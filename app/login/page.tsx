@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 
 import { useState, useTransition } from 'react'
 import { bazaarLogin } from '@/lib/bazaar/auth'

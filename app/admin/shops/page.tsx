@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getAllShops } from '@/lib/bazaar/admin-actions'
 import { ShopList } from './shop-list'
 

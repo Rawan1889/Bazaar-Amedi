@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getProfile } from '@/lib/bazaar/profile-actions'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'

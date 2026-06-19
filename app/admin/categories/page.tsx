@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getAllCategories } from '@/lib/bazaar/admin-actions'
 import { CategoryManager } from './category-manager'
 

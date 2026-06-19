@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getAllOrders } from '@/lib/bazaar/admin-actions'
 
 const c = {

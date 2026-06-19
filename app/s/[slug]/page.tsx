@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'

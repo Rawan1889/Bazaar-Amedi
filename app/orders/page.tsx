@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getMyOrders } from '@/lib/bazaar/order-actions'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'

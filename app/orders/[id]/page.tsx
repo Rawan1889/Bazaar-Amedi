@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'

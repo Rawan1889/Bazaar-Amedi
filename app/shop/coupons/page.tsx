@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getShopCoupons } from '@/lib/bazaar/coupon-actions'
 import { CouponManager } from './coupon-manager'
 

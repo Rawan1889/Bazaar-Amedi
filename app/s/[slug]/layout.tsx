@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import type { Metadata } from 'next'
 

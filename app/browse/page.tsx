@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import Link from 'next/link'
 import { AddToCartButton } from '@/app/components/add-to-cart-button'

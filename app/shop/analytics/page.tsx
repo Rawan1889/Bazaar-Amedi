@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { getShopAnalytics } from '@/lib/bazaar/analytics-actions'
 import { redirect } from 'next/navigation'
 import { AnalyticsDashboard } from './analytics-dashboard'
