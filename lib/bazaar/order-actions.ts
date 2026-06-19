@@ -1,0 +1,208 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { createBazaarServer } from './supabase-server'
+import { getBazaarUser } from './auth'
+
+interface CartItemInput {
+  productId: string
+  shopId: string
+  name: string
+  price: number
+  salePrice: number | null
+  quantity: number
+}
+
+export async function placeOrder(data: {
+  items: CartItemInput[]
+  deliveryAddress: string
+  note: string | null
+}) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Please sign in to place an order.' }
+  if (user.role !== 'customer' && user.role !== 'super_admin') {
+    return { error: 'Only customers can place orders.' }
+  }
+
+  if (!data.items.length) return { error: 'Cart is empty.' }
+  if (!data.deliveryAddress.trim()) return { error: 'Delivery address is required.' }
+
+  const supabase = await createBazaarServer()
+
+  const subtotal = data.items.reduce(
+    (sum, i) => sum + (i.salePrice ?? i.price) * i.quantity, 0
+  )
+  const deliveryFee = 2500
+  const total = subtotal + deliveryFee
+
+  const { data: order, error: orderError } = await supabase
+    .from('bazaar_orders')
+    .insert({
+      customer_id: user.id,
+      status: 'pending',
+      delivery_address: data.deliveryAddress.trim(),
+      delivery_fee: deliveryFee,
+      total,
+      note: data.note?.trim() || null,
+    })
+    .select('id')
+    .single()
+
+  if (orderError) return { error: orderError.message }
+
+  const orderItems = data.items.map(item => ({
+    order_id: order.id,
+    product_id: item.productId,
+    shop_id: item.shopId,
+    product_name: item.name,
+    quantity: item.quantity,
+    unit_price: item.salePrice ?? item.price,
+    pickup_status: 'pending' as const,
+  }))
+
+  const { error: itemsError } = await supabase
+    .from('bazaar_order_items')
+    .insert(orderItems)
+
+  if (itemsError) return { error: itemsError.message }
+
+  revalidatePath('/orders')
+  return { success: true, orderId: order.id }
+}
+
+export async function getMyOrders() {
+  const user = await getBazaarUser()
+  if (!user) return []
+
+  const supabase = await createBazaarServer()
+
+  const { data } = await supabase
+    .from('bazaar_orders')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, slug))')
+    .eq('customer_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  return data || []
+}
+
+export async function getShopOrders() {
+  const user = await getBazaarUser()
+  if (!user) return []
+
+  const supabase = await createBazaarServer()
+
+  const { data: shop } = await supabase
+    .from('bazaar_shops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!shop) return []
+
+  const { data } = await supabase
+    .from('bazaar_order_items')
+    .select('*, bazaar_orders(*, bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone))')
+    .eq('shop_id', shop.id)
+    .order('created_at', { ascending: false })
+
+  return data || []
+}
+
+export async function confirmShopItems(orderId: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+
+  const { data: shop } = await supabase
+    .from('bazaar_shops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!shop) return { error: 'No shop found' }
+
+  await supabase
+    .from('bazaar_order_items')
+    .update({ pickup_status: 'picked_up' })
+    .eq('order_id', orderId)
+    .eq('shop_id', shop.id)
+
+  revalidatePath('/shop')
+  return { success: true }
+}
+
+export async function getAvailableOrders() {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return []
+
+  const supabase = await createBazaarServer()
+
+  const { data } = await supabase
+    .from('bazaar_orders')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
+    .or('status.eq.confirmed,and(status.eq.pending,driver_id.is.null)')
+    .is('driver_id', null)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  return data || []
+}
+
+export async function getMyDeliveries() {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return []
+
+  const supabase = await createBazaarServer()
+
+  const { data } = await supabase
+    .from('bazaar_orders')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
+    .eq('driver_id', user.id)
+    .in('status', ['confirmed', 'picking_up', 'delivering'])
+    .order('created_at', { ascending: false })
+
+  return data || []
+}
+
+export async function acceptOrder(orderId: string) {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return { error: 'Only drivers can accept orders.' }
+
+  const supabase = await createBazaarServer()
+
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({ driver_id: user.id, status: 'confirmed' })
+    .eq('id', orderId)
+    .is('driver_id', null)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/driver')
+  return { success: true }
+}
+
+export async function updateOrderStatus(orderId: string, status: string) {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+
+  const update: Record<string, unknown> = { status }
+  if (status === 'delivered') {
+    update.delivered_at = new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update(update)
+    .eq('id', orderId)
+    .eq('driver_id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/driver')
+  return { success: true }
+}

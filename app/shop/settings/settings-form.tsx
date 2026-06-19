@@ -1,0 +1,162 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { updateShop } from '@/lib/bazaar/shop-actions'
+
+const c = {
+  green:    '#2D8A5E',
+  greenBg:  'rgba(45,138,94,0.08)',
+  charcoal: '#1E1C19',
+  stone:    '#7A756E',
+  cream2:   '#E8E4DE',
+  white:    '#FFFFFF',
+  error:    '#C94A3A',
+  errorBg:  'rgba(201,74,58,0.08)',
+} as const
+
+interface Shop {
+  id: string
+  name: string
+  description: string | null
+  phone: string | null
+  address: string | null
+  category_id: string | null
+  is_open: boolean
+}
+
+function FormField({ name, label, defaultValue, placeholder, type = 'text' }: {
+  name: string; label: string; defaultValue?: string | null; placeholder: string; type?: string
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={name}
+        className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase"
+        style={{ color: c.stone }}
+      >
+        {label}
+      </label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        defaultValue={defaultValue || ''}
+        placeholder={placeholder}
+        className="w-full rounded-[10px] px-4 py-3 text-[14px] font-[family-name:var(--font-dm-sans)] outline-none transition-all duration-200"
+        style={{ border: `1px solid ${c.cream2}`, color: c.charcoal, background: c.white }}
+      />
+    </div>
+  )
+}
+
+export function ShopSettingsForm({ shop, categories }: {
+  shop: Shop | null
+  categories: { id: string; name_en: string }[]
+}) {
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <div className="max-w-[560px]">
+      {error && (
+        <div className="rounded-[10px] px-4 py-3 mb-4 text-[13px] font-[family-name:var(--font-dm-sans)]" style={{ background: c.errorBg, color: c.error }}>
+          {error}
+        </div>
+      )}
+      {saved && (
+        <div className="rounded-[10px] px-4 py-3 mb-4 text-[13px] font-[family-name:var(--font-dm-sans)]" style={{ background: c.greenBg, color: c.green }}>
+          Shop settings saved.
+        </div>
+      )}
+
+      <form
+        className="flex flex-col gap-5"
+        action={(formData: FormData) => {
+          setError(null)
+          setSaved(false)
+          startTransition(async () => {
+            const result = await updateShop(formData)
+            if (result?.error) setError(result.error)
+            else setSaved(true)
+          })
+        }}
+      >
+        <div className="rounded-[14px] p-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+          <h3 className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium mb-5" style={{ color: c.charcoal }}>
+            Basic information
+          </h3>
+
+          <div className="flex flex-col gap-4">
+            <FormField name="name" label="Shop name" defaultValue={shop?.name} placeholder="e.g. Ahmad's Grocery" />
+            <FormField name="description" label="Description (optional)" defaultValue={shop?.description} placeholder="Tell customers about your shop" />
+            <FormField name="phone" label="Phone number" defaultValue={shop?.phone} placeholder="+964 750 123 4567" type="tel" />
+            <FormField name="address" label="Address" defaultValue={shop?.address} placeholder="Near Amedi bazaar, main street" />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                Category
+              </label>
+              <select
+                name="category_id"
+                defaultValue={shop?.category_id || ''}
+                className="w-full rounded-[10px] px-4 py-3 text-[14px] font-[family-name:var(--font-dm-sans)] outline-none appearance-none cursor-pointer"
+                style={{ border: `1px solid ${c.cream2}`, color: c.charcoal, background: c.white }}
+              >
+                <option value="">Select category...</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name_en}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[14px] p-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+          <h3 className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium mb-4" style={{ color: c.charcoal }}>
+            Availability
+          </h3>
+
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="hidden"
+              name="is_open"
+              value={shop?.is_open !== false ? 'true' : 'false'}
+            />
+            <div
+              className="w-10 h-6 rounded-full relative cursor-pointer transition-all duration-200"
+              style={{ background: shop?.is_open !== false ? c.green : c.cream2 }}
+              onClick={e => {
+                const hidden = e.currentTarget.previousElementSibling as HTMLInputElement
+                const newVal = hidden.value === 'true' ? 'false' : 'true'
+                hidden.value = newVal
+                e.currentTarget.style.background = newVal === 'true' ? c.green : c.cream2
+                const dot = e.currentTarget.firstElementChild as HTMLElement
+                dot.style.transform = newVal === 'true' ? 'translateX(16px)' : 'translateX(0)'
+              }}
+            >
+              <div
+                className="w-5 h-5 rounded-full absolute top-0.5 left-0.5 transition-transform duration-200"
+                style={{ background: '#fff', transform: shop?.is_open !== false ? 'translateX(16px)' : 'translateX(0)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
+              />
+            </div>
+            <span className="font-[family-name:var(--font-dm-sans)] text-[14px]" style={{ color: c.charcoal }}>
+              Shop is open for orders
+            </span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="w-full py-3.5 rounded-[10px] text-[14px] font-medium font-[family-name:var(--font-dm-sans)] cursor-pointer border-none transition-all duration-200"
+          style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
+          onMouseEnter={e => !isPending && (e.currentTarget.style.transform = 'scale(0.98)')}
+          onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+        >
+          {isPending ? 'Saving...' : 'Save settings'}
+        </button>
+      </form>
+    </div>
+  )
+}

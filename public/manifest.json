@@ -1,0 +1,27 @@
+{
+  "name": "bazaar. — Shop Every Market in Amedi",
+  "short_name": "bazaar.",
+  "description": "Compare prices across local shops, catch flash sales, and get everything delivered in one trip.",
+  "start_url": "/browse",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF7",
+  "theme_color": "#2D8A5E",
+  "orientation": "portrait",
+  "categories": ["shopping", "food"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createBazaarServer, createBazaarAdmin } from './supabase-server'
+
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48)
+}
+
+export async function bazaarSignup(formData: FormData) {
+  const supabase = await createBazaarServer()
+  const admin = await createBazaarAdmin()
+
+  const role = formData.get('role') as string
+  const fullName = (formData.get('fullName') as string).trim()
+  const phone = (formData.get('phone') as string).trim()
+  const password = formData.get('password') as string
+  const email = (formData.get('email') as string)?.trim()
+
+  if (!fullName || !phone || !password || !email) {
+    return { error: 'All fields are required.' }
+  }
+
+  if (password.length < 8) {
+    return { error: 'Password must be at least 8 characters.' }
+  }
+
+  const authEmail = email
+
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: authEmail,
+    password,
+    options: {
+      data: { full_name: fullName, role, phone },
+    },
+  })
+
+  if (authError) {
+    return { error: authError.message }
+  }
+
+  const userId = authData.user?.id
+  if (!userId) {
+    return { error: 'Could not create account.' }
+  }
+
+  const bazaarRole = role === 'market' ? 'market_admin' : role === 'driver' ? 'driver' : 'customer'
+  const neighborhood = formData.get('neighborhood') as string | null
+
+  const { error: profileError } = await admin
+    .from('bazaar_profiles')
+    .insert({
+      id: userId,
+      role: bazaarRole,
+      full_name: fullName,
+      phone: `+964${phone.replace(/\s+/g, '')}`,
+      neighborhood: neighborhood || null,
+    })
+
+  if (profileError) {
+    console.error('Bazaar profile creation error:', profileError)
+  }
+
+  if (bazaarRole === 'market_admin') {
+    const shopName = (formData.get('shopName') as string)?.trim()
+    const category = formData.get('category') as string
+    const location = (formData.get('location') as string)?.trim()
+
+    if (shopName) {
+      const slug = slugify(shopName) || `shop-${userId.slice(0, 8)}`
+
+      const { data: categories } = await admin
+        .from('bazaar_categories')
+        .select('id')
+        .eq('slug', category || '')
+        .single()
+
+      await admin.from('bazaar_shops').insert({
+        owner_id: userId,
+        name: shopName,
+        slug,
+        category_id: categories?.id || null,
+        address: location || null,
+        phone: `+964${phone.replace(/\s+/g, '')}`,
+        is_approved: false,
+      })
+    }
+  }
+
+  if (authData.session) {
+    revalidatePath('/', 'layout')
+    redirect('/')
+  }
+
+  return { success: true }
+}
+
+export async function bazaarLogin(formData: FormData) {
+  const supabase = await createBazaarServer()
+
+  const identifier = (formData.get('identifier') as string).trim()
+  const password = formData.get('password') as string
+
+  const email = identifier.includes('@')
+    ? identifier
+    : `phone-${identifier.replace(/\s+/g, '')}@bazaaramedi.app`
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if (error) {
+    return { error: 'Invalid phone number or password.' }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
+
+export async function bazaarLogout() {
+  const supabase = await createBazaarServer()
+  await supabase.auth.signOut()
+  revalidatePath('/', 'layout')
+  redirect('/')
+}
+
+export async function getBazaarUser() {
+  const supabase = await createBazaarServer()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from('bazaar_profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  return profile
+}
