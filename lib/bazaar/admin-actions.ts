@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createBazaarServer } from './supabase-server'
 import { getBazaarUser } from './auth'
+import { sendPushToUser } from './push-notifications'
 
 async function requireAdmin() {
   const user = await getBazaarUser()
@@ -28,12 +29,27 @@ export async function approveShop(shopId: string) {
   await requireAdmin()
   const supabase = await createBazaarServer()
 
+  const { data: shop } = await supabase
+    .from('bazaar_shops')
+    .select('owner_id, name')
+    .eq('id', shopId)
+    .single()
+
   const { error } = await supabase
     .from('bazaar_shops')
     .update({ is_approved: true })
     .eq('id', shopId)
 
   if (error) return { error: error.message }
+
+  if (shop) {
+    sendPushToUser(shop.owner_id, {
+      type: 'shop_approved',
+      title: 'Your shop is approved!',
+      body: `${shop.name} is now live on Bazaar Amedi. Customers can find and order from your shop.`,
+      url: '/shop',
+    })
+  }
 
   revalidatePath('/admin')
   return { success: true }

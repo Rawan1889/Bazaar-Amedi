@@ -7,6 +7,7 @@ import { FavoritesProvider } from '@/lib/bazaar/favorites-context'
 import { RealtimeWrapper } from '@/app/components/realtime-wrapper'
 import { MobileNav } from '@/app/components/mobile-nav'
 import { PWARegister } from '@/app/components/pwa-register'
+import { AuthNotifications } from '@/app/components/auth-notifications'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <RealtimeWrapper />
               <PWARegister />
+              <AuthNotifications />
               {children}
               <MobileNav />
             </CartProvider>

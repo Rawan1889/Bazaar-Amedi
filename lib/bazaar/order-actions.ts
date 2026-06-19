@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createBazaarServer } from './supabase-server'
 import { getBazaarUser } from './auth'
+import { sendPushToUser, sendPushToRole } from './push-notifications'
 
 interface CartItemInput {
   productId: string
@@ -67,6 +68,31 @@ export async function placeOrder(data: {
   if (itemsError) return { error: itemsError.message }
 
   revalidatePath('/orders')
+
+  const shopIds = [...new Set(data.items.map(i => i.shopId))]
+  const { data: shops } = await supabase
+    .from('bazaar_shops')
+    .select('owner_id, name')
+    .in('id', shopIds)
+
+  if (shops) {
+    for (const shop of shops) {
+      sendPushToUser(shop.owner_id, {
+        type: 'new_order',
+        title: 'New order received',
+        body: `Order #${order.id.slice(0, 8)} — ${data.items.length} item(s) for ${shop.name}`,
+        url: '/shop/orders',
+      })
+    }
+  }
+
+  sendPushToRole('driver', {
+    type: 'new_order',
+    title: 'New delivery available',
+    body: `${data.items.length} item(s) to ${data.deliveryAddress}`,
+    url: '/driver',
+  })
+
   return { success: true, orderId: order.id }
 }
 
@@ -195,6 +221,12 @@ export async function updateOrderStatus(orderId: string, status: string) {
     update.delivered_at = new Date().toISOString()
   }
 
+  const { data: orderData } = await supabase
+    .from('bazaar_orders')
+    .select('customer_id, order_number')
+    .eq('id', orderId)
+    .single()
+
   const { error } = await supabase
     .from('bazaar_orders')
     .update(update)
@@ -202,6 +234,21 @@ export async function updateOrderStatus(orderId: string, status: string) {
     .eq('driver_id', user.id)
 
   if (error) return { error: error.message }
+
+  if (orderData) {
+    const statusMessages: Record<string, string> = {
+      confirmed: 'A driver has accepted your order',
+      picking_up: 'Your items are being picked up from the shops',
+      delivering: 'Your order is on its way to you',
+      delivered: 'Your order has been delivered',
+    }
+    sendPushToUser(orderData.customer_id, {
+      type: 'order_status',
+      title: `Order #${orderData.order_number} update`,
+      body: statusMessages[status] || `Status changed to ${status}`,
+      url: `/orders/${orderId}`,
+    })
+  }
 
   revalidatePath('/driver')
   return { success: true }
