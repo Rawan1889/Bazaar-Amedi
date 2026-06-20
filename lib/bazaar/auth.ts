@@ -31,7 +31,8 @@ export async function bazaarSignup(formData: FormData) {
     return { error: 'Password must be at least 8 characters.' }
   }
 
-  const authEmail = email || `phone-${phone.replace(/\s+/g, '')}@bazaaramedi.app`
+  const cleanPhone = phone.replace(/\s+/g, '').replace(/^0+/, '')
+  const authEmail = email || `u${cleanPhone}@bazaaramedi.app`
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: authEmail,
@@ -109,7 +110,7 @@ export async function bazaarLogin(formData: FormData) {
 
   const email = identifier.includes('@')
     ? identifier
-    : `phone-${identifier.replace(/\s+/g, '')}@bazaaramedi.app`
+    : `u${identifier.replace(/\s+/g, '').replace(/^0+/, '')}@bazaaramedi.app`
 
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
