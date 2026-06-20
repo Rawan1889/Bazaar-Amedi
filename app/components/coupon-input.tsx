@@ -16,7 +16,7 @@ const c = {
 interface Props {
   shopIds: string[]
   subtotal: number
-  onApply: (discount: number, description: string) => void
+  onApply: (discount: number, description: string, code: string) => void
   onRemove: () => void
   applied: { discount: number; description: string } | null
 }
@@ -30,11 +30,12 @@ export function CouponInput({ shopIds, subtotal, onApply, onRemove, applied }: P
     if (!code.trim()) return
     setError(null)
     startTransition(async () => {
+      const appliedCode = code.trim().toUpperCase()
       const result = await applyCoupon(code, shopIds, subtotal)
       if (result.error) {
         setError(result.error)
       } else if (result.success) {
-        onApply(result.discount!, result.description!)
+        onApply(result.discount!, result.description!, appliedCode)
         setCode('')
       }
     })

@@ -19,18 +19,18 @@ export async function getShopAnalytics() {
 
   const { data: allItems } = await supabase
     .from('bazaar_order_items')
-    .select('quantity, unit_price, product_name, created_at, bazaar_orders!inner(status, created_at)')
+    .select('order_id, quantity, unit_price, product_name, created_at, bazaar_orders!inner(status, created_at)')
     .eq('shop_id', shop.id)
 
   const items = (allItems || []) as unknown as {
-    quantity: number; unit_price: number; product_name: string; created_at: string
+    order_id: string; quantity: number; unit_price: number; product_name: string; created_at: string
     bazaar_orders: { status: string; created_at: string }
   }[]
 
   const deliveredItems = items.filter(i => i.bazaar_orders.status === 'delivered')
 
   const totalRevenue = deliveredItems.reduce((sum, i) => sum + i.unit_price * i.quantity, 0)
-  const totalOrders = new Set(items.map(() => Math.random())).size
+  const totalOrders = new Set(items.map(i => i.order_id)).size
   const totalItemsSold = deliveredItems.reduce((sum, i) => sum + i.quantity, 0)
 
   const { count: totalProducts } = await supabase
@@ -71,14 +71,14 @@ export async function getShopAnalytics() {
     last7Days.push({
       date: date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }),
       revenue: dayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0),
-      orders: new Set(dayItems.map((_, idx) => idx)).size,
+      orders: new Set(dayItems.map(i => i.order_id)).size,
     })
   }
 
   return {
     shopName: shop.name,
     totalRevenue,
-    totalOrders: items.length,
+    totalOrders,
     totalItemsSold,
     totalProducts: totalProducts || 0,
     avgRating,

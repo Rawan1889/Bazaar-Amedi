@@ -87,7 +87,7 @@ export default async function DriverEarningsPage() {
               {formatIQD(todayEarnings)}
             </div>
             <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.stone }}>
-              {todayDeliveries.length} delivery{todayDeliveries.length !== 1 ? 'ies' : 'y'}
+              {todayDeliveries.length} deliver{todayDeliveries.length !== 1 ? 'ies' : 'y'}
             </div>
           </div>
           <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>

@@ -33,7 +33,7 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
-  const [coupon, setCoupon] = useState<{ discount: number; description: string } | null>(null)
+  const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string } | null>(null)
 
   const deliveryFee = 2500
   const discount = coupon?.discount || 0
@@ -57,6 +57,7 @@ export default function CartPage() {
         })),
         deliveryAddress: address,
         note: note || null,
+        couponCode: coupon?.code ?? null,
       })
       if (result.error) {
         setError(result.error)
@@ -263,7 +264,7 @@ export default function CartPage() {
                     shopIds={shopGroups.map(g => g.shopId)}
                     subtotal={subtotal}
                     applied={coupon}
-                    onApply={(d, desc) => setCoupon({ discount: d, description: desc })}
+                    onApply={(d, desc, code) => setCoupon({ discount: d, description: desc, code })}
                     onRemove={() => setCoupon(null)}
                   />
                 </div>

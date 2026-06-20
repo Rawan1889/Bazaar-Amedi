@@ -68,7 +68,7 @@ export function OrderList({ orders }: Props) {
           <div key={o.id} className="rounded-[14px] p-5 transition-all duration-150" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <Link href={`/bazaar/orders/${o.id}` as Route} className="font-[family-name:var(--font-dm-sans)] text-[15px] font-medium no-underline" style={{ color: c.charcoal }}>
+                <Link href={`/orders/${o.id}` as Route} className="font-[family-name:var(--font-dm-sans)] text-[15px] font-medium no-underline" style={{ color: c.charcoal }}>
                   Order #{o.order_number}
                 </Link>
                 <span
@@ -105,7 +105,7 @@ export function OrderList({ orders }: Props) {
                 {(o.status === 'delivered' || o.status === 'cancelled') && o.bazaar_order_items?.length > 0 && (
                   <ReorderButton items={o.bazaar_order_items} />
                 )}
-                <Link href={`/bazaar/orders/${o.id}` as Route} className="font-[family-name:var(--font-dm-sans)] text-[11px] no-underline" style={{ color: c.green }}>
+                <Link href={`/orders/${o.id}` as Route} className="font-[family-name:var(--font-dm-sans)] text-[11px] no-underline" style={{ color: c.green }}>
                   View details
                 </Link>
               </div>

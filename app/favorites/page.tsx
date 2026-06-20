@@ -88,7 +88,7 @@ export default function FavoritesPage() {
                   {shops.map(shop => (
                     <Link
                       key={shop.id}
-                      href={`/bazaar/s/${shop.slug}` as Route}
+                      href={`/s/${shop.slug}` as Route}
                       className="rounded-[14px] p-4 no-underline flex items-center gap-3 transition-all duration-150"
                       style={{ background: c.white, border: `1px solid ${c.cream2}` }}
                       onMouseEnter={e => (e.currentTarget.style.borderColor = c.green)}
@@ -124,7 +124,7 @@ export default function FavoritesPage() {
                   {products.map(product => (
                     <Link
                       key={product.id}
-                      href={`/bazaar/s/${product.shopSlug}` as Route}
+                      href={`/s/${product.shopSlug}` as Route}
                       className="rounded-[14px] overflow-hidden no-underline transition-all duration-150"
                       style={{ background: c.white, border: `1px solid ${c.cream2}` }}
                     >

@@ -125,7 +125,7 @@ export function SearchBar() {
                   )}
                 </div>
                 <Link
-                  href={`/bazaar/s/${p.bazaar_shops.slug}`}
+                  href={`/s/${p.bazaar_shops.slug}`}
                   className="flex-1 min-w-0 no-underline"
                   onClick={() => setIsOpen(false)}
                 >

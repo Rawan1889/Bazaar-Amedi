@@ -1,9 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createBazaarServer } from './supabase-server'
+import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
 import { sendPushToUser, sendPushToRole } from './push-notifications'
+import { applyCoupon } from './coupon-actions'
 
 interface CartItemInput {
   productId: string
@@ -18,6 +19,7 @@ export async function placeOrder(data: {
   items: CartItemInput[]
   deliveryAddress: string
   note: string | null
+  couponCode?: string | null
 }) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Please sign in to place an order.' }
@@ -34,7 +36,20 @@ export async function placeOrder(data: {
     (sum, i) => sum + (i.salePrice ?? i.price) * i.quantity, 0
   )
   const deliveryFee = 2500
-  const total = subtotal + deliveryFee
+
+  // Re-validate the coupon server-side — never trust the discount the client sent.
+  let discount = 0
+  let appliedCouponId: string | null = null
+  if (data.couponCode?.trim()) {
+    const shopIds = [...new Set(data.items.map(i => i.shopId))]
+    const result = await applyCoupon(data.couponCode, shopIds, subtotal)
+    if ('success' in result && result.success) {
+      discount = result.discount
+      appliedCouponId = result.couponId
+    }
+  }
+
+  const total = Math.max(0, subtotal - discount) + deliveryFee
 
   const { data: order, error: orderError } = await supabase
     .from('bazaar_orders')
@@ -66,6 +81,22 @@ export async function placeOrder(data: {
     .insert(orderItems)
 
   if (itemsError) return { error: itemsError.message }
+
+  // Record coupon usage with the service-role client (customers can't UPDATE coupons under RLS).
+  if (appliedCouponId) {
+    const admin = await createBazaarAdmin()
+    const { data: cpn } = await admin
+      .from('bazaar_coupons')
+      .select('uses_count')
+      .eq('id', appliedCouponId)
+      .single()
+    if (cpn) {
+      await admin
+        .from('bazaar_coupons')
+        .update({ uses_count: (cpn.uses_count ?? 0) + 1 })
+        .eq('id', appliedCouponId)
+    }
+  }
 
   revalidatePath('/orders')
 

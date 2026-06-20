@@ -107,7 +107,7 @@ export default async function BrowsePage({
           {categories?.map(cat => (
             <Link
               key={cat.id}
-              href={`/bazaar/browse?category=${cat.slug}`}
+              href={`/browse?category=${cat.slug}`}
               className="flex-shrink-0 px-4 py-2 rounded-[20px] font-[family-name:var(--font-dm-sans)] text-[13px] no-underline transition-all duration-150"
               style={{
                 background: activeCategory === cat.slug ? c.green : c.cream,
@@ -149,7 +149,7 @@ export default async function BrowsePage({
               return (
                 <Link
                   key={p.id}
-                  href={`/bazaar/s/${p.bazaar_shops.slug}`}
+                  href={`/s/${p.bazaar_shops.slug}`}
                   className="rounded-[14px] overflow-hidden no-underline transition-all duration-200 group"
                   style={{ background: c.white, border: `1px solid ${c.cream2}` }}
                 >

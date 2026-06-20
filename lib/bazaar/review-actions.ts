@@ -45,7 +45,7 @@ export async function submitReview(formData: FormData) {
     if (error) return { error: error.message }
   }
 
-  revalidatePath(`/bazaar/s/`)
+  revalidatePath(`/s/`, 'layout')
   return { success: true }
 }
 
