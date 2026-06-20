@@ -23,15 +23,15 @@ export async function bazaarSignup(formData: FormData) {
   const password = formData.get('password') as string
   const email = (formData.get('email') as string)?.trim()
 
-  if (!fullName || !phone || !password || !email) {
-    return { error: 'All fields are required.' }
+  if (!fullName || !phone || !password) {
+    return { error: 'Name, phone, and password are required.' }
   }
 
   if (password.length < 8) {
     return { error: 'Password must be at least 8 characters.' }
   }
 
-  const authEmail = email
+  const authEmail = email || `phone-${phone.replace(/\s+/g, '')}@bazaaramedi.app`
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: authEmail,
