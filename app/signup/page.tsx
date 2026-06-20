@@ -256,7 +256,7 @@ function SignupFormInner() {
         {/* Common fields */}
         <Field name="fullName" label="Full name" placeholder="Your full name" autoComplete="name" />
         <PhoneField name="phone" label="Phone number" />
-        <Field name="email" label="Email (optional)" type="email" placeholder="you@example.com" autoComplete="email" required={false} />
+        <Field name="email" label="Email" type="email" placeholder="you@example.com" autoComplete="email" />
 
         {/* Customer fields */}
         {activeRole === 'customer' && (

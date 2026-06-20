@@ -23,16 +23,18 @@ export async function bazaarSignup(formData: FormData) {
   const password = formData.get('password') as string
   const email = (formData.get('email') as string)?.trim()
 
-  if (!fullName || !phone || !password) {
-    return { error: 'Name, phone, and password are required.' }
+  if (!fullName || !phone || !password || !email) {
+    return { error: 'All fields are required, including email.' }
   }
 
   if (password.length < 8) {
     return { error: 'Password must be at least 8 characters.' }
   }
 
-  const cleanPhone = phone.replace(/\s+/g, '').replace(/^0+/, '')
-  const authEmail = email || `u${cleanPhone}@bazaaramedi.app`
+  // Phone-only signup is not yet supported — Supabase rejects synthetic emails,
+  // and proper phone login needs an SMS provider (planned separately). Until then
+  // a real email is required. The phone is still stored on the profile.
+  const authEmail = email
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: authEmail,
@@ -108,14 +110,12 @@ export async function bazaarLogin(formData: FormData) {
   const identifier = (formData.get('identifier') as string).trim()
   const password = formData.get('password') as string
 
-  const email = identifier.includes('@')
-    ? identifier
-    : `u${identifier.replace(/\s+/g, '').replace(/^0+/, '')}@bazaaramedi.app`
+  const email = identifier
 
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    return { error: 'Invalid phone number or password.' }
+    return { error: 'Invalid email or password.' }
   }
 
   revalidatePath('/', 'layout')

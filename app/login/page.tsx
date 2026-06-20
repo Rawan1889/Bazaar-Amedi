@@ -76,15 +76,15 @@ export default function BazaarLoginPage() {
                 className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase"
                 style={{ color: c.stone }}
               >
-                Phone number or email
+                Email
               </label>
               <input
                 id="identifier"
                 name="identifier"
-                type="text"
+                type="email"
                 required
-                autoComplete="username"
-                placeholder="750 123 4567 or you@email.com"
+                autoComplete="email"
+                placeholder="you@email.com"
                 className="w-full rounded-[10px] px-4 py-3 text-[14px] font-[family-name:var(--font-dm-sans)] outline-none transition-all duration-200"
                 style={{
                   background: c.white,
