@@ -37,6 +37,20 @@ export default async function BrowsePage({
     .select('*')
     .order('sort_order')
 
+  // Resolve the category slug to an id so we can filter products by their own
+  // category_id. Filtering on a non-inner embedded table (bazaar_categories.slug)
+  // does not restrict the parent rows in PostgREST, so the filter must be on the
+  // product column directly.
+  let categoryId: string | null = null
+  if (params.category) {
+    const { data: cat } = await supabase
+      .from('bazaar_categories')
+      .select('id')
+      .eq('slug', params.category)
+      .single()
+    categoryId = cat?.id ?? null
+  }
+
   let productsQuery = supabase
     .from('bazaar_products')
     .select('*, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active)')
@@ -45,8 +59,8 @@ export default async function BrowsePage({
     .order('created_at', { ascending: false })
     .limit(40)
 
-  if (params.category) {
-    productsQuery = productsQuery.eq('bazaar_categories.slug', params.category)
+  if (categoryId) {
+    productsQuery = productsQuery.eq('category_id', categoryId)
   }
 
   const { data: products } = await productsQuery
@@ -115,7 +129,7 @@ export default async function BrowsePage({
                 fontWeight: activeCategory === cat.slug ? 500 : 400,
               }}
             >
-              {cat.name_en}
+              <LocalizedName en={cat.name_en} ku={cat.name_ku} ar={cat.name_ar} />
             </Link>
           ))}
         </div>
