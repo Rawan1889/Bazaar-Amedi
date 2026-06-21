@@ -3,9 +3,9 @@ import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import Link from 'next/link'
 import { AddToCartButton } from '@/app/components/add-to-cart-button'
 import { CartBar } from '@/app/components/cart-bar'
-import { LanguageSwitcher } from '@/app/components/language-switcher'
 import { SearchBar } from '@/app/components/search-bar'
 import { LocalizedName } from '@/app/components/localized-name'
+import { CustomerNav } from '@/app/components/customer-nav'
 
 const c = {
   green:    '#2D8A5E',
@@ -69,29 +69,7 @@ export default async function BrowsePage({
 
   return (
     <div className="min-h-[100dvh]" style={{ background: c.bg }}>
-      {/* Nav */}
-      <nav className="sticky top-0 z-10 px-6 py-4" style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}>
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          <Link href="/" className="no-underline">
-            <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-              bazaar<span style={{ color: c.green }}>.</span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <LanguageSwitcher />
-            <Link href="/login" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="px-4 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium no-underline"
-              style={{ background: c.green, color: '#fff' }}
-            >
-              Sign up
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <CustomerNav />
 
       <div className="max-w-[1200px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium mb-2" style={{ color: c.charcoal }}>
