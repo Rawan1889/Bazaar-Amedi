@@ -201,6 +201,21 @@ function CreateSaleForm({ products, onDone }: { products: Product[]; onDone: () 
 
           <div className="flex flex-col gap-1">
             <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+              Items available in this sale
+            </label>
+            <input
+              name="quantity"
+              type="number"
+              min="1"
+              required
+              placeholder="e.g. 10"
+              className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
+              style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
               Sale price (IQD)
             </label>
             <input
