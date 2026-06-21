@@ -21,6 +21,8 @@ export async function createFlashSale(formData: FormData) {
   const productId = formData.get('product_id') as string
   const salePrice = parseInt(formData.get('sale_price') as string, 10)
   const endsAt = formData.get('ends_at') as string
+  const quantityRaw = formData.get('quantity') as string
+  const quantity = quantityRaw ? parseInt(quantityRaw, 10) : null
 
   if (!productId || isNaN(salePrice) || !endsAt) {
     return { error: 'All fields are required.' }
@@ -38,6 +40,7 @@ export async function createFlashSale(formData: FormData) {
   const { error } = await supabase.from('bazaar_flash_sales').insert({
     product_id: productId,
     sale_price: salePrice,
+    quantity,
     starts_at: new Date().toISOString(),
     ends_at: new Date(endsAt).toISOString(),
     is_active: true,
@@ -84,7 +87,7 @@ export async function getShopFlashSales() {
 
   const { data } = await supabase
     .from('bazaar_flash_sales')
-    .select('*, bazaar_products!inner(name_en, price, shop_id)')
+    .select('*, bazaar_products!inner(name_en, price, unit, shop_id)')
     .eq('bazaar_products.shop_id', shop.id)
     .order('created_at', { ascending: false })
 

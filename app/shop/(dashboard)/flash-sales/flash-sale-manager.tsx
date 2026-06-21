@@ -26,10 +26,11 @@ interface FlashSale {
   id: string
   product_id: string
   sale_price: number
+  quantity: number | null
   starts_at: string
   ends_at: string
   is_active: boolean
-  bazaar_products: { name_en: string; price: number }
+  bazaar_products: { name_en: string; price: number; unit: string }
 }
 
 interface Product {
@@ -51,6 +52,11 @@ function SaleCard({ sale }: { sale: FlashSale }) {
           <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
             {sale.bazaar_products.name_en}
           </div>
+          {sale.quantity && (
+            <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: c.stone }}>
+              {sale.quantity} {sale.bazaar_products.unit}
+            </div>
+          )}
           <div className="flex items-center gap-2 mt-1">
             <span className="font-[family-name:var(--font-dm-sans)] text-[13px] line-through" style={{ color: c.stone }}>
               {formatIQD(sale.bazaar_products.price)}
@@ -170,6 +176,20 @@ function CreateSaleForm({ products, onDone }: { products: Product[]; onDone: () 
               min="0"
               max={selectedProduct?.price || undefined}
               placeholder={selectedProduct ? `Less than ${selectedProduct.price}` : 'Sale price'}
+              className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
+              style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+              Quantity available (optional)
+            </label>
+            <input
+              name="quantity"
+              type="number"
+              min="1"
+              placeholder="e.g. 5"
               className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
               style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
             />

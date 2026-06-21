@@ -38,6 +38,7 @@ function useCountdown(endsAt: string) {
 type Sale = {
   id: string
   sale_price: number
+  quantity: number | null
   ends_at: string
   is_active: boolean
   bazaar_products: {
@@ -89,9 +90,14 @@ function SaleCard({ sale }: { sale: Sale }) {
           <div className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium truncate mb-0.5" style={{ color: c.charcoal }}>
             {p.name_en}
           </div>
-          <div className="font-[family-name:var(--font-dm-mono)] text-[10px] truncate mb-2" style={{ color: c.stone }}>
+          <div className="font-[family-name:var(--font-dm-mono)] text-[10px] truncate mb-1" style={{ color: c.stone }}>
             {p.bazaar_shops.name}
           </div>
+          {sale.quantity && (
+            <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2" style={{ color: c.terra }}>
+              {sale.quantity} {p.unit}
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div>
               <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.terra }}>
