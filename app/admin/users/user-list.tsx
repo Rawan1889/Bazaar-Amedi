@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useTransition, useState } from 'react'
 import { suspendUser, unsuspendUser, approveDriver, changeUserRole } from '@/lib/bazaar/admin-actions'
 
 const c = {
@@ -137,8 +137,41 @@ function UserRow({ user }: { user: User }) {
   )
 }
 
+const FILTERS = [
+  { key: 'all',          label: 'All' },
+  { key: 'customer',     label: 'Customers' },
+  { key: 'driver',       label: 'Drivers' },
+  { key: 'market_admin', label: 'Market Owners' },
+]
+
 export function UserList({ users }: { users: User[] }) {
+  const [filter, setFilter] = useState('all')
+  const visible = filter === 'all' ? users : users.filter(u => u.role === filter)
+
   return (
+    <div>
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-4">
+        {FILTERS.map(f => {
+          const count = f.key === 'all' ? users.length : users.filter(u => u.role === f.key).length
+          const active = filter === f.key
+          return (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className="px-4 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[13px] border-none cursor-pointer transition-all duration-150"
+              style={{
+                background: active ? c.green : c.cream,
+                color: active ? '#fff' : c.stone,
+                fontWeight: active ? 500 : 400,
+              }}
+            >
+              {f.label} <span style={{ opacity: 0.7 }}>({count})</span>
+            </button>
+          )
+        })}
+      </div>
+
     <div className="rounded-[14px] overflow-hidden" style={{ border: `1px solid ${c.cream2}`, background: c.white }}>
       <table className="w-full" style={{ borderCollapse: 'collapse' }}>
         <thead>
@@ -151,7 +184,7 @@ export function UserList({ users }: { users: User[] }) {
           </tr>
         </thead>
         <tbody>
-          {users.map(u => (
+          {visible.map(u => (
             <tr key={u.id} style={{ borderBottom: `1px solid ${c.cream2}` }}>
               <UserRow user={u} />
             </tr>
@@ -159,11 +192,12 @@ export function UserList({ users }: { users: User[] }) {
         </tbody>
       </table>
 
-      {users.length === 0 && (
+      {visible.length === 0 && (
         <div className="text-center py-12 font-[family-name:var(--font-dm-sans)] text-[14px]" style={{ color: c.stone }}>
-          No users yet
+          No {filter === 'all' ? 'users' : FILTERS.find(f => f.key === filter)?.label.toLowerCase()} yet
         </div>
       )}
+    </div>
     </div>
   )
 }
