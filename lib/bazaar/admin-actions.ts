@@ -168,3 +168,41 @@ export async function getAdminStats() {
     pendingShops: pendingShops?.length || 0,
   }
 }
+
+export async function getAllUsers() {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  const { data } = await supabase
+    .from('bazaar_profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+  return data || []
+}
+
+export async function suspendUser(userId: string) {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  await supabase.from('bazaar_profiles').update({ is_suspended: true }).eq('id', userId)
+  revalidatePath('/admin/users')
+}
+
+export async function unsuspendUser(userId: string) {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  await supabase.from('bazaar_profiles').update({ is_suspended: false }).eq('id', userId)
+  revalidatePath('/admin/users')
+}
+
+export async function approveDriver(userId: string) {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  await supabase.from('bazaar_profiles').update({ is_approved: true }).eq('id', userId)
+  revalidatePath('/admin/users')
+}
+
+export async function changeUserRole(userId: string, role: string) {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  await supabase.from('bazaar_profiles').update({ role }).eq('id', userId)
+  revalidatePath('/admin/users')
+}

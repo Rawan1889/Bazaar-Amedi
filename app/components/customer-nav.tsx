@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from './language-switcher'
+import { useCart } from '@/lib/bazaar/cart-context'
 
 const c = {
   green:    '#2D8A5E',
@@ -22,6 +23,7 @@ export function CustomerNav() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { itemCount } = useCart()
 
   useEffect(() => {
     const supabase = createBazaarClient()
