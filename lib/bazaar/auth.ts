@@ -22,7 +22,7 @@ function slugify(name: string): string {
 
 export async function bazaarSignup(formData: FormData) {
   const supabase = await createBazaarServer()
-  const admin = await createBazaarAdmin()
+  const admin = createBazaarAdmin()
 
   const role = formData.get('role') as string
   const fullName = (formData.get('fullName') as string).trim()

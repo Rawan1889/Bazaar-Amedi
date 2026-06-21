@@ -1,4 +1,5 @@
 import { createServerClient, type CookieMethodsServer } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 function cookieMethods(): CookieMethodsServer {
@@ -26,10 +27,10 @@ export async function createBazaarServer() {
   )
 }
 
-export async function createBazaarAdmin() {
-  return createServerClient(
+export function createBazaarAdmin() {
+  return createClient(
     process.env.NEXT_PUBLIC_BAZAAR_SUPABASE_URL!,
     process.env.BAZAAR_SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: cookieMethods() },
+    { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }

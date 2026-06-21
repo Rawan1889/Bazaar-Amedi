@@ -65,7 +65,7 @@ export async function sendPushToUser(
 ) {
   if (!initWebPush()) return
 
-  const admin = await createBazaarAdmin()
+  const admin = createBazaarAdmin()
 
   await admin.from('bazaar_notifications').insert({
     user_id: userId,
@@ -115,7 +115,7 @@ export async function sendPushToRole(
 ) {
   if (!initWebPush()) return
 
-  const admin = await createBazaarAdmin()
+  const admin = createBazaarAdmin()
 
   const { data: users } = await admin
     .from('bazaar_profiles')

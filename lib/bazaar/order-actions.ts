@@ -84,7 +84,7 @@ export async function placeOrder(data: {
 
   // Record coupon usage with the service-role client (customers can't UPDATE coupons under RLS).
   if (appliedCouponId) {
-    const admin = await createBazaarAdmin()
+    const admin = createBazaarAdmin()
     const { data: cpn } = await admin
       .from('bazaar_coupons')
       .select('uses_count')

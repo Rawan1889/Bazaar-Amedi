@@ -181,28 +181,28 @@ export async function getAllUsers() {
 
 export async function suspendUser(userId: string) {
   await requireAdmin()
-  const supabase = await createBazaarAdmin()
+  const supabase = createBazaarAdmin()
   await supabase.from('bazaar_profiles').update({ is_suspended: true }).eq('id', userId)
   revalidatePath('/admin/users')
 }
 
 export async function unsuspendUser(userId: string) {
   await requireAdmin()
-  const supabase = await createBazaarAdmin()
+  const supabase = createBazaarAdmin()
   await supabase.from('bazaar_profiles').update({ is_suspended: false }).eq('id', userId)
   revalidatePath('/admin/users')
 }
 
 export async function approveDriver(userId: string) {
   await requireAdmin()
-  const supabase = await createBazaarAdmin()
+  const supabase = createBazaarAdmin()
   await supabase.from('bazaar_profiles').update({ is_approved: true }).eq('id', userId)
   revalidatePath('/admin/users')
 }
 
 export async function changeUserRole(userId: string, role: string) {
   await requireAdmin()
-  const supabase = await createBazaarAdmin()
+  const supabase = createBazaarAdmin()
   await supabase.from('bazaar_profiles').update({ role }).eq('id', userId)
   revalidatePath('/admin/users')
 }
