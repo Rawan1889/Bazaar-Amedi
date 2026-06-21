@@ -8,13 +8,15 @@ import { bazaarLogout } from '@/lib/bazaar/auth'
 import { NotificationBell } from '@/app/components/notification-bell'
 
 const c = {
-  green:    '#2D8A5E',
-  greenBg:  'rgba(45,138,94,0.08)',
-  charcoal: '#1E1C19',
-  stone:    '#7A756E',
-  cream:    '#F2EFEA',
-  cream2:   '#E8E4DE',
-  white:    '#FFFFFF',
+  green:     '#2D8A5E',
+  greenBg:   'rgba(45,138,94,0.08)',
+  saffron:   '#E8A838',
+  saffronBg: 'rgba(232,168,56,0.12)',
+  charcoal:  '#1E1C19',
+  stone:     '#7A756E',
+  cream:     '#F2EFEA',
+  cream2:    '#E8E4DE',
+  white:     '#FFFFFF',
 } as const
 
 const links: { href: string; label: string; icon: string }[] = [
@@ -70,8 +72,8 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
       <div className="px-3 pt-4" style={{ borderTop: `1px solid ${c.cream}` }}>
         <div className="flex items-center gap-2.5 mb-3">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[12px] font-medium"
-            style={{ background: c.greenBg, color: c.green }}
+            className="w-8 h-8 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[12px] font-medium flex-shrink-0"
+            style={{ background: c.saffronBg, color: c.saffron }}
           >
             {user.full_name.charAt(0).toUpperCase()}
           </div>
@@ -79,8 +81,8 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
             <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium truncate" style={{ color: c.charcoal }}>
               {user.full_name}
             </div>
-            <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
-              Shop owner
+            <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffron }}>
+              Market owner
             </div>
           </div>
         </div>

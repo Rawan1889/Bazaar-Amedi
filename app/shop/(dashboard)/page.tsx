@@ -3,16 +3,16 @@ import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 
 const c = {
-  green:    '#2D8A5E',
-  greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
-  terraBg:  'rgba(196,101,74,0.08)',
-  saffron:  '#E8A838',
-  saffronBg:'rgba(232,168,56,0.08)',
-  charcoal: '#1E1C19',
-  stone:    '#7A756E',
-  cream2:   '#E8E4DE',
-  white:    '#FFFFFF',
+  green:     '#2D8A5E',
+  greenBg:   'rgba(45,138,94,0.08)',
+  terra:     '#C4654A',
+  terraBg:   'rgba(196,101,74,0.08)',
+  saffron:   '#E8A838',
+  saffronBg: 'rgba(232,168,56,0.10)',
+  charcoal:  '#1E1C19',
+  stone:     '#7A756E',
+  cream2:    '#E8E4DE',
+  white:     '#FFFFFF',
 } as const
 
 export default async function ShopDashboard() {
@@ -84,6 +84,46 @@ export default async function ShopDashboard() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {shop && (
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <a
+            href="/shop/products"
+            className="flex items-center gap-3 rounded-[14px] px-5 py-4 no-underline transition-all duration-150 group"
+            style={{ background: c.white, border: `1px solid ${c.cream2}` }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = c.green)}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = c.cream2)}
+          >
+            <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.greenBg }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>Add product</div>
+              <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>Add to your catalog</div>
+            </div>
+          </a>
+
+          <a
+            href="/shop/flash-sales"
+            className="flex items-center gap-3 rounded-[14px] px-5 py-4 no-underline transition-all duration-150"
+            style={{ background: c.white, border: `1px solid ${c.cream2}` }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = c.saffron)}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = c.cream2)}
+          >
+            <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.saffronBg }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.saffron} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>Flash sale</div>
+              <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>Create a timed deal</div>
+            </div>
+          </a>
         </div>
       )}
 
