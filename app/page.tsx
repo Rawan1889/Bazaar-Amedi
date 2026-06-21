@@ -26,14 +26,34 @@ const c = {
 
 function Nav() {
   const [open, setOpen] = useState(false)
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [userInfo, setUserInfo] = useState<{ role: string; name: string } | null>(null)
 
   useEffect(() => {
     const supabase = createBazaarClient()
-    supabase.auth.getSession().then(({ data }) => {
-      setLoggedIn(!!data.session)
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return
+      const { data: profile } = await supabase
+        .from('bazaar_profiles')
+        .select('role, full_name')
+        .eq('id', data.session.user.id)
+        .single()
+      if (profile) setUserInfo({ role: profile.role, name: profile.full_name })
     })
   }, [])
+
+  const dashboardLink = userInfo
+    ? userInfo.role === 'market_admin' ? '/shop'
+    : userInfo.role === 'super_admin' ? '/admin'
+    : userInfo.role === 'driver' ? '/driver'
+    : '/browse'
+    : null
+
+  const dashboardLabel = userInfo
+    ? userInfo.role === 'market_admin' ? 'My shop'
+    : userInfo.role === 'super_admin' ? 'Admin panel'
+    : userInfo.role === 'driver' ? 'My deliveries'
+    : 'Browse markets'
+    : null
 
   return (
     <nav
@@ -70,15 +90,15 @@ function Nav() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          {loggedIn ? (
+          {userInfo && dashboardLink ? (
             <a
-              href="/browse"
+              href={dashboardLink}
               className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium no-underline px-5 py-2.5 rounded-[8px] transition-all duration-200"
               style={{ color: '#fff', background: c.green }}
               onMouseEnter={e => { e.currentTarget.style.background = c.greenHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
               onMouseLeave={e => { e.currentTarget.style.background = c.green; e.currentTarget.style.transform = 'translateY(0)' }}
             >
-              Go to shop
+              {dashboardLabel}
             </a>
           ) : (<>
           <a
