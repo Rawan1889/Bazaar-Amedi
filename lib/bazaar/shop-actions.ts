@@ -79,31 +79,56 @@ export async function addProduct(formData: FormData) {
   if (!shop) return { error: 'Create your shop first.' }
 
   const nameEn = (formData.get('name_en') as string).trim()
-  const price = parseInt(formData.get('price') as string, 10)
-  const unit = (formData.get('unit') as string) || 'piece'
   const categoryId = (formData.get('category_id') as string) || null
   const description = (formData.get('description') as string)?.trim() || null
   const imageUrl = (formData.get('image_url') as string)?.trim() || null
-  const quantityRaw = formData.get('quantity') as string
-  const quantity = quantityRaw ? parseInt(quantityRaw, 10) : null
 
-  if (!nameEn || isNaN(price)) {
-    return { error: 'Name and price are required.' }
-  }
+  type VariantInput = { amount: string; unit: string; price: string; stockQty: string }
+  let variants: VariantInput[] = []
+  try {
+    variants = JSON.parse((formData.get('variants') as string) || '[]')
+  } catch { /* ignore */ }
 
-  const { error } = await supabase.from('bazaar_products').insert({
-    shop_id: shop.id,
-    name_en: nameEn,
-    price,
-    unit,
-    category_id: categoryId || null,
-    description,
-    image_url: imageUrl,
-    quantity,
+  if (!nameEn) return { error: 'Product name is required.' }
+  if (variants.length === 0) return { error: 'Add at least one pricing option.' }
+
+  const validVariants = variants.filter(v => v.price && !isNaN(parseInt(v.price, 10)))
+  if (validVariants.length === 0) return { error: 'Each option needs a price.' }
+
+  // Use first variant as the product default price/unit for backward compat
+  const firstVariant = validVariants[0]
+  const defaultPrice = parseInt(firstVariant.price, 10)
+  const defaultUnit = firstVariant.unit || 'piece'
+
+  const { data: product, error: productError } = await supabase
+    .from('bazaar_products')
+    .insert({
+      shop_id: shop.id,
+      name_en: nameEn,
+      price: defaultPrice,
+      unit: defaultUnit,
+      category_id: categoryId || null,
+      description,
+      image_url: imageUrl,
+      in_stock: true,
+    })
+    .select('id')
+    .single()
+
+  if (productError) return { error: productError.message }
+
+  // Insert variants
+  const variantRows = validVariants.map((v, i) => ({
+    product_id: product.id,
+    amount: parseFloat(v.amount) || 1,
+    unit: v.unit || 'piece',
+    price: parseInt(v.price, 10),
+    stock_qty: v.stockQty ? parseInt(v.stockQty, 10) : null,
+    sort_order: i,
     in_stock: true,
-  })
+  }))
 
-  if (error) return { error: error.message }
+  await supabase.from('bazaar_product_variants').insert(variantRows)
 
   revalidatePath('/shop/products')
   return { success: true }
