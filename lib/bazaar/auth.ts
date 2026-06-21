@@ -4,6 +4,13 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 
+function dashboardFor(role: string): string {
+  if (role === 'market_admin' || role === 'market') return '/shop'
+  if (role === 'driver') return '/driver'
+  if (role === 'super_admin') return '/admin'
+  return '/browse'
+}
+
 function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -103,7 +110,7 @@ export async function bazaarSignup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect(dashboardFor(bazaarRole))
 }
 
 export async function bazaarLogin(formData: FormData) {
@@ -112,16 +119,20 @@ export async function bazaarLogin(formData: FormData) {
   const identifier = (formData.get('identifier') as string).trim()
   const password = formData.get('password') as string
 
-  const email = identifier
-
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password })
 
   if (error) {
     return { error: 'Invalid email or password.' }
   }
 
+  const { data: profile } = await supabase
+    .from('bazaar_profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .single()
+
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect(dashboardFor(profile?.role ?? 'customer'))
 }
 
 export async function bazaarLogout() {
