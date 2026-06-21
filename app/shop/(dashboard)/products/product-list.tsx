@@ -1,7 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
-import { deleteProduct, toggleProductStock } from '@/lib/bazaar/shop-actions'
+import { useTransition, useRef, useState } from 'react'
+import { deleteProduct, toggleProductStock, updateProductImage } from '@/lib/bazaar/shop-actions'
+import { uploadProductImage } from '@/lib/bazaar/image-upload'
 
 const c = {
   green:    '#2D8A5E',
@@ -20,6 +21,7 @@ interface Product {
   price: number
   unit: string
   in_stock: boolean
+  image_url: string | null
   description: string | null
   bazaar_categories: { name_en: string } | null
 }
@@ -30,6 +32,23 @@ function formatIQD(amount: number) {
 
 function ProductRow({ product }: { product: Product }) {
   const [isPending, startTransition] = useTransition()
+  const [imgUrl, setImgUrl] = useState(product.image_url)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const result = await uploadProductImage(fd)
+    setUploading(false)
+    if (result.url) {
+      setImgUrl(result.url)
+      startTransition(() => { updateProductImage(product.id, result.url!) })
+    }
+  }
 
   return (
     <div
@@ -40,13 +59,31 @@ function ProductRow({ product }: { product: Product }) {
       }}
     >
       <div
-        className="w-10 h-10 rounded-[8px] flex items-center justify-center flex-shrink-0 font-[family-name:var(--font-dm-sans)] text-[14px] font-medium"
-        style={{
-          background: product.in_stock ? c.greenBg : c.terraBg,
-          color: product.in_stock ? c.green : c.terra,
-        }}
+        className="w-10 h-10 rounded-[8px] flex-shrink-0 overflow-hidden cursor-pointer relative group"
+        style={{ background: product.in_stock ? c.greenBg : c.terraBg }}
+        onClick={() => fileRef.current?.click()}
+        title="Click to change image"
       >
-        {product.name_en.charAt(0)}
+        {imgUrl ? (
+          <>
+            <img src={imgUrl} alt={product.name_en} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </>
+        ) : uploading ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="font-[family-name:var(--font-dm-mono)] text-[8px]" style={{ color: c.stone }}>…</span>
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[14px] font-medium"
+            style={{ color: product.in_stock ? c.green : c.terra }}>
+            {product.name_en.charAt(0)}
+          </div>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
       </div>
 
       <div className="flex-1 min-w-0">

@@ -134,6 +134,21 @@ export async function addProduct(formData: FormData) {
   return { success: true }
 }
 
+export async function updateProductImage(productId: string, imageUrl: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+  const { error } = await supabase
+    .from('bazaar_products')
+    .update({ image_url: imageUrl })
+    .eq('id', productId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/products')
+  return { success: true }
+}
+
 export async function updateProduct(formData: FormData) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
