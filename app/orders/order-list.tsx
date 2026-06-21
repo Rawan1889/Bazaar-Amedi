@@ -24,7 +24,8 @@ function formatIQD(amount: number) {
 
 const statusColors: Record<string, { color: string; bg: string; label: string }> = {
   pending:     { color: c.saffron, bg: c.saffronBg, label: 'Pending' },
-  confirmed:   { color: c.green, bg: c.greenBg, label: 'Confirmed' },
+  confirmed:   { color: c.green, bg: c.greenBg, label: 'Preparing' },
+  ready:       { color: c.green, bg: c.greenBg, label: 'Ready — awaiting driver' },
   picking_up:  { color: '#6366F1', bg: 'rgba(99,102,241,0.08)', label: 'Picking up' },
   delivering:  { color: '#6366F1', bg: 'rgba(99,102,241,0.08)', label: 'On the way' },
   delivered:   { color: c.green, bg: c.greenBg, label: 'Delivered' },

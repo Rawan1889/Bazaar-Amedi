@@ -27,18 +27,20 @@ function formatIQD(amount: number) {
 
 const statusSteps = [
   { key: 'pending', label: 'Order placed', icon: '1' },
-  { key: 'confirmed', label: 'Shops confirmed', icon: '2' },
-  { key: 'picking_up', label: 'Driver picking up', icon: '3' },
-  { key: 'delivering', label: 'On the way', icon: '4' },
-  { key: 'delivered', label: 'Delivered', icon: '5' },
+  { key: 'confirmed', label: 'Shop is preparing', icon: '2' },
+  { key: 'ready', label: 'Ready — waiting for driver', icon: '3' },
+  { key: 'picking_up', label: 'Driver picking up', icon: '4' },
+  { key: 'delivering', label: 'On the way', icon: '5' },
+  { key: 'delivered', label: 'Delivered', icon: '6' },
 ]
 
 const statusIndex: Record<string, number> = {
   pending: 0,
   confirmed: 1,
-  picking_up: 2,
-  delivering: 3,
-  delivered: 4,
+  ready: 2,
+  picking_up: 3,
+  delivering: 4,
+  delivered: 5,
   cancelled: -1,
 }
 
