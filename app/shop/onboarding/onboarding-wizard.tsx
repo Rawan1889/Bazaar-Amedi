@@ -78,6 +78,7 @@ export function OnboardingWizard({ shop, categories, products, currentStep }: {
 }) {
   const [step, setStep] = useState(currentStep)
   const [error, setError] = useState<string | null>(null)
+  const [productError, setProductError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [localProducts, setLocalProducts] = useState<Product[]>(products)
   const [productAdded, setProductAdded] = useState(false)
@@ -238,7 +239,7 @@ export function OnboardingWizard({ shop, categories, products, currentStep }: {
               <form
                 className="rounded-[14px] p-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}
                 action={(formData: FormData) => {
-                  setError(null)
+                  setProductError(null)
                   setProductAdded(false)
                   // Build variants JSON from simple price/unit/quantity fields
                   const price = formData.get('price') as string
@@ -247,7 +248,7 @@ export function OnboardingWizard({ shop, categories, products, currentStep }: {
                   formData.set('variants', JSON.stringify([{ amount: '1', unit, price, stockQty }]))
                   startTransition(async () => {
                     const result = await addProduct(formData)
-                    if (result?.error) { setError(result.error); return }
+                    if (result?.error) { setProductError(result.error); return }
                     setLocalProducts(prev => [{
                       id: crypto.randomUUID(),
                       name_en: formData.get('name_en') as string,
@@ -307,6 +308,12 @@ export function OnboardingWizard({ shop, categories, products, currentStep }: {
                           <option key={cat.id} value={cat.id}>{cat.name_en}</option>
                         ))}
                       </select>
+                    </div>
+                  )}
+
+                  {productError && (
+                    <div className="rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)]" style={{ background: c.errorBg, color: c.error }}>
+                      {productError}
                     </div>
                   )}
 
