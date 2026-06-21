@@ -42,7 +42,7 @@ export default async function BrowsePage({
   // Active flash sales
   const { data: flashSales } = await supabase
     .from('bazaar_flash_sales')
-    .select('*, bazaar_products(id, name_en, name_ku, name_ar, shop_id, unit, image_url, bazaar_shops(name, slug))')
+    .select('*, bazaar_products(id, name_en, name_ku, name_ar, shop_id, unit, price, image_url, bazaar_shops(name, slug)), bazaar_product_variants(amount, unit)')
     .eq('is_active', true)
     .gt('ends_at', new Date().toISOString())
     .order('ends_at', { ascending: true })

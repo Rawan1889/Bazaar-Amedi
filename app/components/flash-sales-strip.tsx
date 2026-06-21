@@ -52,6 +52,7 @@ type Sale = {
     price?: number
     bazaar_shops: { name: string; slug: string }
   } | null
+  bazaar_product_variants: { amount: number; unit: string } | null
 }
 
 function SaleCard({ sale }: { sale: Sale }) {
@@ -93,9 +94,11 @@ function SaleCard({ sale }: { sale: Sale }) {
           <div className="font-[family-name:var(--font-dm-mono)] text-[10px] truncate mb-1" style={{ color: c.stone }}>
             {p.bazaar_shops.name}
           </div>
-          {sale.quantity && (
-            <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2" style={{ color: c.terra }}>
-              {sale.quantity} {p.unit}
+          {(sale.bazaar_product_variants?.amount || sale.quantity) && (
+            <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2 font-medium" style={{ color: c.terra }}>
+              {sale.bazaar_product_variants
+                ? `${sale.bazaar_product_variants.amount} ${sale.bazaar_product_variants.unit}`
+                : `${sale.quantity} ${p.unit}`}
             </div>
           )}
           <div className="flex items-center justify-between">

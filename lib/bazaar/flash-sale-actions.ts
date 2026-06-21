@@ -21,6 +21,7 @@ export async function createFlashSale(formData: FormData) {
   const productId = formData.get('product_id') as string
   const salePrice = parseInt(formData.get('sale_price') as string, 10)
   const endsAt = formData.get('ends_at') as string
+  const variantId = (formData.get('variant_id') as string) || null
   const quantityRaw = formData.get('quantity') as string
   const quantity = quantityRaw ? parseInt(quantityRaw, 10) : null
 
@@ -39,6 +40,7 @@ export async function createFlashSale(formData: FormData) {
 
   const { error } = await supabase.from('bazaar_flash_sales').insert({
     product_id: productId,
+    variant_id: variantId,
     sale_price: salePrice,
     quantity,
     starts_at: new Date().toISOString(),
@@ -110,7 +112,7 @@ export async function getShopProducts() {
 
   const { data } = await supabase
     .from('bazaar_products')
-    .select('id, name_en, price')
+    .select('id, name_en, price, bazaar_product_variants(id, amount, unit, price)')
     .eq('shop_id', shop.id)
     .eq('in_stock', true)
     .order('name_en')

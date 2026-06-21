@@ -33,10 +33,18 @@ interface FlashSale {
   bazaar_products: { name_en: string; price: number; unit: string }
 }
 
+interface Variant {
+  id: string
+  amount: number
+  unit: string
+  price: number
+}
+
 interface Product {
   id: string
   name_en: string
   price: number
+  bazaar_product_variants: Variant[]
 }
 
 function SaleCard({ sale }: { sale: FlashSale }) {
@@ -106,6 +114,7 @@ function CreateSaleForm({ products, onDone }: { products: Product[]; onDone: () 
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
 
   return (
     <div className="rounded-[14px] p-5 mb-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -156,14 +165,39 @@ function CreateSaleForm({ products, onDone }: { products: Product[]; onDone: () 
               onChange={e => {
                 const p = products.find(pr => pr.id === e.target.value)
                 setSelectedProduct(p || null)
+                setSelectedVariant(null)
               }}
             >
               <option value="">Select product...</option>
               {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name_en} — {formatIQD(p.price)}</option>
+                <option key={p.id} value={p.id}>{p.name_en}</option>
               ))}
             </select>
           </div>
+
+          {selectedProduct && selectedProduct.bazaar_product_variants.length > 0 && (
+            <div className="flex flex-col gap-1">
+              <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                Which option is on sale?
+              </label>
+              <select
+                name="variant_id"
+                className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none appearance-none cursor-pointer"
+                style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
+                onChange={e => {
+                  const v = selectedProduct.bazaar_product_variants.find(vr => vr.id === e.target.value)
+                  setSelectedVariant(v || null)
+                }}
+              >
+                <option value="">All options</option>
+                {selectedProduct.bazaar_product_variants.map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.amount} {v.unit} — {formatIQD(v.price)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
@@ -174,22 +208,7 @@ function CreateSaleForm({ products, onDone }: { products: Product[]; onDone: () 
               type="number"
               required
               min="0"
-              max={selectedProduct?.price || undefined}
-              placeholder={selectedProduct ? `Less than ${selectedProduct.price}` : 'Sale price'}
-              className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
-              style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
-              Quantity available (optional)
-            </label>
-            <input
-              name="quantity"
-              type="number"
-              min="1"
-              placeholder="e.g. 5"
+              placeholder={selectedVariant ? `Less than ${formatIQD(selectedVariant.price)}` : selectedProduct ? `Less than ${formatIQD(selectedProduct.price)}` : 'Sale price'}
               className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
               style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
             />
