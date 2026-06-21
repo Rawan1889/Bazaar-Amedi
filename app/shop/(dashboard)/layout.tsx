@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
-import { ShopSidebar } from './sidebar'
+import { ShopSidebar } from '../sidebar'
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const user = await getBazaarUser()
