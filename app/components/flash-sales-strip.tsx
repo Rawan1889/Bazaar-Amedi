@@ -88,17 +88,24 @@ function SaleCard({ sale }: { sale: Sale }) {
           </div>
         </div>
         <div className="p-3">
-          <div className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium truncate mb-0.5" style={{ color: c.charcoal }}>
-            {p.name_en}
+          {/* Name + variant option on same line */}
+          <div className="flex items-baseline gap-1.5 mb-0.5">
+            <span className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium truncate" style={{ color: c.charcoal }}>
+              {p.name_en}
+            </span>
+            {sale.bazaar_product_variants && (
+              <span className="font-[family-name:var(--font-dm-mono)] text-[9px] px-1.5 py-0.5 rounded-[4px] flex-shrink-0" style={{ background: c.terraBg, color: c.terra }}>
+                {sale.bazaar_product_variants.amount} {sale.bazaar_product_variants.unit}
+              </span>
+            )}
           </div>
           <div className="font-[family-name:var(--font-dm-mono)] text-[10px] truncate mb-1" style={{ color: c.stone }}>
             {p.bazaar_shops.name}
           </div>
-          {(sale.bazaar_product_variants?.amount || sale.quantity) && (
-            <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2 font-medium" style={{ color: c.terra }}>
-              {sale.bazaar_product_variants
-                ? `${sale.bazaar_product_variants.amount} ${sale.bazaar_product_variants.unit}`
-                : `${sale.quantity} ${p.unit}`}
+          {/* Items available in flash sale */}
+          {sale.quantity && (
+            <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2" style={{ color: c.stone }}>
+              {sale.quantity} available
             </div>
           )}
           <div className="flex items-center justify-between">
