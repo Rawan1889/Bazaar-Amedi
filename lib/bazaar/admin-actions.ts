@@ -206,3 +206,17 @@ export async function changeUserRole(userId: string, role: string) {
   await supabase.from('bazaar_profiles').update({ role }).eq('id', userId)
   revalidatePath('/admin/users')
 }
+
+export async function adminCancelOrder(orderId: string) {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  await supabase.from('bazaar_orders').update({ status: 'cancelled' }).eq('id', orderId)
+  revalidatePath('/admin/orders')
+}
+
+export async function adminSetOrderStatus(orderId: string, status: string) {
+  await requireAdmin()
+  const supabase = await createBazaarServer()
+  await supabase.from('bazaar_orders').update({ status }).eq('id', orderId)
+  revalidatePath('/admin/orders')
+}
