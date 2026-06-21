@@ -96,12 +96,14 @@ export async function bazaarSignup(formData: FormData) {
     }
   }
 
-  if (authData.session) {
-    revalidatePath('/', 'layout')
-    redirect('/')
+  // If Supabase didn't attach a session immediately (can happen even with confirmation off),
+  // sign in explicitly so the user lands logged-in rather than seeing the waitlist screen.
+  if (!authData.session) {
+    await supabase.auth.signInWithPassword({ email: authEmail, password })
   }
 
-  return { success: true }
+  revalidatePath('/', 'layout')
+  redirect('/')
 }
 
 export async function bazaarLogin(formData: FormData) {
