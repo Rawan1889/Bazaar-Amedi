@@ -84,6 +84,8 @@ export async function addProduct(formData: FormData) {
   const categoryId = (formData.get('category_id') as string) || null
   const description = (formData.get('description') as string)?.trim() || null
   const imageUrl = (formData.get('image_url') as string)?.trim() || null
+  const quantityRaw = formData.get('quantity') as string
+  const quantity = quantityRaw ? parseInt(quantityRaw, 10) : null
 
   if (!nameEn || isNaN(price)) {
     return { error: 'Name and price are required.' }
@@ -97,6 +99,7 @@ export async function addProduct(formData: FormData) {
     category_id: categoryId || null,
     description,
     image_url: imageUrl,
+    quantity,
     in_stock: true,
   })
 

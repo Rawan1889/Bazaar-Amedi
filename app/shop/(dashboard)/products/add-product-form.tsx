@@ -177,13 +177,32 @@ export function AddProductForm({ categories }: { categories: { id: string; name_
             style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
           >
             <option value="piece">Piece</option>
-            <option value="kg">Kilogram</option>
-            <option value="gram">Gram</option>
-            <option value="liter">Liter</option>
+            <option value="kg">Kilogram (kg)</option>
+            <option value="gram">Gram (g)</option>
+            <option value="liter">Liter (L)</option>
+            <option value="ml">Milliliter (ml)</option>
             <option value="pack">Pack</option>
             <option value="box">Box</option>
+            <option value="bag">Bag</option>
+            <option value="bundle">Bundle</option>
             <option value="dozen">Dozen</option>
+            <option value="can">Can</option>
+            <option value="bottle">Bottle</option>
           </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+            Quantity in stock
+          </label>
+          <input
+            name="quantity"
+            type="number"
+            min="0"
+            placeholder="e.g. 50"
+            className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
+            style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
+          />
         </div>
 
         <div className="flex flex-col gap-1">

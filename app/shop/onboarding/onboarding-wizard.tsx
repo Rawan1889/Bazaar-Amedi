@@ -271,15 +271,21 @@ export function OnboardingWizard({ shop, categories, products, currentStep }: {
                         style={{ border: `1px solid ${c.cream2}`, color: c.charcoal, background: c.white }}
                       >
                         <option value="piece">Piece</option>
-                        <option value="kg">Kg</option>
-                        <option value="liter">Liter</option>
-                        <option value="dozen">Dozen</option>
+                        <option value="kg">Kilogram (kg)</option>
+                        <option value="gram">Gram (g)</option>
+                        <option value="liter">Liter (L)</option>
+                        <option value="ml">Milliliter (ml)</option>
+                        <option value="pack">Pack</option>
                         <option value="box">Box</option>
                         <option value="bag">Bag</option>
                         <option value="bundle">Bundle</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="can">Can</option>
+                        <option value="bottle">Bottle</option>
                       </select>
                     </div>
                   </div>
+                  <FormField name="quantity" label="Quantity in stock" placeholder="e.g. 50" type="number" />
                   <FormField name="description" label="Description (optional)" placeholder="Brief description..." />
 
                   {categories.length > 0 && (
