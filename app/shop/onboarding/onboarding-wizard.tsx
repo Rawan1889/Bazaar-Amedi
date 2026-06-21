@@ -240,21 +240,27 @@ export function OnboardingWizard({ shop, categories, products, currentStep }: {
                 action={(formData: FormData) => {
                   setError(null)
                   setProductAdded(false)
+                  // Build variants JSON from simple price/unit/quantity fields
+                  const price = formData.get('price') as string
+                  const unit = (formData.get('unit') as string) || 'piece'
+                  const stockQty = (formData.get('quantity') as string) || ''
+                  formData.set('variants', JSON.stringify([{ amount: '1', unit, price, stockQty }]))
                   startTransition(async () => {
                     const result = await addProduct(formData)
                     if (result?.error) { setError(result.error); return }
                     setLocalProducts(prev => [{
                       id: crypto.randomUUID(),
                       name_en: formData.get('name_en') as string,
-                      price: parseInt(formData.get('price') as string),
-                      unit: formData.get('unit') as string || 'piece',
+                      price: parseInt(price),
+                      unit,
                       in_stock: true,
                     }, ...prev])
                     setProductAdded(true)
-                    const form = document.querySelector('form') as HTMLFormElement
+                    const form = document.querySelector('form[data-product-form]') as HTMLFormElement
                     form?.reset()
                   })
                 }}
+                data-product-form
               >
                 <h3 className="font-[family-name:var(--font-dm-sans)] text-[15px] font-medium mb-4" style={{ color: c.charcoal }}>
                   Add a product
