@@ -6,6 +6,8 @@ import { CartBar } from '@/app/components/cart-bar'
 import { SearchBar } from '@/app/components/search-bar'
 import { LocalizedName } from '@/app/components/localized-name'
 import { CustomerNav } from '@/app/components/customer-nav'
+import { FlashSalesStrip } from '@/app/components/flash-sales-strip'
+import { CategoryFilter } from '@/app/components/category-filter'
 
 const c = {
   green:    '#2D8A5E',
@@ -36,6 +38,15 @@ export default async function BrowsePage({
     .from('bazaar_categories')
     .select('*')
     .order('sort_order')
+
+  // Active flash sales
+  const { data: flashSales } = await supabase
+    .from('bazaar_flash_sales')
+    .select('*, bazaar_products(id, name_en, name_ku, name_ar, shop_id, unit, image_url, bazaar_shops(name, slug))')
+    .eq('is_active', true)
+    .gt('ends_at', new Date().toISOString())
+    .order('ends_at', { ascending: true })
+    .limit(8)
 
   // Resolve the category slug to an id so we can filter products by their own
   // category_id. Filtering on a non-inner embedded table (bazaar_categories.slug)
@@ -72,44 +83,24 @@ export default async function BrowsePage({
       <CustomerNav />
 
       <div className="max-w-[1200px] mx-auto px-6 py-8">
-        <h1 className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium mb-2" style={{ color: c.charcoal }}>
+        <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: c.charcoal }}>
           Browse Amedi&apos;s Markets
         </h1>
-        <p className="font-[family-name:var(--font-dm-sans)] text-[15px] mb-6" style={{ color: c.stone }}>
+        <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: c.stone }}>
           Compare prices across shops and find the best deals.
         </p>
 
-        <div className="mb-8">
-          <SearchBar />
-        </div>
+        {/* Flash Sales Strip */}
+        {flashSales && flashSales.length > 0 && (
+          <FlashSalesStrip sales={flashSales as Parameters<typeof FlashSalesStrip>[0]['sales']} />
+        )}
 
-        {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-8 -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
-          <Link
-            href="/browse"
-            className="flex-shrink-0 px-4 py-2 rounded-[20px] font-[family-name:var(--font-dm-sans)] text-[13px] no-underline transition-all duration-150"
-            style={{
-              background: !activeCategory ? c.green : c.cream,
-              color: !activeCategory ? '#fff' : c.stone,
-              fontWeight: !activeCategory ? 500 : 400,
-            }}
-          >
-            All
-          </Link>
-          {categories?.map(cat => (
-            <Link
-              key={cat.id}
-              href={`/browse?category=${cat.slug}`}
-              className="flex-shrink-0 px-4 py-2 rounded-[20px] font-[family-name:var(--font-dm-sans)] text-[13px] no-underline transition-all duration-150"
-              style={{
-                background: activeCategory === cat.slug ? c.green : c.cream,
-                color: activeCategory === cat.slug ? '#fff' : c.stone,
-                fontWeight: activeCategory === cat.slug ? 500 : 400,
-              }}
-            >
-              <LocalizedName en={cat.name_en} ku={cat.name_ku} ar={cat.name_ar} />
-            </Link>
-          ))}
+        {/* Search + Category filter */}
+        <div className="flex gap-3 mb-8 items-center">
+          <div className="flex-1">
+            <SearchBar />
+          </div>
+          <CategoryFilter categories={categories ?? []} activeCategory={activeCategory} />
         </div>
 
         {/* Products grid */}
