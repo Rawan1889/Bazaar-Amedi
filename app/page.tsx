@@ -1,7 +1,8 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 
 const c = {
   green:      '#2D8A5E',
@@ -25,6 +26,15 @@ const c = {
 
 function Nav() {
   const [open, setOpen] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const supabase = createBazaarClient()
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session)
+    })
+  }, [])
+
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-30 transition-all duration-300"
@@ -60,8 +70,19 @@ function Nav() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          {loggedIn ? (
+            <a
+              href="/browse"
+              className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium no-underline px-5 py-2.5 rounded-[8px] transition-all duration-200"
+              style={{ color: '#fff', background: c.green }}
+              onMouseEnter={e => { e.currentTarget.style.background = c.greenHover; e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = c.green; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              Go to shop
+            </a>
+          ) : (<>
           <a
-            href="/signup?role=customer"
+            href="/login"
             className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium no-underline px-5 py-2.5 rounded-[8px] transition-all duration-200"
             style={{ color: c.green, background: c.greenBg }}
             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(45,138,94,0.14)')}
@@ -78,6 +99,7 @@ function Nav() {
           >
             Get started
           </a>
+          </>)}
         </div>
 
         <button
