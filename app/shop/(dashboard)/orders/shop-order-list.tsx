@@ -1,13 +1,15 @@
 'use client'
 
 import { useTransition } from 'react'
-import { confirmShopItems } from '@/lib/bazaar/order-actions'
+import { acceptShopOrder, markShopOrderReady } from '@/lib/bazaar/order-actions'
 
 const c = {
   green:    '#2D8A5E',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
   saffronBg:'rgba(232,168,56,0.08)',
+  terra:    '#C4654A',
+  terraBg:  'rgba(196,101,74,0.08)',
   charcoal: '#1E1C19',
   stone:    '#7A756E',
   cream:    '#F2EFEA',
@@ -19,6 +21,16 @@ function formatIQD(amount: number) {
   return new Intl.NumberFormat('en-IQ').format(amount) + ' IQD'
 }
 
+const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  pending:    { label: 'New order',       color: c.saffron, bg: c.saffronBg },
+  confirmed:  { label: 'Preparing',       color: c.green,   bg: c.greenBg   },
+  ready:      { label: 'Ready',           color: c.green,   bg: c.greenBg   },
+  picking_up: { label: 'Driver coming',   color: c.terra,   bg: c.terraBg   },
+  delivering: { label: 'Out for delivery',color: c.terra,   bg: c.terraBg   },
+  delivered:  { label: 'Delivered',       color: c.stone,   bg: c.cream     },
+  cancelled:  { label: 'Cancelled',       color: c.terra,   bg: c.terraBg   },
+}
+
 interface OrderGroup {
   order: Record<string, unknown>
   items: Record<string, unknown>[]
@@ -27,13 +39,16 @@ interface OrderGroup {
 function OrderCard({ group }: { group: OrderGroup }) {
   const [isPending, startTransition] = useTransition()
   const order = group.order as {
-    id: string; order_number: number; status: string; delivery_address: string; created_at: string
+    id: string
+    order_number: number
+    status: string
+    delivery_address: string
+    created_at: string
     bazaar_profiles: { full_name: string; phone: string }
   }
-  const items = group.items as { product_name: string; quantity: number; unit_price: number; pickup_status: string }[]
-
-  const allPickedUp = items.every(i => i.pickup_status === 'picked_up')
+  const items = group.items as { product_name: string; quantity: number; unit_price: number }[]
   const total = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+  const status = STATUS_META[order.status] ?? { label: order.status, color: c.stone, bg: c.cream }
 
   return (
     <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -44,12 +59,9 @@ function OrderCard({ group }: { group: OrderGroup }) {
           </span>
           <span
             className="px-2 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
-            style={{
-              background: allPickedUp ? c.greenBg : c.saffronBg,
-              color: allPickedUp ? c.green : c.saffron,
-            }}
+            style={{ background: status.bg, color: status.color }}
           >
-            {allPickedUp ? 'Ready' : 'Preparing'}
+            {status.label}
           </span>
         </div>
         <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.green }}>
@@ -66,24 +78,49 @@ function OrderCard({ group }: { group: OrderGroup }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1 mb-3 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
+      <div className="flex flex-col gap-1 mb-4 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
         {items.map((item, idx) => (
           <div key={idx} className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.charcoal }}>
-            <span>{item.quantity}x {item.product_name}</span>
+            <span>{item.quantity}× {item.product_name}</span>
             <span style={{ color: c.stone }}>{formatIQD(item.unit_price * item.quantity)}</span>
           </div>
         ))}
       </div>
 
-      {!allPickedUp && (
+      {order.status === 'pending' && (
         <button
-          onClick={() => startTransition(() => { confirmShopItems(order.id) })}
+          onClick={() => startTransition(() => { acceptShopOrder(order.id) })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
           style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
         >
-          {isPending ? 'Confirming...' : 'Mark items ready for pickup'}
+          {isPending ? 'Accepting...' : '✓ Accept order'}
         </button>
+      )}
+
+      {order.status === 'confirmed' && (
+        <button
+          onClick={() => startTransition(() => { markShopOrderReady(order.id) })}
+          disabled={isPending}
+          className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
+          style={{ background: c.saffron, color: '#fff', opacity: isPending ? 0.7 : 1 }}
+        >
+          {isPending ? 'Updating...' : '📦 Mark ready for pickup'}
+        </button>
+      )}
+
+      {order.status === 'ready' && (
+        <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center"
+          style={{ background: c.greenBg, color: c.green }}>
+          Waiting for driver
+        </div>
+      )}
+
+      {(order.status === 'picking_up' || order.status === 'delivering') && (
+        <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center"
+          style={{ background: c.terraBg, color: c.terra }}>
+          {order.status === 'picking_up' ? 'Driver is picking up' : 'Out for delivery'}
+        </div>
       )}
     </div>
   )
@@ -100,11 +137,31 @@ export function ShopOrderList({ orders }: { orders: OrderGroup[] }) {
     )
   }
 
+  const active = orders.filter(g => !['delivered', 'cancelled'].includes(g.order.status as string))
+  const past   = orders.filter(g =>  ['delivered', 'cancelled'].includes(g.order.status as string))
+
   return (
-    <div className="flex flex-col gap-4">
-      {orders.map(group => (
-        <OrderCard key={group.order.id as string} group={group} />
-      ))}
+    <div className="flex flex-col gap-8">
+      {active.length > 0 && (
+        <div>
+          <h2 className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium mb-4" style={{ color: c.charcoal }}>
+            Active orders
+          </h2>
+          <div className="flex flex-col gap-4">
+            {active.map(g => <OrderCard key={g.order.id as string} group={g} />)}
+          </div>
+        </div>
+      )}
+      {past.length > 0 && (
+        <div>
+          <h2 className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium mb-4" style={{ color: c.stone }}>
+            Past orders
+          </h2>
+          <div className="flex flex-col gap-4">
+            {past.map(g => <OrderCard key={g.order.id as string} group={g} />)}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

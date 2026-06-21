@@ -166,13 +166,31 @@ export async function getShopOrders() {
   return data || []
 }
 
-export async function confirmShopItems(orderId: string) {
+// Market owner: accept an incoming order
+export async function acceptShopOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
 
-  const supabase = await createBazaarServer()
+  const supabase = createBazaarAdmin()
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({ status: 'confirmed' })
+    .eq('id', orderId)
 
-  const { data: shop } = await supabase
+  if (error) return { error: error.message }
+  revalidatePath('/shop/orders')
+  return { success: true }
+}
+
+// Market owner: mark order ready for driver pickup
+export async function markShopOrderReady(orderId: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = createBazaarAdmin()
+  const userSupabase = await createBazaarServer()
+
+  const { data: shop } = await userSupabase
     .from('bazaar_shops')
     .select('id')
     .eq('owner_id', user.id)
@@ -180,26 +198,39 @@ export async function confirmShopItems(orderId: string) {
 
   if (!shop) return { error: 'No shop found' }
 
+  // Mark this shop's items as ready
   await supabase
     .from('bazaar_order_items')
-    .update({ pickup_status: 'picked_up' })
+    .update({ pickup_status: 'ready' })
     .eq('order_id', orderId)
     .eq('shop_id', shop.id)
 
-  revalidatePath('/shop')
+  // Mark order as ready for driver
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({ status: 'ready' })
+    .eq('id', orderId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/orders')
   return { success: true }
+}
+
+// Legacy alias kept for any remaining callers
+export async function confirmShopItems(orderId: string) {
+  return markShopOrderReady(orderId)
 }
 
 export async function getAvailableOrders() {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return []
 
-  const supabase = await createBazaarServer()
+  const supabase = createBazaarAdmin()
 
   const { data } = await supabase
     .from('bazaar_orders')
     .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
-    .or('status.eq.confirmed,and(status.eq.pending,driver_id.is.null)')
+    .eq('status', 'ready')
     .is('driver_id', null)
     .order('created_at', { ascending: false })
     .limit(20)
@@ -211,13 +242,13 @@ export async function getMyDeliveries() {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return []
 
-  const supabase = await createBazaarServer()
+  const supabase = createBazaarAdmin()
 
   const { data } = await supabase
     .from('bazaar_orders')
     .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
     .eq('driver_id', user.id)
-    .in('status', ['confirmed', 'picking_up', 'delivering'])
+    .in('status', ['picking_up', 'delivering'])
     .order('created_at', { ascending: false })
 
   return data || []
@@ -227,11 +258,11 @@ export async function acceptOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Only drivers can accept orders.' }
 
-  const supabase = await createBazaarServer()
+  const supabase = createBazaarAdmin()
 
   const { error } = await supabase
     .from('bazaar_orders')
-    .update({ driver_id: user.id, status: 'confirmed' })
+    .update({ driver_id: user.id, status: 'picking_up' })
     .eq('id', orderId)
     .is('driver_id', null)
 
@@ -245,7 +276,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
 
-  const supabase = await createBazaarServer()
+  const supabase = createBazaarAdmin()
 
   const update: Record<string, unknown> = { status }
   if (status === 'delivered') {

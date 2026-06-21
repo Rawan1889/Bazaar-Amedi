@@ -44,9 +44,8 @@ function ActiveOrderCard({ order }: { order: Order }) {
     : order.status === 'picking_up' ? 'delivering'
     : order.status === 'delivering' ? 'delivered' : null
 
-  const nextLabel = order.status === 'confirmed' ? 'Start pickup'
-    : order.status === 'picking_up' ? 'All picked up — Start delivery'
-    : order.status === 'delivering' ? 'Mark delivered' : null
+  const nextLabel = order.status === 'picking_up' ? 'All picked up — Start delivery'
+    : order.status === 'delivering' ? 'Mark as delivered' : null
 
   return (
     <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
