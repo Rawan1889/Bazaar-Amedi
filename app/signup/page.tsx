@@ -247,8 +247,6 @@ function SignupFormInner() {
             const result = await bazaarSignup(formData)
             if (result?.error) {
               setError(result.error)
-            } else if (result?.success) {
-              setSubmitted(true)
             }
           })
         }}
