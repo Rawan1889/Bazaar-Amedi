@@ -104,6 +104,27 @@ export async function placeOrder(data: {
     }
   }
 
+  // Decrement flash sale quantities for items purchased at a sale price.
+  for (const item of data.items) {
+    if (item.salePrice === null) continue
+    const { data: sale } = await admin
+      .from('bazaar_flash_sales')
+      .select('id, quantity')
+      .eq('product_id', item.productId)
+      .eq('sale_price', item.salePrice)
+      .eq('is_active', true)
+      .not('quantity', 'is', null)
+      .limit(1)
+      .single()
+    if (sale && sale.quantity !== null) {
+      const newQty = Math.max(0, sale.quantity - item.quantity)
+      await admin
+        .from('bazaar_flash_sales')
+        .update({ quantity: newQty, is_active: newQty > 0 })
+        .eq('id', sale.id)
+    }
+  }
+
   // Record coupon usage with the service-role client (customers can't UPDATE coupons under RLS).
   if (appliedCouponId) {
     const { data: cpn } = await admin
