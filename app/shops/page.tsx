@@ -58,7 +58,7 @@ export default async function ShopsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sorted.map(shop => {
-              const category = shop.bazaar_categories as { name_en: string } | null
+              const category = (Array.isArray(shop.bazaar_categories) ? shop.bazaar_categories[0] : shop.bazaar_categories) as { name_en: string } | null
               return (
                 <Link
                   key={shop.id}
