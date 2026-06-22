@@ -65,6 +65,15 @@ export function CustomerNav() {
           </span>
         </Link>
 
+        <div className="hidden md:flex items-center gap-6">
+          <Link href="/browse" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
+            Browse
+          </Link>
+          <Link href="/shops" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
+            Shops
+          </Link>
+        </div>
+
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
 
