@@ -82,9 +82,30 @@ export async function placeOrder(data: {
 
   if (itemsError) return { error: itemsError.message }
 
+  // Decrement stock_qty on product variants for each ordered item.
+  // Match variant by product_id + price so we don't need variant_id on cart items.
+  const admin = createBazaarAdmin()
+  for (const item of data.items) {
+    const effectivePrice = item.salePrice ?? item.price
+    const { data: variant } = await admin
+      .from('bazaar_product_variants')
+      .select('id, stock_qty')
+      .eq('product_id', item.productId)
+      .eq('price', effectivePrice)
+      .not('stock_qty', 'is', null)
+      .limit(1)
+      .single()
+    if (variant && variant.stock_qty !== null) {
+      const newQty = Math.max(0, variant.stock_qty - item.quantity)
+      await admin
+        .from('bazaar_product_variants')
+        .update({ stock_qty: newQty, in_stock: newQty > 0 })
+        .eq('id', variant.id)
+    }
+  }
+
   // Record coupon usage with the service-role client (customers can't UPDATE coupons under RLS).
   if (appliedCouponId) {
-    const admin = createBazaarAdmin()
     const { data: cpn } = await admin
       .from('bazaar_coupons')
       .select('uses_count')

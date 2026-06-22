@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRealtimeOrders } from '@/lib/bazaar/use-realtime-orders'
 import { useRouter } from 'next/navigation'
 
@@ -22,8 +23,15 @@ const statusMessages: Record<string, string> = {
 }
 
 export function OrderNotifications({ userId, role }: { userId: string; role: string }) {
-  const { notifications, dismiss } = useRealtimeOrders(userId, role)
+  const { notifications, dismiss, latestUpdate } = useRealtimeOrders(userId, role)
   const router = useRouter()
+
+  // Auto-refresh the current page whenever an order status changes so
+  // Server Components (order list, order detail, driver dashboard) reflect
+  // the new status without a manual reload.
+  useEffect(() => {
+    if (latestUpdate) router.refresh()
+  }, [latestUpdate, router])
 
   if (notifications.length === 0) return null
 

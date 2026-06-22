@@ -10,6 +10,30 @@ export default async function DriverDashboard() {
   if (!user) redirect('/login')
   if (user.role !== 'driver' && user.role !== 'super_admin') redirect('/')
 
+  // Driver signed up but not yet approved by admin
+  if (user.role === 'driver' && !user.is_approved) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6" style={{ background: '#FAFAF7' }}>
+        <div className="max-w-[400px] w-full text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: 'rgba(232,168,56,0.1)' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8A838" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+            </svg>
+          </div>
+          <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-3" style={{ color: '#1E1C19' }}>
+            Pending approval
+          </h1>
+          <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#7A756E' }}>
+            Your driver account is under review. We'll notify you once an admin approves your account — usually within 24 hours.
+          </p>
+          <p className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: '#9A958E' }}>
+            Signed in as {user.full_name}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const available = await getAvailableOrders()
   const active = await getMyDeliveries()
 
