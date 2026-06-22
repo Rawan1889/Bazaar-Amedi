@@ -64,6 +64,26 @@ export async function updateShop(formData: FormData) {
   return { success: true }
 }
 
+export async function updateShopImages(logoUrl: string | null, coverUrl: string | null) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+
+  const update: Record<string, string | null> = {}
+  if (logoUrl !== undefined) update.logo_url = logoUrl
+  if (coverUrl !== undefined) update.cover_url = coverUrl
+
+  const { error } = await supabase
+    .from('bazaar_shops')
+    .update(update)
+    .eq('owner_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/settings')
+  return { success: true }
+}
+
 export async function addProduct(formData: FormData) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }

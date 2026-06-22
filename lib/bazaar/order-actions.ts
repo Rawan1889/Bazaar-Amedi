@@ -315,3 +315,29 @@ export async function updateOrderStatus(orderId: string, status: string) {
   revalidatePath('/driver')
   return { success: true }
 }
+
+export async function cancelOrder(orderId: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = createBazaarAdmin()
+
+  const { data: order } = await supabase
+    .from('bazaar_orders')
+    .select('status, customer_id')
+    .eq('id', orderId)
+    .single()
+
+  if (!order) return { error: 'Order not found' }
+  if (order.customer_id !== user.id) return { error: 'Unauthorized' }
+  if (order.status !== 'pending') return { error: 'Order can only be cancelled before the shop accepts it.' }
+
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/orders')
+  return { success: true }
+}

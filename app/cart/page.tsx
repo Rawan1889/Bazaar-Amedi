@@ -32,6 +32,7 @@ export default function CartPage() {
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [savedShopCount, setSavedShopCount] = useState(0)
   const [isPending, startTransition] = useTransition()
   const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string } | null>(null)
 
@@ -62,6 +63,7 @@ export default function CartPage() {
       if (result.error) {
         setError(result.error)
       } else {
+        setSavedShopCount(shopCount)
         clearCart()
         setSuccess(result.orderId!)
       }
@@ -90,7 +92,7 @@ export default function CartPage() {
             Order placed!
           </h1>
           <p className="font-[family-name:var(--font-dm-sans)] text-[15px] mb-6" style={{ color: c.stone }}>
-            A driver will pick up from {shopCount} shop{shopCount !== 1 ? 's' : ''} and deliver to you. Cash on delivery.
+            A driver will pick up from {savedShopCount} shop{savedShopCount !== 1 ? 's' : ''} and deliver to you. Cash on delivery.
           </p>
           <div className="flex gap-3 justify-center">
             <Link
