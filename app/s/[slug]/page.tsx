@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AddToCartButton } from '@/app/components/add-to-cart-button'
 import { CartBar } from '@/app/components/cart-bar'
 import { ShopFavoriteButton } from './shop-favorite-button'
+import { FavoriteButton } from '@/app/components/favorite-button'
 import { getShopReviews, getShopRating } from '@/lib/bazaar/review-actions'
 import { ReviewSection } from '@/app/components/review-section'
 import { isFollowing, getFollowerCount } from '@/lib/bazaar/follower-actions'
@@ -234,6 +235,19 @@ export default async function ShopPublicPage({
                         SALE
                       </div>
                     )}
+                    <div className="absolute top-2 right-2">
+                      <FavoriteButton
+                        item={{
+                          id: p.id,
+                          type: 'product',
+                          name: p.name_en,
+                          imageUrl: p.image_url,
+                          shopName: shop.name,
+                          shopSlug: shop.slug,
+                          price: activeSale?.sale_price ?? p.price,
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="p-3">
                     <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium mb-0.5" style={{ color: c.charcoal }}>

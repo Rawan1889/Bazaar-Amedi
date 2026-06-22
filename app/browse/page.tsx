@@ -8,6 +8,7 @@ import { LocalizedName } from '@/app/components/localized-name'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { FlashSalesStrip } from '@/app/components/flash-sales-strip'
 import { CategoryFilter } from '@/app/components/category-filter'
+import { FavoriteButton } from '@/app/components/favorite-button'
 
 const c = {
   green:    '#2D8A5E',
@@ -154,6 +155,19 @@ export default async function BrowsePage({
                         SALE
                       </div>
                     )}
+                    <div className="absolute top-2 right-2" onClick={e => e.preventDefault()}>
+                      <FavoriteButton
+                        item={{
+                          id: p.id,
+                          type: 'product',
+                          name: p.name_en,
+                          imageUrl: p.image_url,
+                          shopName: p.bazaar_shops.name,
+                          shopSlug: p.bazaar_shops.slug,
+                          price: activeSale?.sale_price ?? p.price,
+                        }}
+                      />
+                    </div>
                   </div>
                   <div className="p-3">
                     <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium mb-0.5 truncate" style={{ color: c.charcoal }}>
