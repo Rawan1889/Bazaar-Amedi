@@ -3,6 +3,7 @@ import { getBazaarUser } from '@/lib/bazaar/auth'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import { OrderTrackingMap } from '@/app/components/order-tracking-map'
 
 const c = {
   green:    '#2D8A5E',
@@ -67,11 +68,15 @@ export default async function OrderDetailPage({
   const o = order as {
     id: string; order_number: number; status: string; total: number; delivery_fee: number
     delivery_address: string; note: string | null; created_at: string; delivered_at: string | null
+    delivery_lat: number | null; delivery_lng: number | null
+    driver_lat: number | null; driver_lng: number | null
     bazaar_order_items: { id: string; product_name: string; quantity: number; unit_price: number; pickup_status: string; bazaar_shops: { name: string; slug: string } }[]
   }
 
   const currentStep = statusIndex[o.status] ?? 0
   const isCancelled = o.status === 'cancelled'
+  const isEnRoute = o.status === 'picking_up' || o.status === 'delivering'
+  const hasTrackingCoords = (o.delivery_lat != null && o.delivery_lng != null) || (o.driver_lat != null && o.driver_lng != null)
   const shopNames = [...new Set(o.bazaar_order_items?.map(i => i.bazaar_shops?.name))]
 
   return (
@@ -103,6 +108,22 @@ export default async function OrderDetailPage({
             {new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
+
+        {/* Live tracking map — shown while out for delivery */}
+        {isEnRoute && hasTrackingCoords && (
+          <div className="rounded-[14px] p-4 mb-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+            <h2 className="font-[family-name:var(--font-dm-sans)] text-[15px] font-medium mb-3" style={{ color: c.charcoal }}>
+              Live tracking
+            </h2>
+            <OrderTrackingMap
+              orderId={o.id}
+              destLat={o.delivery_lat}
+              destLng={o.delivery_lng}
+              driverLat={o.driver_lat}
+              driverLng={o.driver_lng}
+            />
+          </div>
+        )}
 
         {/* Status Timeline */}
         <div className="rounded-[14px] p-6 mb-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>

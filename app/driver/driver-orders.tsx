@@ -27,6 +27,8 @@ interface Order {
   total: number
   delivery_fee: number
   delivery_address: string
+  delivery_lat: number | null
+  delivery_lng: number | null
   note: string | null
   created_at: string
   bazaar_order_items: { product_name: string; quantity: number; pickup_status: string; bazaar_shops: { name: string; address: string | null } }[]
@@ -91,6 +93,20 @@ function ActiveOrderCard({ order }: { order: Order }) {
           <div className="font-[family-name:var(--font-dm-sans)] text-[11px] mt-1" style={{ color: c.saffron }}>
             Note: {order.note}
           </div>
+        )}
+        {order.delivery_lat != null && order.delivery_lng != null && (
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${order.delivery_lat},${order.delivery_lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-[8px] no-underline font-[family-name:var(--font-dm-sans)] text-[12px] font-medium"
+            style={{ background: c.greenBg, color: c.green }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+            </svg>
+            Navigate to customer
+          </a>
         )}
       </div>
 

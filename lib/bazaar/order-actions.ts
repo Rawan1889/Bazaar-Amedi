@@ -364,6 +364,27 @@ export async function updateOrderStatus(orderId: string, status: string) {
   return { success: true }
 }
 
+// Driver broadcasts their current GPS position to all their active deliveries.
+// Called periodically from the driver dashboard while delivering.
+export async function updateDriverLocation(lat: number, lng: number) {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
+
+  const supabase = createBazaarAdmin()
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({
+      driver_lat: lat,
+      driver_lng: lng,
+      driver_location_updated_at: new Date().toISOString(),
+    })
+    .eq('driver_id', user.id)
+    .in('status', ['picking_up', 'delivering'])
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
 export async function cancelOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }

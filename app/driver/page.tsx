@@ -3,6 +3,7 @@ import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
 import { getAvailableOrders, getMyDeliveries } from '@/lib/bazaar/order-actions'
 import { DriverOrderList } from './driver-orders'
+import { DriverLocationBroadcaster } from '@/app/components/driver-location-broadcaster'
 import Link from 'next/link'
 
 export default async function DriverDashboard() {
@@ -67,6 +68,8 @@ export default async function DriverDashboard() {
         <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-8" style={{ color: '#7A756E' }}>
           {active.length} active, {available.length} available
         </p>
+
+        <DriverLocationBroadcaster active={active.length > 0} />
 
         <DriverOrderList active={active} available={available} />
       </div>
