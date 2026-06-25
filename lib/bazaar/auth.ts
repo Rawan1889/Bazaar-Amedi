@@ -71,6 +71,9 @@ export async function bazaarSignup(formData: FormData) {
       full_name: fullName,
       phone: `+964${phone.replace(/\s+/g, '')}`,
       neighborhood: neighborhood || null,
+      // Drivers require admin approval before they can take deliveries.
+      // Customers and market owners are approved on signup.
+      is_approved: bazaarRole !== 'driver',
     })
 
   if (profileError) {
