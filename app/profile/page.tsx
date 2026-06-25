@@ -1,8 +1,10 @@
 export const dynamic = 'force-dynamic'
 import { getProfile } from '@/lib/bazaar/profile-actions'
+import { getAddresses } from '@/lib/bazaar/address-actions'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ProfileForm } from './profile-form'
+import { AddressManager } from '@/app/components/address-manager'
 
 const c = {
   green:    '#2D8A5E',
@@ -18,6 +20,10 @@ const c = {
 export default async function ProfilePage() {
   const profile = await getProfile()
   if (!profile) redirect('/login')
+
+  const addresses = profile.role === 'customer' || profile.role === 'super_admin'
+    ? await getAddresses()
+    : []
 
   const roleBadge: Record<string, string> = {
     customer: 'Customer',
@@ -81,6 +87,12 @@ export default async function ProfilePage() {
           </h2>
           <ProfileForm profile={profile} />
         </div>
+
+        {(profile.role === 'customer' || profile.role === 'super_admin') && (
+          <div className="mt-6 rounded-[14px] p-6" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+            <AddressManager addresses={addresses} />
+          </div>
+        )}
 
         <div className="mt-6 rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
           <h3 className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium mb-3" style={{ color: c.charcoal }}>

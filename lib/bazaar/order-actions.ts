@@ -20,6 +20,9 @@ export async function placeOrder(data: {
   deliveryAddress: string
   note: string | null
   couponCode?: string | null
+  addressId?: string | null
+  deliveryLat?: number | null
+  deliveryLng?: number | null
 }) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Please sign in to place an order.' }
@@ -60,6 +63,9 @@ export async function placeOrder(data: {
       delivery_fee: deliveryFee,
       total,
       note: data.note?.trim() || null,
+      address_id: data.addressId ?? null,
+      delivery_lat: data.deliveryLat ?? null,
+      delivery_lng: data.deliveryLng ?? null,
     })
     .select('id')
     .single()

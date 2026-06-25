@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useCart } from '@/lib/bazaar/cart-context'
 import { placeOrder } from '@/lib/bazaar/order-actions'
 import { CouponInput } from '@/app/components/coupon-input'
+import { CheckoutAddress, type SelectedAddress } from '@/app/components/checkout-address'
 
 const c = {
   green:    '#2D8A5E',
@@ -28,7 +29,7 @@ function formatIQD(amount: number) {
 
 export default function CartPage() {
   const { items, shopGroups, updateQuantity, removeItem, clearCart, itemCount, shopCount, subtotal } = useCart()
-  const [address, setAddress] = useState('')
+  const [selectedAddress, setSelectedAddress] = useState<SelectedAddress | null>(null)
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -41,8 +42,8 @@ export default function CartPage() {
   const total = subtotal - discount + deliveryFee
 
   function handleCheckout() {
-    if (!address.trim()) {
-      setError('Please enter your delivery address.')
+    if (!selectedAddress) {
+      setError('Please choose or add a delivery address.')
       return
     }
     setError(null)
@@ -56,9 +57,12 @@ export default function CartPage() {
           salePrice: i.salePrice,
           quantity: i.quantity,
         })),
-        deliveryAddress: address,
+        deliveryAddress: selectedAddress.text,
         note: note || null,
         couponCode: coupon?.code ?? null,
+        addressId: selectedAddress.id,
+        deliveryLat: selectedAddress.lat,
+        deliveryLng: selectedAddress.lng,
       })
       if (result.error) {
         setError(result.error)
@@ -281,17 +285,11 @@ export default function CartPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 mb-4">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1.5">
                     <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
                       Delivery address
                     </label>
-                    <input
-                      value={address}
-                      onChange={e => setAddress(e.target.value)}
-                      placeholder="Your address in Amedi"
-                      className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
-                      style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
-                    />
+                    <CheckoutAddress onSelect={setSelectedAddress} />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
