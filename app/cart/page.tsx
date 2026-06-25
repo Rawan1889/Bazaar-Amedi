@@ -7,6 +7,7 @@ import { useCart } from '@/lib/bazaar/cart-context'
 import { placeOrder } from '@/lib/bazaar/order-actions'
 import { CouponInput } from '@/app/components/coupon-input'
 import { CheckoutAddress, type SelectedAddress } from '@/app/components/checkout-address'
+import { DeliverySlotPicker, type SelectedSlot } from '@/app/components/delivery-slot-picker'
 import { feeForZone } from '@/lib/bazaar/zone-utils'
 
 const c = {
@@ -31,6 +32,7 @@ function formatIQD(amount: number) {
 export default function CartPage() {
   const { items, shopGroups, updateQuantity, removeItem, clearCart, itemCount, shopCount, subtotal } = useCart()
   const [selectedAddress, setSelectedAddress] = useState<SelectedAddress | null>(null)
+  const [slot, setSlot] = useState<SelectedSlot>({ date: null, slot: null })
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -74,6 +76,8 @@ export default function CartPage() {
         deliveryLat: selectedAddress.lat,
         deliveryLng: selectedAddress.lng,
         zoneId: selectedAddress.zone?.id ?? null,
+        scheduledDate: slot.date,
+        scheduledSlot: slot.slot,
       })
       if (result.error) {
         setError(result.error)
@@ -315,6 +319,12 @@ export default function CartPage() {
                       Delivery address
                     </label>
                     <CheckoutAddress onSelect={setSelectedAddress} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                      Delivery time
+                    </label>
+                    <DeliverySlotPicker onSelect={setSlot} />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>

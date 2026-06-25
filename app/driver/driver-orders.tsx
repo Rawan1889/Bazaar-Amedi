@@ -29,6 +29,8 @@ interface Order {
   delivery_address: string
   delivery_lat: number | null
   delivery_lng: number | null
+  scheduled_date: string | null
+  scheduled_slot: string | null
   note: string | null
   created_at: string
   bazaar_order_items: { product_name: string; quantity: number; pickup_status: string; bazaar_shops: { name: string; address: string | null } }[]
@@ -89,6 +91,14 @@ function ActiveOrderCard({ order }: { order: Order }) {
         <div className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: c.stone }}>
           {order.bazaar_profiles.phone}
         </div>
+        {order.scheduled_slot && (
+          <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ background: c.saffronBg, color: c.saffron }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+            </svg>
+            {order.scheduled_date ? new Date(order.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {order.scheduled_slot}
+          </div>
+        )}
         {order.note && (
           <div className="font-[family-name:var(--font-dm-sans)] text-[11px] mt-1" style={{ color: c.saffron }}>
             Note: {order.note}

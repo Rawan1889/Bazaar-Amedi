@@ -25,6 +25,8 @@ export async function placeOrder(data: {
   deliveryLat?: number | null
   deliveryLng?: number | null
   zoneId?: string | null
+  scheduledDate?: string | null
+  scheduledSlot?: string | null
 }) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Please sign in to place an order.' }
@@ -85,6 +87,8 @@ export async function placeOrder(data: {
       delivery_lat: data.deliveryLat ?? null,
       delivery_lng: data.deliveryLng ?? null,
       zone_id: data.zoneId ?? null,
+      scheduled_date: data.scheduledDate ?? null,
+      scheduled_slot: data.scheduledSlot ?? null,
     })
     .select('id')
     .single()

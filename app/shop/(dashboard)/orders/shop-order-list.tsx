@@ -44,6 +44,8 @@ function OrderCard({ group }: { group: OrderGroup }) {
     status: string
     delivery_address: string
     created_at: string
+    scheduled_date: string | null
+    scheduled_slot: string | null
     bazaar_profiles: { full_name: string; phone: string }
   }
   const items = group.items as { product_name: string; quantity: number; unit_price: number }[]
@@ -76,6 +78,14 @@ function OrderCard({ group }: { group: OrderGroup }) {
         <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: c.stone }}>
           {new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
         </div>
+        {order.scheduled_slot && (
+          <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ background: 'rgba(232,168,56,0.1)', color: '#E8A838' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+            </svg>
+            Scheduled: {order.scheduled_date ? new Date(order.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {order.scheduled_slot}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-1 mb-4 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>

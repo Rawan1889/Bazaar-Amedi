@@ -70,8 +70,13 @@ export default async function OrderDetailPage({
     delivery_address: string; note: string | null; created_at: string; delivered_at: string | null
     delivery_lat: number | null; delivery_lng: number | null
     driver_lat: number | null; driver_lng: number | null
+    scheduled_date: string | null; scheduled_slot: string | null
     bazaar_order_items: { id: string; product_name: string; quantity: number; unit_price: number; pickup_status: string; bazaar_shops: { name: string; slug: string } }[]
   }
+
+  const scheduledLabel = o.scheduled_slot
+    ? `${new Date(o.scheduled_date!).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}, ${o.scheduled_slot}`
+    : null
 
   const currentStep = statusIndex[o.status] ?? 0
   const isCancelled = o.status === 'cancelled'
@@ -244,6 +249,10 @@ export default async function OrderDetailPage({
             <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[12px]">
               <span style={{ color: c.stone }}>Delivery address</span>
               <span style={{ color: c.charcoal }}>{o.delivery_address}</span>
+            </div>
+            <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[12px]">
+              <span style={{ color: c.stone }}>Delivery time</span>
+              <span style={{ color: c.charcoal }}>{scheduledLabel || 'As soon as possible'}</span>
             </div>
             <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[12px]">
               <span style={{ color: c.stone }}>Shops</span>
