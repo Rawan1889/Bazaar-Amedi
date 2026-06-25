@@ -20,7 +20,7 @@ export async function ensureBazaarProfile(fullName?: string): Promise<
     .from('bazaar_profiles')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   if (profile) {
     revalidatePath('/', 'layout')

@@ -60,7 +60,7 @@ export async function placeOrder(data: {
       .from('bazaar_delivery_zones')
       .select('fee, min_order, free_delivery_threshold, is_active')
       .eq('id', data.zoneId)
-      .single()
+      .maybeSingle()
     if (zone && zone.is_active) {
       if (zone.min_order && subtotal < zone.min_order) {
         return { error: `Minimum order for this area is ${zone.min_order.toLocaleString('en-IQ')} IQD.` }
@@ -134,7 +134,7 @@ export async function placeOrder(data: {
       .eq('price', effectivePrice)
       .not('stock_qty', 'is', null)
       .limit(1)
-      .single()
+      .maybeSingle()
     if (variant && variant.stock_qty !== null) {
       const newQty = Math.max(0, variant.stock_qty - item.quantity)
       await admin
@@ -155,7 +155,7 @@ export async function placeOrder(data: {
       .eq('is_active', true)
       .not('quantity', 'is', null)
       .limit(1)
-      .single()
+      .maybeSingle()
     if (sale && sale.quantity !== null) {
       const newQty = Math.max(0, sale.quantity - item.quantity)
       await admin
@@ -346,7 +346,7 @@ export async function markPickupCollected(orderId: string) {
     .eq('order_id', orderId)
     .eq('shop_id', shop.id)
     .limit(1)
-    .single()
+    .maybeSingle()
   if (!item) return { error: 'Order not found for your shop.' }
 
   const { error } = await supabase

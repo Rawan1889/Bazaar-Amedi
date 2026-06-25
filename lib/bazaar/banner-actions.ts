@@ -27,7 +27,7 @@ export async function getActiveBanner(): Promise<PromoBanner | null> {
     .gte('ends_at', now)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
   return (data as PromoBanner) || null
 }
 

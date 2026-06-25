@@ -42,8 +42,10 @@ export default function CartPage() {
   const [isPending, startTransition] = useTransition()
   const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string } | null>(null)
 
-  const isPickup = fulfillment === 'pickup'
   const canPickup = shopCount === 1
+  // If the cart grows to multiple shops, fall back to delivery automatically so
+  // the UI and the order submitted stay consistent (pickup is single-shop only).
+  const isPickup = fulfillment === 'pickup' && canPickup
   const zone = selectedAddress?.zone ?? null
   // No zone on the address (e.g. saved before zones existed) → server falls back
   // to the default 2500 fee, so mirror that here for a consistent total.
