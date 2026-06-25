@@ -5,6 +5,7 @@ import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
 import { sendPushToUser, sendPushToRole } from './push-notifications'
 import { applyCoupon } from './coupon-actions'
+import { feeForZone } from './zone-utils'
 
 interface CartItemInput {
   productId: string
@@ -23,6 +24,7 @@ export async function placeOrder(data: {
   addressId?: string | null
   deliveryLat?: number | null
   deliveryLng?: number | null
+  zoneId?: string | null
 }) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Please sign in to place an order.' }
@@ -38,7 +40,23 @@ export async function placeOrder(data: {
   const subtotal = data.items.reduce(
     (sum, i) => sum + (i.salePrice ?? i.price) * i.quantity, 0
   )
-  const deliveryFee = 2500
+
+  // Resolve the delivery fee server-side from the chosen zone — never trust a
+  // fee from the client. Enforce the zone's minimum order value too.
+  let deliveryFee = 2500
+  if (data.zoneId) {
+    const { data: zone } = await supabase
+      .from('bazaar_delivery_zones')
+      .select('fee, min_order, free_delivery_threshold, is_active')
+      .eq('id', data.zoneId)
+      .single()
+    if (zone && zone.is_active) {
+      if (zone.min_order && subtotal < zone.min_order) {
+        return { error: `Minimum order for this area is ${zone.min_order.toLocaleString('en-IQ')} IQD.` }
+      }
+      deliveryFee = feeForZone(zone, subtotal)
+    }
+  }
 
   // Re-validate the coupon server-side — never trust the discount the client sent.
   let discount = 0
@@ -66,6 +84,7 @@ export async function placeOrder(data: {
       address_id: data.addressId ?? null,
       delivery_lat: data.deliveryLat ?? null,
       delivery_lng: data.deliveryLng ?? null,
+      zone_id: data.zoneId ?? null,
     })
     .select('id')
     .single()

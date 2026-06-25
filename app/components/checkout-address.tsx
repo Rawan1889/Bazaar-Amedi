@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { getAddresses, type Address } from '@/lib/bazaar/address-actions'
+import { getActiveZones } from '@/lib/bazaar/zone-actions'
+import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 import { AddressForm } from './address-form'
 
 const c = {
@@ -19,6 +21,7 @@ export interface SelectedAddress {
   text: string
   lat: number | null
   lng: number | null
+  zone: DeliveryZone | null
 }
 
 interface Props {
@@ -27,22 +30,30 @@ interface Props {
 
 export function CheckoutAddress({ onSelect }: Props) {
   const [addresses, setAddresses] = useState<Address[]>([])
+  const [zones, setZones] = useState<DeliveryZone[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const reportSelection = useCallback((list: Address[], id: string | null) => {
+  const reportSelection = useCallback((list: Address[], zoneList: DeliveryZone[], id: string | null) => {
     const a = list.find(x => x.id === id)
-    onSelect(a ? { id: a.id, text: `${a.label} — ${a.address_text}${a.neighborhood ? `, ${a.neighborhood}` : ''}`, lat: a.lat, lng: a.lng } : null)
+    if (!a) { onSelect(null); return }
+    const zone = zoneList.find(z => z.id === a.zone_id) || null
+    onSelect({
+      id: a.id,
+      text: `${a.label} — ${a.address_text}${a.neighborhood ? `, ${a.neighborhood}` : ''}`,
+      lat: a.lat, lng: a.lng, zone,
+    })
   }, [onSelect])
 
   const load = useCallback(async (preferId?: string) => {
-    const list = await getAddresses()
+    const [list, zoneList] = await Promise.all([getAddresses(), getActiveZones()])
     setAddresses(list)
+    setZones(zoneList)
     setLoading(false)
     const pick = preferId || list.find(a => a.is_default)?.id || list[0]?.id || null
     setSelectedId(pick)
-    reportSelection(list, pick)
+    reportSelection(list, zoneList, pick)
     setAdding(list.length === 0)
   }, [reportSelection])
 
@@ -50,7 +61,7 @@ export function CheckoutAddress({ onSelect }: Props) {
 
   function choose(id: string) {
     setSelectedId(id)
-    reportSelection(addresses, id)
+    reportSelection(addresses, zones, id)
   }
 
   if (loading) {

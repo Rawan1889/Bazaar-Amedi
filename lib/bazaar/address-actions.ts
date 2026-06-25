@@ -12,6 +12,7 @@ export interface Address {
   lat: number | null
   lng: number | null
   is_default: boolean
+  zone_id: string | null
 }
 
 export async function getAddresses(): Promise<Address[]> {
@@ -21,7 +22,7 @@ export async function getAddresses(): Promise<Address[]> {
   const supabase = await createBazaarServer()
   const { data } = await supabase
     .from('bazaar_addresses')
-    .select('id, label, address_text, neighborhood, lat, lng, is_default')
+    .select('id, label, address_text, neighborhood, lat, lng, is_default, zone_id')
     .eq('customer_id', user.id)
     .order('is_default', { ascending: false })
     .order('created_at', { ascending: false })
@@ -35,6 +36,7 @@ export async function addAddress(data: {
   neighborhood?: string | null
   lat: number | null
   lng: number | null
+  zoneId?: string | null
   makeDefault?: boolean
 }) {
   const user = await getBazaarUser()
@@ -67,6 +69,7 @@ export async function addAddress(data: {
       neighborhood: data.neighborhood?.trim() || null,
       lat: data.lat,
       lng: data.lng,
+      zone_id: data.zoneId ?? null,
       is_default: makeDefault,
     })
     .select('id')

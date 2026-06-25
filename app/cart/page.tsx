@@ -7,6 +7,7 @@ import { useCart } from '@/lib/bazaar/cart-context'
 import { placeOrder } from '@/lib/bazaar/order-actions'
 import { CouponInput } from '@/app/components/coupon-input'
 import { CheckoutAddress, type SelectedAddress } from '@/app/components/checkout-address'
+import { feeForZone } from '@/lib/bazaar/zone-utils'
 
 const c = {
   green:    '#2D8A5E',
@@ -37,13 +38,22 @@ export default function CartPage() {
   const [isPending, startTransition] = useTransition()
   const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string } | null>(null)
 
-  const deliveryFee = 2500
+  const zone = selectedAddress?.zone ?? null
+  // No zone on the address (e.g. saved before zones existed) → server falls back
+  // to the default 2500 fee, so mirror that here for a consistent total.
+  const deliveryFee = zone ? feeForZone(zone, subtotal) : 2500
   const discount = coupon?.discount || 0
-  const total = subtotal - discount + deliveryFee
+  const total = Math.max(0, subtotal - discount) + deliveryFee
+  const freeDelivery = zone?.free_delivery_threshold != null && subtotal >= zone.free_delivery_threshold
+  const belowMin = !!zone && zone.min_order > 0 && subtotal < zone.min_order
 
   function handleCheckout() {
     if (!selectedAddress) {
       setError('Please choose or add a delivery address.')
+      return
+    }
+    if (belowMin && zone) {
+      setError(`Minimum order for ${zone.name} is ${formatIQD(zone.min_order)}.`)
       return
     }
     setError(null)
@@ -63,6 +73,7 @@ export default function CartPage() {
         addressId: selectedAddress.id,
         deliveryLat: selectedAddress.lat,
         deliveryLng: selectedAddress.lng,
+        zoneId: selectedAddress.zone?.id ?? null,
       })
       if (result.error) {
         setError(result.error)
@@ -256,9 +267,23 @@ export default function CartPage() {
                     </div>
                   )}
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
-                    <span style={{ color: c.stone }}>Delivery fee</span>
-                    <span style={{ color: c.charcoal }}>{formatIQD(deliveryFee)}</span>
+                    <span style={{ color: c.stone }}>
+                      Delivery fee{zone ? ` · ${zone.name}` : ''}
+                    </span>
+                    <span style={{ color: freeDelivery ? c.green : c.charcoal }}>
+                      {freeDelivery ? 'Free' : formatIQD(deliveryFee)}
+                    </span>
                   </div>
+                  {zone?.free_delivery_threshold != null && !freeDelivery && (
+                    <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.green }}>
+                      Add {formatIQD(zone.free_delivery_threshold - subtotal)} more for free delivery
+                    </div>
+                  )}
+                  {belowMin && zone && (
+                    <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: '#C94A3A' }}>
+                      Minimum order for {zone.name} is {formatIQD(zone.min_order)}
+                    </div>
+                  )}
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px] font-medium pt-2">
                     <span style={{ color: c.charcoal }}>Total</span>
                     <span style={{ color: c.green }}>{formatIQD(total)}</span>
@@ -307,13 +332,13 @@ export default function CartPage() {
 
                 <button
                   onClick={handleCheckout}
-                  disabled={isPending}
+                  disabled={isPending || belowMin}
                   className="w-full py-3 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[14px] font-medium border-none cursor-pointer transition-all duration-150"
-                  style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
-                  onMouseEnter={e => !isPending && (e.currentTarget.style.transform = 'scale(0.98)')}
+                  style={{ background: belowMin ? c.cream2 : c.green, color: '#fff', opacity: isPending ? 0.7 : 1, cursor: belowMin ? 'not-allowed' : 'pointer' }}
+                  onMouseEnter={e => !isPending && !belowMin && (e.currentTarget.style.transform = 'scale(0.98)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                 >
-                  {isPending ? 'Placing order...' : `Place order — ${formatIQD(total)}`}
+                  {isPending ? 'Placing order...' : belowMin ? 'Minimum order not met' : `Place order — ${formatIQD(total)}`}
                 </button>
 
                 <p className="text-center font-[family-name:var(--font-dm-mono)] text-[10px] mt-3" style={{ color: c.stone }}>

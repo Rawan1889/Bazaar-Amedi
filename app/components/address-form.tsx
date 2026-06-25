@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { addAddress } from '@/lib/bazaar/address-actions'
+import { getActiveZones } from '@/lib/bazaar/zone-actions'
+import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 import { LocationPicker } from './location-picker'
 
 const c = {
@@ -27,14 +29,23 @@ export function AddressForm({ onSaved, onCancel }: Props) {
   const [neighborhood, setNeighborhood] = useState('')
   const [lat, setLat] = useState<number | null>(null)
   const [lng, setLng] = useState<number | null>(null)
+  const [zones, setZones] = useState<DeliveryZone[]>([])
+  const [zoneId, setZoneId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    getActiveZones().then(z => {
+      setZones(z)
+      if (z.length > 0) setZoneId(z[0].id)
+    })
+  }, [])
 
   function save() {
     if (!addressText.trim()) { setError('Please describe the address (house, street, landmark).'); return }
     setError(null)
     startTransition(async () => {
-      const res = await addAddress({ label, addressText, neighborhood, lat, lng })
+      const res = await addAddress({ label, addressText, neighborhood, lat, lng, zoneId: zoneId || null })
       if (res.error) setError(res.error)
       else { onSaved?.(res.id!); setAddressText(''); setNeighborhood('') }
     })
@@ -85,6 +96,26 @@ export function AddressForm({ onSaved, onCancel }: Props) {
         className="w-full px-3 py-2.5 rounded-[10px] text-[13px] font-[family-name:var(--font-dm-sans)] outline-none mb-3"
         style={inputStyle}
       />
+
+      {zones.length > 0 && (
+        <>
+          <label className="block font-[family-name:var(--font-dm-sans)] text-[12px] mb-1" style={{ color: c.stone }}>
+            Delivery area
+          </label>
+          <select
+            value={zoneId}
+            onChange={e => setZoneId(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-[10px] text-[13px] font-[family-name:var(--font-dm-sans)] outline-none mb-3"
+            style={inputStyle}
+          >
+            {zones.map(z => (
+              <option key={z.id} value={z.id}>
+                {z.name} — {z.fee.toLocaleString('en-IQ')} IQD
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       <label className="block font-[family-name:var(--font-dm-sans)] text-[12px] mb-1.5" style={{ color: c.stone }}>
         Pin your location
