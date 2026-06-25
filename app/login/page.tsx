@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useTransition } from 'react'
 import { bazaarLogin } from '@/lib/bazaar/auth'
+import { PhoneLogin } from '@/app/components/phone-login'
 
 const c = {
   green:      '#2D8A5E',
@@ -139,6 +140,14 @@ export default function BazaarLoginPage() {
               {isPending ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
+
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px" style={{ background: c.cream2 }} />
+            <span className="font-[family-name:var(--font-dm-mono)] text-[10px] uppercase tracking-[0.1em]" style={{ color: c.stoneLight }}>or</span>
+            <div className="flex-1 h-px" style={{ background: c.cream2 }} />
+          </div>
+
+          <PhoneLogin />
 
           <p className="text-center text-[13px] mt-5 font-[family-name:var(--font-dm-sans)]" style={{ color: c.stone }}>
             Don&apos;t have an account?{' '}
