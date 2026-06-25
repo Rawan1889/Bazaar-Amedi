@@ -169,6 +169,51 @@ export async function updateProductImage(productId: string, imageUrl: string) {
   return { success: true }
 }
 
+// Add an extra gallery image to a product.
+export async function addProductImage(productId: string, url: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+  const { count } = await supabase
+    .from('bazaar_product_images')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', productId)
+
+  const { error } = await supabase
+    .from('bazaar_product_images')
+    .insert({ product_id: productId, url, sort_order: count ?? 0 })
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/products')
+  return { success: true }
+}
+
+export async function deleteProductImage(imageId: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+  const { error } = await supabase
+    .from('bazaar_product_images')
+    .delete()
+    .eq('id', imageId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/products')
+  return { success: true }
+}
+
+export async function getProductImages(productId: string) {
+  const supabase = await createBazaarServer()
+  const { data } = await supabase
+    .from('bazaar_product_images')
+    .select('id, url, sort_order')
+    .eq('product_id', productId)
+    .order('sort_order')
+  return data || []
+}
+
 export async function updateProduct(formData: FormData) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }

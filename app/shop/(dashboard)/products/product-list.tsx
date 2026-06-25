@@ -1,7 +1,8 @@
 'use client'
 
 import { useTransition, useRef, useState } from 'react'
-import { deleteProduct, toggleProductStock, updateProductImage } from '@/lib/bazaar/shop-actions'
+import { useRouter } from 'next/navigation'
+import { deleteProduct, toggleProductStock, updateProductImage, addProductImage, deleteProductImage } from '@/lib/bazaar/shop-actions'
 import { uploadProductImage } from '@/lib/bazaar/image-upload'
 
 const c = {
@@ -15,6 +16,8 @@ const c = {
   white:    '#FFFFFF',
 } as const
 
+interface GalleryImage { id: string; url: string; sort_order: number }
+
 interface Product {
   id: string
   name_en: string
@@ -24,6 +27,7 @@ interface Product {
   image_url: string | null
   description: string | null
   bazaar_categories: { name_en: string } | null
+  bazaar_product_images?: GalleryImage[]
 }
 
 function formatIQD(amount: number) {
@@ -34,7 +38,12 @@ function ProductRow({ product }: { product: Product }) {
   const [isPending, startTransition] = useTransition()
   const [imgUrl, setImgUrl] = useState(product.image_url)
   const [uploading, setUploading] = useState(false)
+  const [galleryUploading, setGalleryUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  const gallery = (product.bazaar_product_images || []).slice().sort((a, b) => a.sort_order - b.sort_order)
 
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -50,13 +59,23 @@ function ProductRow({ product }: { product: Product }) {
     }
   }
 
+  async function handleGalleryAdd(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setGalleryUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    const result = await uploadProductImage(fd)
+    if (result.url) await addProductImage(product.id, result.url)
+    setGalleryUploading(false)
+    router.refresh()
+  }
+
   return (
+    <div style={{ borderBottom: `1px solid ${c.cream2}` }}>
     <div
       className="flex items-center gap-4 px-5 py-4 transition-all duration-100"
-      style={{
-        borderBottom: `1px solid ${c.cream2}`,
-        opacity: isPending ? 0.5 : 1,
-      }}
+      style={{ opacity: isPending ? 0.5 : 1 }}
     >
       <div
         className="w-10 h-10 rounded-[8px] flex-shrink-0 overflow-hidden cursor-pointer relative group"
@@ -146,6 +165,44 @@ function ProductRow({ product }: { product: Product }) {
           </button>
         </form>
       </div>
+    </div>
+
+    {/* Gallery — extra photos shown on the product page */}
+    <div className="flex items-center gap-2 px-5 pb-3 -mt-1 flex-wrap">
+      <span className="font-[family-name:var(--font-dm-mono)] text-[9px] uppercase tracking-[0.1em]" style={{ color: c.stone }}>
+        Gallery
+      </span>
+      {gallery.map(img => (
+        <div key={img.id} className="relative w-9 h-9 rounded-[6px] overflow-hidden group" style={{ border: `1px solid ${c.cream2}` }}>
+          <img src={img.url} alt="" className="w-full h-full object-cover" />
+          <button
+            onClick={() => startTransition(async () => { await deleteProductImage(img.id); router.refresh() })}
+            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center border-none cursor-pointer"
+            aria-label="Remove photo"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => galleryRef.current?.click()}
+        disabled={galleryUploading}
+        className="w-9 h-9 rounded-[6px] flex items-center justify-center border-dashed cursor-pointer"
+        style={{ border: `1px dashed ${c.cream2}`, background: 'transparent', color: c.stone }}
+        title="Add a photo"
+      >
+        {galleryUploading ? (
+          <span className="font-[family-name:var(--font-dm-mono)] text-[8px]">…</span>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        )}
+      </button>
+      <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleGalleryAdd} />
+    </div>
     </div>
   )
 }

@@ -133,7 +133,7 @@ export default async function BrowsePage({
               return (
                 <Link
                   key={p.id}
-                  href={`/s/${p.bazaar_shops.slug}`}
+                  href={`/p/${p.id}`}
                   className="rounded-[14px] overflow-hidden no-underline transition-all duration-200 group"
                   style={{ background: c.white, border: `1px solid ${c.cream2}` }}
                 >
