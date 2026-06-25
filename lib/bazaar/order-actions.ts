@@ -27,6 +27,7 @@ export async function placeOrder(data: {
   zoneId?: string | null
   scheduledDate?: string | null
   scheduledSlot?: string | null
+  fulfillmentType?: 'delivery' | 'pickup'
 }) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Please sign in to place an order.' }
@@ -34,8 +35,15 @@ export async function placeOrder(data: {
     return { error: 'Only customers can place orders.' }
   }
 
+  const isPickup = data.fulfillmentType === 'pickup'
+
   if (!data.items.length) return { error: 'Cart is empty.' }
-  if (!data.deliveryAddress.trim()) return { error: 'Delivery address is required.' }
+  if (isPickup) {
+    const shopIds = new Set(data.items.map(i => i.shopId))
+    if (shopIds.size > 1) return { error: 'Pickup is only available for single-shop orders.' }
+  } else if (!data.deliveryAddress.trim()) {
+    return { error: 'Delivery address is required.' }
+  }
 
   const supabase = await createBazaarServer()
 
@@ -45,8 +53,9 @@ export async function placeOrder(data: {
 
   // Resolve the delivery fee server-side from the chosen zone — never trust a
   // fee from the client. Enforce the zone's minimum order value too.
-  let deliveryFee = 2500
-  if (data.zoneId) {
+  // Pickup orders have no delivery fee.
+  let deliveryFee = isPickup ? 0 : 2500
+  if (!isPickup && data.zoneId) {
     const { data: zone } = await supabase
       .from('bazaar_delivery_zones')
       .select('fee, min_order, free_delivery_threshold, is_active')
@@ -90,6 +99,7 @@ export async function placeOrder(data: {
       scheduled_date: data.scheduledDate ?? null,
       scheduled_slot: data.scheduledSlot ?? null,
       delivery_code: String(Math.floor(1000 + Math.random() * 9000)),
+      fulfillment_type: isPickup ? 'pickup' : 'delivery',
     })
     .select('id')
     .single()
@@ -189,12 +199,15 @@ export async function placeOrder(data: {
     }
   }
 
-  sendPushToRole('driver', {
-    type: 'new_order',
-    title: 'New delivery available',
-    body: `${data.items.length} item(s) to ${data.deliveryAddress}`,
-    url: '/driver',
-  })
+  // Pickup orders never go to a driver.
+  if (!isPickup) {
+    sendPushToRole('driver', {
+      type: 'new_order',
+      title: 'New delivery available',
+      body: `${data.items.length} item(s) to ${data.deliveryAddress}`,
+      url: '/driver',
+    })
+  }
 
   return { success: true, orderId: order.id }
 }
@@ -303,11 +316,48 @@ export async function getAvailableOrders() {
     .from('bazaar_orders')
     .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
     .eq('status', 'ready')
+    .eq('fulfillment_type', 'delivery')
     .is('driver_id', null)
     .order('created_at', { ascending: false })
     .limit(20)
 
   return data || []
+}
+
+// Shop marks a pickup order as collected by the customer (no driver involved).
+export async function markPickupCollected(orderId: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = createBazaarAdmin()
+  const userSupabase = await createBazaarServer()
+
+  const { data: shop } = await userSupabase
+    .from('bazaar_shops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+  if (!shop) return { error: 'No shop found' }
+
+  // Confirm this pickup order contains this shop's items.
+  const { data: item } = await supabase
+    .from('bazaar_order_items')
+    .select('id')
+    .eq('order_id', orderId)
+    .eq('shop_id', shop.id)
+    .limit(1)
+    .single()
+  if (!item) return { error: 'Order not found for your shop.' }
+
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({ status: 'delivered', delivered_at: new Date().toISOString() })
+    .eq('id', orderId)
+    .eq('fulfillment_type', 'pickup')
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/orders')
+  return { success: true }
 }
 
 export async function getMyDeliveries() {

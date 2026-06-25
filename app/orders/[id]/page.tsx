@@ -72,9 +72,11 @@ export default async function OrderDetailPage({
     driver_lat: number | null; driver_lng: number | null
     scheduled_date: string | null; scheduled_slot: string | null
     delivery_code: string | null
+    fulfillment_type: string | null
     bazaar_order_items: { id: string; product_name: string; quantity: number; unit_price: number; pickup_status: string; bazaar_shops: { name: string; slug: string } }[]
   }
 
+  const isPickupOrder = o.fulfillment_type === 'pickup'
   const scheduledLabel = o.scheduled_slot
     ? `${new Date(o.scheduled_date!).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}, ${o.scheduled_slot}`
     : null
@@ -115,15 +117,15 @@ export default async function OrderDetailPage({
           </span>
         </div>
 
-        {/* Delivery handoff code — shown while out for delivery */}
-        {isEnRoute && o.delivery_code && (
+        {/* Handoff code — shown while out for delivery, or ready for pickup */}
+        {((isEnRoute && !isPickupOrder) || (isPickupOrder && o.status === 'ready')) && o.delivery_code && (
           <div className="rounded-[14px] p-5 mb-6 flex items-center justify-between" style={{ background: c.greenBg, border: `1px solid ${c.green}` }}>
             <div>
               <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
-                Your delivery code
+                {isPickupOrder ? 'Your pickup code' : 'Your delivery code'}
               </div>
               <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
-                Give this to the driver to confirm your delivery
+                {isPickupOrder ? 'Show this at the shop to collect your order' : 'Give this to the driver to confirm your delivery'}
               </div>
             </div>
             <div className="font-[family-name:var(--font-dm-mono)] text-[28px] font-medium tracking-[0.2em]" style={{ color: c.green }}>

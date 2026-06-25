@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { acceptShopOrder, markShopOrderReady } from '@/lib/bazaar/order-actions'
+import { acceptShopOrder, markShopOrderReady, markPickupCollected } from '@/lib/bazaar/order-actions'
 
 const c = {
   green:    '#2D8A5E',
@@ -46,8 +46,10 @@ function OrderCard({ group }: { group: OrderGroup }) {
     created_at: string
     scheduled_date: string | null
     scheduled_slot: string | null
+    fulfillment_type: string | null
     bazaar_profiles: { full_name: string; phone: string }
   }
+  const isPickup = order.fulfillment_type === 'pickup'
   const items = group.items as { product_name: string; quantity: number; unit_price: number }[]
   const total = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
   const status = STATUS_META[order.status] ?? { label: order.status, color: c.stone, bg: c.cream }
@@ -65,6 +67,11 @@ function OrderCard({ group }: { group: OrderGroup }) {
           >
             {status.label}
           </span>
+          {isPickup && (
+            <span className="px-2 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium" style={{ background: c.greenBg, color: c.green }}>
+              Pickup
+            </span>
+          )}
         </div>
         <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.green }}>
           {formatIQD(total)}
@@ -119,7 +126,18 @@ function OrderCard({ group }: { group: OrderGroup }) {
         </button>
       )}
 
-      {order.status === 'ready' && (
+      {order.status === 'ready' && isPickup && (
+        <button
+          onClick={() => startTransition(() => { markPickupCollected(order.id) })}
+          disabled={isPending}
+          className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
+          style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
+        >
+          {isPending ? 'Updating...' : 'Customer collected — mark done'}
+        </button>
+      )}
+
+      {order.status === 'ready' && !isPickup && (
         <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center"
           style={{ background: c.greenBg, color: c.green }}>
           Waiting for driver

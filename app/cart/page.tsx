@@ -33,24 +33,29 @@ export default function CartPage() {
   const { items, shopGroups, updateQuantity, removeItem, clearCart, itemCount, shopCount, subtotal } = useCart()
   const [selectedAddress, setSelectedAddress] = useState<SelectedAddress | null>(null)
   const [slot, setSlot] = useState<SelectedSlot>({ date: null, slot: null })
+  const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery')
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [savedShopCount, setSavedShopCount] = useState(0)
+  const [savedPickup, setSavedPickup] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string } | null>(null)
 
+  const isPickup = fulfillment === 'pickup'
+  const canPickup = shopCount === 1
   const zone = selectedAddress?.zone ?? null
   // No zone on the address (e.g. saved before zones existed) → server falls back
   // to the default 2500 fee, so mirror that here for a consistent total.
-  const deliveryFee = zone ? feeForZone(zone, subtotal) : 2500
+  // Pickup has no delivery fee.
+  const deliveryFee = isPickup ? 0 : (zone ? feeForZone(zone, subtotal) : 2500)
   const discount = coupon?.discount || 0
   const total = Math.max(0, subtotal - discount) + deliveryFee
-  const freeDelivery = zone?.free_delivery_threshold != null && subtotal >= zone.free_delivery_threshold
-  const belowMin = !!zone && zone.min_order > 0 && subtotal < zone.min_order
+  const freeDelivery = !isPickup && zone?.free_delivery_threshold != null && subtotal >= zone.free_delivery_threshold
+  const belowMin = !isPickup && !!zone && zone.min_order > 0 && subtotal < zone.min_order
 
   function handleCheckout() {
-    if (!selectedAddress) {
+    if (!isPickup && !selectedAddress) {
       setError('Please choose or add a delivery address.')
       return
     }
@@ -69,20 +74,22 @@ export default function CartPage() {
           salePrice: i.salePrice,
           quantity: i.quantity,
         })),
-        deliveryAddress: selectedAddress.text,
+        deliveryAddress: isPickup ? `Pickup from ${shopGroups[0]?.shopName ?? 'shop'}` : (selectedAddress?.text ?? ''),
         note: note || null,
         couponCode: coupon?.code ?? null,
-        addressId: selectedAddress.id,
-        deliveryLat: selectedAddress.lat,
-        deliveryLng: selectedAddress.lng,
-        zoneId: selectedAddress.zone?.id ?? null,
+        addressId: isPickup ? null : (selectedAddress?.id ?? null),
+        deliveryLat: isPickup ? null : (selectedAddress?.lat ?? null),
+        deliveryLng: isPickup ? null : (selectedAddress?.lng ?? null),
+        zoneId: isPickup ? null : (selectedAddress?.zone?.id ?? null),
         scheduledDate: slot.date,
         scheduledSlot: slot.slot,
+        fulfillmentType: fulfillment,
       })
       if (result.error) {
         setError(result.error)
       } else {
         setSavedShopCount(shopCount)
+        setSavedPickup(isPickup)
         clearCart()
         setSuccess(result.orderId!)
       }
@@ -111,7 +118,9 @@ export default function CartPage() {
             Order placed!
           </h1>
           <p className="font-[family-name:var(--font-dm-sans)] text-[15px] mb-6" style={{ color: c.stone }}>
-            A driver will pick up from {savedShopCount} shop{savedShopCount !== 1 ? 's' : ''} and deliver to you. Cash on delivery.
+            {savedPickup
+              ? 'The shop will prepare your order. We’ll tell you when it’s ready to collect. Pay at pickup.'
+              : `A driver will pick up from ${savedShopCount} shop${savedShopCount !== 1 ? 's' : ''} and deliver to you. Cash on delivery.`}
           </p>
           <div className="flex gap-3 justify-center">
             <Link
@@ -272,13 +281,13 @@ export default function CartPage() {
                   )}
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
                     <span style={{ color: c.stone }}>
-                      Delivery fee{zone ? ` · ${zone.name}` : ''}
+                      {isPickup ? 'Pickup' : `Delivery fee${zone ? ` · ${zone.name}` : ''}`}
                     </span>
-                    <span style={{ color: freeDelivery ? c.green : c.charcoal }}>
-                      {freeDelivery ? 'Free' : formatIQD(deliveryFee)}
+                    <span style={{ color: (freeDelivery || isPickup) ? c.green : c.charcoal }}>
+                      {(freeDelivery || isPickup) ? 'Free' : formatIQD(deliveryFee)}
                     </span>
                   </div>
-                  {zone?.free_delivery_threshold != null && !freeDelivery && (
+                  {!isPickup && zone?.free_delivery_threshold != null && !freeDelivery && (
                     <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.green }}>
                       Add {formatIQD(zone.free_delivery_threshold - subtotal)} more for free delivery
                     </div>
@@ -304,22 +313,57 @@ export default function CartPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-[8px]" style={{ background: c.greenBg }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                  <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.green }}>
-                    One driver picks up from {shopCount} shop{shopCount !== 1 ? 's' : ''}
-                  </span>
-                </div>
+                {!isPickup && (
+                  <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-[8px]" style={{ background: c.greenBg }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                    <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.green }}>
+                      One driver picks up from {shopCount} shop{shopCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-3 mb-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
-                      Delivery address
-                    </label>
-                    <CheckoutAddress onSelect={setSelectedAddress} />
+                  {/* Delivery vs pickup */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFulfillment('delivery')}
+                      className="flex-1 py-2 rounded-[8px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[12px] font-medium transition-colors"
+                      style={{ background: !isPickup ? c.green : c.white, color: !isPickup ? '#fff' : c.stone, border: `1px solid ${!isPickup ? c.green : c.cream2}` }}
+                    >
+                      Delivery
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => canPickup && setFulfillment('pickup')}
+                      disabled={!canPickup}
+                      title={canPickup ? '' : 'Pickup is available for single-shop orders'}
+                      className="flex-1 py-2 rounded-[8px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[12px] font-medium transition-colors"
+                      style={{ background: isPickup ? c.green : c.white, color: isPickup ? '#fff' : c.stone, border: `1px solid ${isPickup ? c.green : c.cream2}`, opacity: canPickup ? 1 : 0.5, cursor: canPickup ? 'pointer' : 'not-allowed' }}
+                    >
+                      Pickup
+                    </button>
                   </div>
+
+                  {isPickup ? (
+                    <div className="rounded-[10px] p-3" style={{ background: c.greenBg }}>
+                      <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
+                        Pick up from {shopGroups[0]?.shopName}
+                      </div>
+                      <div className="font-[family-name:var(--font-dm-sans)] text-[12px] mt-0.5" style={{ color: c.stone }}>
+                        No delivery fee. We&apos;ll tell you when it&apos;s ready to collect.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                        Delivery address
+                      </label>
+                      <CheckoutAddress onSelect={setSelectedAddress} />
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1.5">
                     <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
                       Delivery time
