@@ -1,7 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { approveShop, rejectShop } from '@/lib/bazaar/admin-actions'
+import { updateCommissionRate } from '@/lib/bazaar/payout-actions'
 
 const c = {
   green:    '#2D8A5E',
@@ -23,12 +24,23 @@ interface Shop {
   is_open: boolean
   is_approved: boolean
   created_at: string
+  commission_rate: number | null
   bazaar_profiles: { full_name: string; phone: string } | null
   bazaar_categories: { name_en: string } | null
 }
 
 function ShopCard({ shop, showActions }: { shop: Shop; showActions: boolean }) {
   const [isPending, startTransition] = useTransition()
+  const [rate, setRate] = useState(String(shop.commission_rate ?? 10))
+  const [saved, setSaved] = useState(false)
+
+  function saveRate() {
+    const n = parseFloat(rate)
+    startTransition(async () => {
+      const res = await updateCommissionRate(shop.id, n)
+      if (!res.error) { setSaved(true); setTimeout(() => setSaved(false), 1500) }
+    })
+  }
 
   return (
     <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -66,6 +78,26 @@ function ShopCard({ shop, showActions }: { shop: Shop; showActions: boolean }) {
         <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
           Created {new Date(shop.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 mb-3">
+        <span className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>Commission</span>
+        <input
+          value={rate}
+          onChange={e => setRate(e.target.value)}
+          inputMode="decimal"
+          className="w-16 px-2 py-1 rounded-[6px] text-[12px] font-[family-name:var(--font-dm-mono)] outline-none"
+          style={{ background: c.white, color: c.charcoal, border: `1px solid ${c.cream2}` }}
+        />
+        <span className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>%</span>
+        <button
+          onClick={saveRate}
+          disabled={isPending}
+          className="px-2.5 py-1 rounded-[6px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[11px]"
+          style={{ background: c.greenBg, color: c.green }}
+        >
+          {saved ? 'Saved' : 'Save'}
+        </button>
       </div>
 
       {showActions && (
