@@ -154,6 +154,134 @@ export async function addProduct(formData: FormData) {
   return { success: true }
 }
 
+// --- Bulk CSV import -------------------------------------------------
+
+// Minimal RFC-4180-ish CSV parser: handles quoted fields, escaped quotes
+// (""), and commas/newlines inside quotes.
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = []
+  let field = ''
+  let inQuotes = false
+  const s = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i]
+    if (inQuotes) {
+      if (ch === '"') {
+        if (s[i + 1] === '"') { field += '"'; i++ }
+        else inQuotes = false
+      } else field += ch
+    } else if (ch === '"') {
+      inQuotes = true
+    } else if (ch === ',') {
+      row.push(field); field = ''
+    } else if (ch === '\n') {
+      row.push(field); field = ''
+      if (row.some(c => c.trim() !== '')) rows.push(row)
+      row = []
+    } else field += ch
+  }
+  if (field !== '' || row.length > 0) {
+    row.push(field)
+    if (row.some(c => c.trim() !== '')) rows.push(row)
+  }
+  return rows
+}
+
+export interface BulkImportResult {
+  added: number
+  skipped: { row: number; reason: string }[]
+  error?: string
+}
+
+export async function bulkImportProducts(csvText: string): Promise<BulkImportResult> {
+  const user = await getBazaarUser()
+  if (!user) return { added: 0, skipped: [], error: 'Unauthorized' }
+
+  const supabase = await createBazaarServer()
+
+  const { data: shop } = await supabase
+    .from('bazaar_shops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .maybeSingle()
+  if (!shop) return { added: 0, skipped: [], error: 'Create your shop first.' }
+
+  const rows = parseCsv(csvText)
+  if (rows.length < 2) return { added: 0, skipped: [], error: 'CSV needs a header row and at least one product row.' }
+
+  // Map header names → column index (case/space-insensitive).
+  const header = rows[0].map(h => h.trim().toLowerCase().replace(/\s+/g, '_'))
+  const col = (name: string) => header.indexOf(name)
+  const iName = col('name_en') >= 0 ? col('name_en') : col('name')
+  const iPrice = col('price')
+  if (iName < 0 || iPrice < 0) {
+    return { added: 0, skipped: [], error: 'CSV must include at least "name_en" and "price" columns.' }
+  }
+  const iKu = col('name_ku'), iAr = col('name_ar'), iUnit = col('unit')
+  const iStock = col('stock_qty'), iCat = col('category'), iDesc = col('description')
+
+  // Resolve category names/slugs to ids once.
+  const { data: cats } = await supabase.from('bazaar_categories').select('id, name_en, slug')
+  const catMap = new Map<string, string>()
+  for (const cdata of (cats || []) as { id: string; name_en: string; slug: string }[]) {
+    catMap.set(cdata.name_en.trim().toLowerCase(), cdata.id)
+    if (cdata.slug) catMap.set(cdata.slug.trim().toLowerCase(), cdata.id)
+  }
+
+  const get = (r: string[], i: number) => (i >= 0 && i < r.length ? r[i].trim() : '')
+  const skipped: BulkImportResult['skipped'] = []
+  let added = 0
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r]
+    const nameEn = get(row, iName)
+    const priceRaw = get(row, iPrice)
+    const price = parseInt(priceRaw.replace(/[^\d]/g, ''), 10)
+
+    if (!nameEn) { skipped.push({ row: r + 1, reason: 'missing name' }); continue }
+    if (!priceRaw || isNaN(price)) { skipped.push({ row: r + 1, reason: 'missing/invalid price' }); continue }
+
+    const unit = get(row, iUnit) || 'piece'
+    const stockRaw = get(row, iStock)
+    const stockQty = stockRaw ? parseInt(stockRaw.replace(/[^\d]/g, ''), 10) : null
+    const categoryId = catMap.get(get(row, iCat).toLowerCase()) ?? null
+
+    const { data: product, error: pErr } = await supabase
+      .from('bazaar_products')
+      .insert({
+        shop_id: shop.id,
+        name_en: nameEn,
+        name_ku: get(row, iKu) || null,
+        name_ar: get(row, iAr) || null,
+        price,
+        unit,
+        category_id: categoryId,
+        description: get(row, iDesc) || null,
+        in_stock: true,
+      })
+      .select('id')
+      .single()
+
+    if (pErr || !product) { skipped.push({ row: r + 1, reason: pErr?.message || 'insert failed' }); continue }
+
+    await supabase.from('bazaar_product_variants').insert({
+      product_id: product.id,
+      amount: 1,
+      unit,
+      price,
+      stock_qty: stockQty != null && !isNaN(stockQty) ? stockQty : null,
+      sort_order: 0,
+      in_stock: true,
+    })
+    added++
+  }
+
+  revalidatePath('/shop/products')
+  return { added, skipped }
+}
+
 export async function updateProductImage(productId: string, imageUrl: string) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }

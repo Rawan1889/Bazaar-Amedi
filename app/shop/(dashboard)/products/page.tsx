@@ -4,6 +4,7 @@ import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
 import { ProductList } from './product-list'
 import { AddProductForm } from './add-product-form'
+import { BulkImport } from './bulk-import'
 
 export default async function ProductsPage() {
   const user = await getBazaarUser()
@@ -59,6 +60,7 @@ export default async function ProductsPage() {
             {products?.length ?? 0} products in your catalog
           </p>
         </div>
+        <BulkImport />
       </div>
 
       <AddProductForm categories={categories || []} />
