@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
+import { getMyCashToRemit } from '@/lib/bazaar/cash-actions'
 import Link from 'next/link'
 
 const c = {
@@ -45,6 +46,8 @@ export default async function DriverEarningsPage() {
   const todayDeliveries = completedDeliveries.filter(d => d.delivered_at?.startsWith(today))
   const todayEarnings = todayDeliveries.reduce((sum, d) => sum + d.delivery_fee, 0)
 
+  const cash = await getMyCashToRemit()
+
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <nav className="sticky top-0 z-10 px-6 py-4" style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}>
@@ -68,6 +71,23 @@ export default async function DriverEarningsPage() {
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-6" style={{ color: c.charcoal }}>
           Earnings
         </h1>
+
+        {/* Cash to remit */}
+        {cash.amount > 0 && (
+          <div className="rounded-[14px] p-5 mb-6 flex items-center justify-between" style={{ background: c.saffronBg, border: `1px solid ${c.saffron}` }}>
+            <div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
+                Cash to remit
+              </div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
+                COD collected from {cash.orders} order{cash.orders !== 1 ? 's' : ''} — hand in to the office
+              </div>
+            </div>
+            <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffron }}>
+              {formatIQD(cash.amount)}
+            </div>
+          </div>
+        )}
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

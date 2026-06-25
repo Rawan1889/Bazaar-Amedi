@@ -71,6 +71,7 @@ export default async function OrderDetailPage({
     delivery_lat: number | null; delivery_lng: number | null
     driver_lat: number | null; driver_lng: number | null
     scheduled_date: string | null; scheduled_slot: string | null
+    delivery_code: string | null
     bazaar_order_items: { id: string; product_name: string; quantity: number; unit_price: number; pickup_status: string; bazaar_shops: { name: string; slug: string } }[]
   }
 
@@ -113,6 +114,23 @@ export default async function OrderDetailPage({
             {new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
+
+        {/* Delivery handoff code — shown while out for delivery */}
+        {isEnRoute && o.delivery_code && (
+          <div className="rounded-[14px] p-5 mb-6 flex items-center justify-between" style={{ background: c.greenBg, border: `1px solid ${c.green}` }}>
+            <div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
+                Your delivery code
+              </div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
+                Give this to the driver to confirm your delivery
+              </div>
+            </div>
+            <div className="font-[family-name:var(--font-dm-mono)] text-[28px] font-medium tracking-[0.2em]" style={{ color: c.green }}>
+              {o.delivery_code}
+            </div>
+          </div>
+        )}
 
         {/* Live tracking map — shown while out for delivery */}
         {isEnRoute && hasTrackingCoords && (

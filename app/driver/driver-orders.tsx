@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { acceptOrder, updateOrderStatus } from '@/lib/bazaar/order-actions'
 
 const c = {
@@ -39,6 +39,8 @@ interface Order {
 
 function ActiveOrderCard({ order }: { order: Order }) {
   const [isPending, startTransition] = useTransition()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const shopStops = [...new Map(
     order.bazaar_order_items.map(i => [i.bazaar_shops.name, i.bazaar_shops])
@@ -135,7 +137,38 @@ function ActiveOrderCard({ order }: { order: Order }) {
         ))}
       </div>
 
-      {nextStatus && (
+      {nextStatus === 'delivered' ? (
+        <div className="flex flex-col gap-2">
+          <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+            Ask the customer for their 4-digit code
+          </label>
+          <div className="flex gap-2">
+            <input
+              value={code}
+              onChange={e => { setCode(e.target.value); setError(null) }}
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="••••"
+              className="w-24 px-3 py-2.5 rounded-[10px] text-center tracking-[0.3em] font-[family-name:var(--font-dm-mono)] text-[15px] outline-none"
+              style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
+            />
+            <button
+              onClick={() => startTransition(async () => {
+                const res = await updateOrderStatus(order.id, 'delivered', code)
+                if (res?.error) setError(res.error)
+              })}
+              disabled={isPending || code.trim().length < 4}
+              className="flex-1 py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
+              style={{ background: code.trim().length < 4 ? c.cream2 : c.green, color: '#fff', opacity: isPending ? 0.7 : 1, cursor: code.trim().length < 4 ? 'not-allowed' : 'pointer' }}
+            >
+              {isPending ? 'Confirming…' : 'Confirm delivery'}
+            </button>
+          </div>
+          {error && (
+            <p className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.terra }}>{error}</p>
+          )}
+        </div>
+      ) : nextStatus && (
         <button
           onClick={() => startTransition(() => { updateOrderStatus(order.id, nextStatus) })}
           disabled={isPending}
