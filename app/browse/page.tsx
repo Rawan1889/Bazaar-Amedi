@@ -8,6 +8,8 @@ import { LocalizedName } from '@/app/components/localized-name'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { FlashSalesStrip } from '@/app/components/flash-sales-strip'
 import { CategoryFilter } from '@/app/components/category-filter'
+import { RecentlyViewed } from '@/app/components/recently-viewed'
+import { PromoBanner } from '@/app/components/promo-banner'
 import { FavoriteButton } from '@/app/components/favorite-button'
 
 const c = {
@@ -65,7 +67,7 @@ export default async function BrowsePage({
 
   let productsQuery = supabase
     .from('bazaar_products')
-    .select('*, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active)')
+    .select('*, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active), bazaar_product_variants(stock_qty)')
     .eq('in_stock', true)
     .eq('bazaar_shops.is_approved', true)
     .order('created_at', { ascending: false })
@@ -82,6 +84,7 @@ export default async function BrowsePage({
   return (
     <div className="min-h-[100dvh]" style={{ background: c.bg }}>
       <CustomerNav />
+      <PromoBanner />
 
       <div className="max-w-[1200px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: c.charcoal }}>
@@ -103,6 +106,9 @@ export default async function BrowsePage({
           </div>
           <CategoryFilter categories={categories ?? []} activeCategory={activeCategory} />
         </div>
+
+        {/* Recently viewed */}
+        <RecentlyViewed />
 
         {/* Products grid */}
         {(!products || products.length === 0) ? (
@@ -127,8 +133,12 @@ export default async function BrowsePage({
                 bazaar_shops: { name: string; slug: string }
                 bazaar_categories: { name_en: string; name_ku: string | null; name_ar: string | null } | null
                 bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
+                bazaar_product_variants: { stock_qty: number | null }[] | null
               }
               const activeSale = p.bazaar_flash_sales?.find(s => s.is_active && new Date(s.ends_at) > new Date())
+              const stocks = (p.bazaar_product_variants || []).map(v => v.stock_qty).filter((s): s is number => s != null && s > 0)
+              const lowStock = stocks.length > 0 ? Math.min(...stocks) : null
+              const showLowStock = lowStock != null && lowStock <= 5
 
               return (
                 <Link
@@ -153,6 +163,14 @@ export default async function BrowsePage({
                         style={{ background: c.terra, color: '#fff' }}
                       >
                         SALE
+                      </div>
+                    )}
+                    {!activeSale && showLowStock && (
+                      <div
+                        className="absolute top-2 left-2 px-2 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
+                        style={{ background: 'rgba(196,101,74,0.92)', color: '#fff' }}
+                      >
+                        {lowStock} LEFT
                       </div>
                     )}
                     <div className="absolute top-2 right-2" onClick={e => e.preventDefault()}>

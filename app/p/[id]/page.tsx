@@ -7,6 +7,7 @@ import { AddToCartButton } from '@/app/components/add-to-cart-button'
 import { CartBar } from '@/app/components/cart-bar'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { LocalizedName } from '@/app/components/localized-name'
+import { RecordView } from '@/app/components/record-view'
 
 const c = {
   green:    '#2D8A5E',
@@ -30,7 +31,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const { data: product } = await supabase
     .from('bazaar_products')
-    .select('*, bazaar_shops!inner(id, name, slug, is_approved), bazaar_product_variants(id, amount, unit, price, in_stock), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active)')
+    .select('*, bazaar_shops!inner(id, name, slug, is_approved), bazaar_product_variants(id, amount, unit, price, in_stock, stock_qty), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active)')
     .eq('id', id)
     .single()
 
@@ -40,7 +41,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     id: string; shop_id: string; name_en: string; name_ku: string | null; name_ar: string | null
     description: string | null; price: number; unit: string; image_url: string | null; in_stock: boolean
     bazaar_shops: { id: string; name: string; slug: string; is_approved: boolean }
-    bazaar_product_variants: { id: string; amount: number; unit: string; price: number; in_stock: boolean }[]
+    bazaar_product_variants: { id: string; amount: number; unit: string; price: number; in_stock: boolean; stock_qty: number | null }[]
     bazaar_product_images: { url: string; sort_order: number }[]
     bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
   }
@@ -56,9 +57,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const variants = (p.bazaar_product_variants || []).sort((a, b) => a.price - b.price)
   const basePrice = variants[0]?.price ?? p.price
 
+  // Low-stock: lowest tracked stock across variants (only show when genuinely low).
+  const stocks = (p.bazaar_product_variants || [])
+    .map(v => v.stock_qty)
+    .filter((s): s is number => s != null && s > 0)
+  const lowStock = stocks.length > 0 ? Math.min(...stocks) : null
+  const showLowStock = lowStock != null && lowStock <= 5
+
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <CustomerNav />
+      <RecordView product={{
+        id: p.id, name_en: p.name_en, image_url: p.image_url, price: basePrice, unit: p.unit,
+        shopId: p.shop_id, shopName: p.bazaar_shops.name, shopSlug: p.bazaar_shops.slug,
+      }} />
 
       <div className="max-w-[900px] mx-auto px-6 py-8">
         <Link href={`/s/${p.bazaar_shops.slug}`} className="inline-flex items-center gap-1.5 mb-5 no-underline font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.stone }}>
@@ -95,6 +107,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               )}
               <span className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: c.stone }}>per {p.unit}</span>
             </div>
+
+            {showLowStock && (
+              <div className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[12px] font-medium" style={{ background: 'rgba(196,101,74,0.08)', color: c.terra }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                Only {lowStock} left
+              </div>
+            )}
 
             {p.description && (
               <p className="font-[family-name:var(--font-dm-sans)] text-[14px] leading-relaxed mt-4" style={{ color: c.stone }}>
