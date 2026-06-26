@@ -85,7 +85,7 @@ export default async function ShopsPage() {
                       {shop.is_open ? 'Open' : 'Closed'}
                     </div>
                     {/* Favorite button */}
-                    <div className="absolute top-3 right-3" onClick={e => e.preventDefault()}>
+                    <div className="absolute top-3 right-3">
                       <FavoriteButton
                         item={{
                           id: shop.id,

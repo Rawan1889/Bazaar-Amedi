@@ -173,7 +173,7 @@ export default async function BrowsePage({
                         {lowStock} LEFT
                       </div>
                     )}
-                    <div className="absolute top-2 right-2" onClick={e => e.preventDefault()}>
+                    <div className="absolute top-2 right-2">
                       <FavoriteButton
                         item={{
                           id: p.id,
