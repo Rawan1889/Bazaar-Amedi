@@ -71,7 +71,7 @@ export default async function DriverDashboard() {
 
         <DriverLocationBroadcaster active={active.length > 0} />
 
-        <DriverOrderList active={active} available={available} />
+        <DriverOrderList active={active} available={available} userId={user.id} />
       </div>
     </div>
   )

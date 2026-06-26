@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { acceptOrder, updateOrderStatus } from '@/lib/bazaar/order-actions'
+import { OrderChat } from '@/app/components/order-chat'
 
 const c = {
   green:    '#2D8A5E',
@@ -37,7 +38,7 @@ interface Order {
   bazaar_profiles: { full_name: string; phone: string }
 }
 
-function ActiveOrderCard({ order }: { order: Order }) {
+function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
   const [isPending, startTransition] = useTransition()
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -178,6 +179,10 @@ function ActiveOrderCard({ order }: { order: Order }) {
           {isPending ? 'Updating...' : nextLabel}
         </button>
       )}
+
+      <div className="mt-3">
+        <OrderChat orderId={order.id} currentUserId={userId} />
+      </div>
     </div>
   )
 }
@@ -219,7 +224,7 @@ function AvailableOrderCard({ order }: { order: Order }) {
   )
 }
 
-export function DriverOrderList({ active, available }: { active: Order[]; available: Order[] }) {
+export function DriverOrderList({ active, available, userId }: { active: Order[]; available: Order[]; userId: string }) {
   return (
     <div className="flex flex-col gap-8">
       {active.length > 0 && (
@@ -228,7 +233,7 @@ export function DriverOrderList({ active, available }: { active: Order[]; availa
             Active deliveries
           </h2>
           <div className="flex flex-col gap-4">
-            {active.map(order => <ActiveOrderCard key={order.id} order={order as Order} />)}
+            {active.map(order => <ActiveOrderCard key={order.id} order={order as Order} userId={userId} />)}
           </div>
         </div>
       )}

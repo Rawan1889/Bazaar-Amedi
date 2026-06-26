@@ -31,7 +31,7 @@ export default async function ShopOrdersPage() {
         {orders.length} order{orders.length !== 1 ? 's' : ''} for your shop
       </p>
 
-      <ShopOrderList orders={orders} />
+      <ShopOrderList orders={orders} userId={user.id} />
     </div>
   )
 }

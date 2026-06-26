@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { acceptShopOrder, markShopOrderReady, markPickupCollected } from '@/lib/bazaar/order-actions'
+import { OrderChat } from '@/app/components/order-chat'
 
 const c = {
   green:    '#2D8A5E',
@@ -36,7 +37,7 @@ interface OrderGroup {
   items: Record<string, unknown>[]
 }
 
-function OrderCard({ group }: { group: OrderGroup }) {
+function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
   const [isPending, startTransition] = useTransition()
   const order = group.order as {
     id: string
@@ -150,11 +151,17 @@ function OrderCard({ group }: { group: OrderGroup }) {
           {order.status === 'picking_up' ? 'Driver is picking up' : 'Out for delivery'}
         </div>
       )}
+
+      {order.status !== 'cancelled' && (
+        <div className="mt-3">
+          <OrderChat orderId={order.id} currentUserId={userId} />
+        </div>
+      )}
     </div>
   )
 }
 
-export function ShopOrderList({ orders }: { orders: OrderGroup[] }) {
+export function ShopOrderList({ orders, userId }: { orders: OrderGroup[]; userId: string }) {
   if (orders.length === 0) {
     return (
       <div className="rounded-[14px] p-8 text-center" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -176,7 +183,7 @@ export function ShopOrderList({ orders }: { orders: OrderGroup[] }) {
             Active orders
           </h2>
           <div className="flex flex-col gap-4">
-            {active.map(g => <OrderCard key={g.order.id as string} group={g} />)}
+            {active.map(g => <OrderCard key={g.order.id as string} group={g} userId={userId} />)}
           </div>
         </div>
       )}
@@ -186,7 +193,7 @@ export function ShopOrderList({ orders }: { orders: OrderGroup[] }) {
             Past orders
           </h2>
           <div className="flex flex-col gap-4">
-            {past.map(g => <OrderCard key={g.order.id as string} group={g} />)}
+            {past.map(g => <OrderCard key={g.order.id as string} group={g} userId={userId} />)}
           </div>
         </div>
       )}

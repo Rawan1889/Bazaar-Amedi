@@ -4,6 +4,7 @@ import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { OrderTrackingMap } from '@/app/components/order-tracking-map'
+import { OrderChat } from '@/app/components/order-chat'
 
 const c = {
   green:    '#2D8A5E',
@@ -147,6 +148,13 @@ export default async function OrderDetailPage({
               driverLat={o.driver_lat}
               driverLng={o.driver_lng}
             />
+          </div>
+        )}
+
+        {/* Order chat */}
+        {!isCancelled && (
+          <div className="mb-6">
+            <OrderChat orderId={o.id} currentUserId={user.id} />
           </div>
         )}
 
