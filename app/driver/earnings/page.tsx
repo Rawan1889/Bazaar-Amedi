@@ -3,7 +3,7 @@ import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { getMyCashToRemit } from '@/lib/bazaar/cash-actions'
-import Link from 'next/link'
+import { DriverNav } from '@/app/components/driver-nav'
 
 const c = {
   green:    '#2D8A5E',
@@ -50,22 +50,7 @@ export default async function DriverEarningsPage() {
 
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
-      <nav className="sticky top-0 z-10 px-6 py-4" style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}>
-        <div className="max-w-[800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/driver" className="no-underline">
-              <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-                bazaar<span style={{ color: c.green }}>.</span>
-              </span>
-            </Link>
-            <span style={{ color: c.cream2 }}>/</span>
-            <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.stone }}>Earnings</span>
-          </div>
-          <Link href="/driver" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.green }}>
-            Dashboard
-          </Link>
-        </div>
-      </nav>
+      <DriverNav userName={user.full_name} />
 
       <div className="max-w-[800px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-6" style={{ color: c.charcoal }}>

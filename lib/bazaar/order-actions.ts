@@ -242,12 +242,13 @@ export async function getShopOrders() {
 
   if (!shop) return []
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bazaar_order_items')
-    .select('*, bazaar_orders(*, bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone))')
+    .select('*, bazaar_orders(id, order_number, status, delivery_address, delivery_fee, created_at, scheduled_date, scheduled_slot, fulfillment_type, customer_id, bazaar_profiles(full_name, phone))')
     .eq('shop_id', shop.id)
     .order('created_at', { ascending: false })
 
+  if (error) console.error('getShopOrders error:', error)
   return data || []
 }
 

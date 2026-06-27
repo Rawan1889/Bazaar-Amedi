@@ -48,7 +48,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
     scheduled_date: string | null
     scheduled_slot: string | null
     fulfillment_type: string | null
-    bazaar_profiles: { full_name: string; phone: string }
+    bazaar_profiles: { full_name: string; phone: string } | null
   }
   const isPickup = order.fulfillment_type === 'pickup'
   const items = group.items as { product_name: string; quantity: number; unit_price: number }[]
@@ -81,7 +81,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
 
       <div className="mb-3">
         <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
-          {order.bazaar_profiles?.full_name} — {order.bazaar_profiles?.phone}
+          {order.bazaar_profiles?.full_name ?? 'Customer'} — {order.bazaar_profiles?.phone ?? ''}
         </div>
         <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: c.stone }}>
           {new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}

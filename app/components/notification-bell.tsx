@@ -42,7 +42,7 @@ function timeAgo(date: string) {
   return `${days}d ago`
 }
 
-export function NotificationBell() {
+export function NotificationBell({ dropdownSide = 'right' }: { dropdownSide?: 'left' | 'right' }) {
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unread, setUnread] = useState(0)
@@ -106,7 +106,7 @@ export function NotificationBell() {
 
       {open && (
         <div
-          className="absolute right-0 top-12 w-[340px] max-h-[420px] rounded-[14px] overflow-hidden shadow-lg z-50 flex flex-col"
+          className={`absolute ${dropdownSide === 'left' ? 'left-0' : 'right-0'} top-12 w-[340px] max-h-[420px] rounded-[14px] overflow-hidden shadow-lg z-50 flex flex-col`}
           style={{ background: c.white, border: `1px solid ${c.cream2}` }}
         >
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${c.cream}` }}>

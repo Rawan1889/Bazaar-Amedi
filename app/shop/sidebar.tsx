@@ -44,7 +44,7 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
             bazaar<span style={{ color: c.green }}>.</span>
           </span>
         </Link>
-        <NotificationBell />
+        <NotificationBell dropdownSide="left" />
       </div>
 
       <nav className="flex flex-col gap-1 flex-1">
