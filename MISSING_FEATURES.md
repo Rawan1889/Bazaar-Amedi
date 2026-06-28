@@ -43,10 +43,10 @@ Last reviewed: 2026-06-28
 - No "cancel my order" button for customers
 - Should be allowed during `pending` window before driver is assigned
 
-### 7. Product Variants are Half-Built
-- Schema references `bazaar_product_variants` (amount/unit/price)
-- Product creation UI and cart do NOT handle variants
-- Can't buy "500g" vs "1kg" options
+### 7. ~~Product Variants are Half-Built~~ ✅ DONE (Phase 21)
+- Added interactive Client-side `ProductVariantsSelector` to handle variant options
+- Integrated selection with `AddToCartButton` and `CartItem` composite matches (so different variants of the same product can exist side-by-side in the cart)
+- Auto-decrements correct variant stock in database upon checkout
 
 ### 8. No Closed-Shop Guard
 - Items from a closed shop (`is_open: false`) can still be added to cart

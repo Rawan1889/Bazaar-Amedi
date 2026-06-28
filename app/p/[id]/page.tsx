@@ -3,7 +3,7 @@ import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProductGallery } from '@/app/components/product-gallery'
-import { AddToCartButton } from '@/app/components/add-to-cart-button'
+import { ProductVariantsSelector } from '@/app/components/product-variants-selector'
 import { CartBar } from '@/app/components/cart-bar'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { LocalizedName } from '@/app/components/localized-name'
@@ -90,23 +90,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               style={{ color: c.charcoal }}
             />
 
-            <div className="flex items-center gap-3 mt-3">
-              {activeSale ? (
-                <>
-                  <span className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.terra }}>
-                    {formatIQD(activeSale.sale_price)}
-                  </span>
-                  <span className="font-[family-name:var(--font-dm-sans)] text-[15px] line-through" style={{ color: c.stone }}>
-                    {formatIQD(basePrice)}
-                  </span>
-                </>
-              ) : (
-                <span className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.green }}>
-                  {formatIQD(basePrice)}
-                </span>
-              )}
-              <span className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: c.stone }}>per {p.unit}</span>
-            </div>
+            <ProductVariantsSelector
+              productId={p.id}
+              shopId={p.shop_id}
+              shopName={p.bazaar_shops.name}
+              shopSlug={p.bazaar_shops.slug}
+              name={p.name_en}
+              basePrice={basePrice}
+              unit={p.unit}
+              imageUrl={p.image_url}
+              activeSalePrice={activeSale?.sale_price ?? null}
+              variants={variants}
+              inStock={p.in_stock}
+            />
 
             {showLowStock && (
               <div className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[12px] font-medium" style={{ background: 'rgba(196,101,74,0.08)', color: c.terra }}>
@@ -122,46 +118,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 {p.description}
               </p>
             )}
-
-            {variants.length > 1 && (
-              <div className="mt-5">
-                <div className="font-[family-name:var(--font-dm-mono)] text-[10px] uppercase tracking-[0.1em] mb-2" style={{ color: c.stone }}>
-                  Options
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  {variants.map(v => (
-                    <div key={v.id} className="flex items-center justify-between rounded-[10px] px-3 py-2" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
-                      <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.charcoal }}>
-                        {v.amount} {v.unit}
-                      </span>
-                      <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.green }}>
-                        {formatIQD(v.price)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-6">
-              {p.in_stock ? (
-                <AddToCartButton
-                  productId={p.id}
-                  shopId={p.shop_id}
-                  shopName={p.bazaar_shops.name}
-                  shopSlug={p.bazaar_shops.slug}
-                  name={p.name_en}
-                  price={basePrice}
-                  salePrice={activeSale?.sale_price ?? null}
-                  unit={p.unit}
-                  imageUrl={p.image_url}
-                />
-              ) : (
-                <div className="inline-block px-4 py-2 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ background: c.cream, color: c.stone }}>
-                  Out of stock
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
