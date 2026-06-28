@@ -573,3 +573,52 @@ export async function setDriverOnline(online: boolean) {
   revalidatePath('/driver')
   return { success: true }
 }
+
+export async function cancelShopOrder(orderId: string) {
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Unauthorized' }
+
+  const supabase = createBazaarAdmin()
+  const userSupabase = await createBazaarServer()
+
+  const { data: shop } = await userSupabase
+    .from('bazaar_shops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!shop) return { error: 'No shop found' }
+
+  const { data: item } = await supabase
+    .from('bazaar_order_items')
+    .select('id')
+    .eq('order_id', orderId)
+    .eq('shop_id', shop.id)
+    .limit(1)
+    .maybeSingle()
+
+  if (!item) return { error: 'Order not found for your shop' }
+
+  const { data: order } = await supabase
+    .from('bazaar_orders')
+    .select('status')
+    .eq('id', orderId)
+    .single()
+
+  if (!order) return { error: 'Order not found' }
+  if (order.status === 'delivered' || order.status === 'cancelled') {
+    return { error: 'Order is already delivered or cancelled.' }
+  }
+
+  const { error } = await supabase
+    .from('bazaar_orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/shop/orders')
+  revalidatePath('/driver')
+  revalidatePath('/orders')
+  return { success: true }
+}
+

@@ -1,9 +1,10 @@
 'use client'
 
 import { useTransition } from 'react'
-import { acceptShopOrder, markShopOrderReady, markPickupCollected } from '@/lib/bazaar/order-actions'
+import { acceptShopOrder, markShopOrderReady, markPickupCollected, cancelShopOrder } from '@/lib/bazaar/order-actions'
 import { OrderChat } from '@/app/components/order-chat'
 import { ClientDate } from '@/app/components/client-date'
+import { useState } from 'react'
 
 const c = {
   green:    '#2D8A5E',
@@ -153,16 +154,40 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         </div>
       )}
 
+      {/* Shop Owner Cancellation Button */}
+      {['pending', 'confirmed', 'ready'].includes(order.status) && (
+        <button
+          onClick={() => {
+            if (confirm('Cancel this order? This action cannot be undone.')) {
+              startTransition(() => { cancelShopOrder(order.id) })
+            }
+          }}
+          disabled={isPending}
+          className="w-full mt-2 py-2 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[12px] font-medium cursor-pointer transition-all"
+          style={{
+            background: 'transparent',
+            border: `1px solid ${c.terra}`,
+            color: c.terra,
+            opacity: isPending ? 0.5 : 1,
+          }}
+        >
+          ✕ Cancel order
+        </button>
+      )}
+
       {order.status !== 'cancelled' && (
         <div className="mt-3">
           <OrderChat orderId={order.id} currentUserId={userId} />
         </div>
       )}
+
     </div>
   )
 }
 
 export function ShopOrderList({ orders, userId }: { orders: OrderGroup[]; userId: string }) {
+  const [activeTab, setActiveTab] = useState<'new' | 'preparing' | 'past'>('new')
+
   if (orders.length === 0) {
     return (
       <div className="rounded-[14px] p-8 text-center" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -173,31 +198,87 @@ export function ShopOrderList({ orders, userId }: { orders: OrderGroup[]; userId
     )
   }
 
-  const active = orders.filter(g => !['delivered', 'cancelled'].includes(g.order.status as string))
-  const past   = orders.filter(g =>  ['delivered', 'cancelled'].includes(g.order.status as string))
+  // Filter orders by tab
+  const newOrders = orders.filter(g => g.order.status === 'pending')
+  const preparingOrders = orders.filter(g => ['confirmed', 'ready', 'picking_up', 'delivering'].includes(g.order.status as string))
+  const pastOrders = orders.filter(g => ['delivered', 'cancelled'].includes(g.order.status as string))
+
+  const activeOrders = activeTab === 'new'
+    ? newOrders
+    : activeTab === 'preparing'
+      ? preparingOrders
+      : pastOrders
+
+  const tabs = [
+    { id: 'new' as const, label: 'New Received', count: newOrders.length, color: c.saffron },
+    { id: 'preparing' as const, label: 'Preparing & Ready', count: preparingOrders.length, color: c.green },
+    { id: 'past' as const, label: 'Delivered & Past', count: pastOrders.length, color: c.stone },
+  ]
 
   return (
-    <div className="flex flex-col gap-8">
-      {active.length > 0 && (
-        <div>
-          <h2 className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium mb-4" style={{ color: c.charcoal }}>
-            Active orders
-          </h2>
-          <div className="flex flex-col gap-4">
-            {active.map(g => <OrderCard key={g.order.id as string} group={g} userId={userId} />)}
+    <div className="flex flex-col gap-6">
+      {/* Premium Tab Bar */}
+      <div className="flex border-b pb-1 gap-2 overflow-x-auto" style={{ borderColor: c.cream2 }}>
+        {tabs.map(t => {
+          const isActive = activeTab === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className="flex items-center gap-1.5 pb-2.5 px-3 font-[family-name:var(--font-dm-sans)] text-[14px] font-medium border-none cursor-pointer bg-transparent relative transition-all"
+              style={{
+                color: isActive ? c.charcoal : c.stone,
+                borderBottom: isActive ? `2px solid ${c.charcoal}` : '2px solid transparent',
+                marginBottom: '-1px'
+              }}
+            >
+              {t.label}
+              {t.count > 0 && (
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-[10px] font-bold font-[family-name:var(--font-dm-mono)]"
+                  style={{
+                    background: isActive ? 'rgba(30,28,25,0.1)' : 'rgba(122,117,110,0.1)',
+                    color: isActive ? c.charcoal : c.stone
+                  }}
+                >
+                  {t.count}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Orders List / Empty State */}
+      {activeOrders.length === 0 ? (
+        <div className="rounded-[14px] p-12 text-center" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: c.cream }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c.stone} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
           </div>
+          <p className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium mb-1" style={{ color: c.charcoal }}>
+            No {activeTab} orders
+          </p>
+          <p className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
+            {activeTab === 'new'
+              ? 'New orders will show up here as soon as they are placed.'
+              : activeTab === 'preparing'
+                ? 'Orders you accept and mark ready for pickup will appear here.'
+                : 'Your order history will be shown here.'}
+          </p>
         </div>
-      )}
-      {past.length > 0 && (
-        <div>
-          <h2 className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium mb-4" style={{ color: c.stone }}>
-            Past orders
-          </h2>
-          <div className="flex flex-col gap-4">
-            {past.map(g => <OrderCard key={g.order.id as string} group={g} userId={userId} />)}
-          </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {activeOrders.map(g => (
+            <OrderCard key={g.order.id as string} group={g} userId={userId} />
+          ))}
         </div>
       )}
     </div>
   )
 }
+
