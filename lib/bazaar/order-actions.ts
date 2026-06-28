@@ -228,30 +228,54 @@ export async function getShopOrders() {
   const user = await getBazaarUser()
   if (!user) return []
 
-  // Use the user-scoped client only to verify shop ownership, then switch to
-  // the admin client for the actual query.  The market_admin role has no RLS
-  // policy on bazaar_orders (only customers and drivers do), so a user-scoped
-  // join to bazaar_orders returns null — causing orders to silently disappear.
+  // Verify shop ownership using user-scoped client.
   const userSupabase = await createBazaarServer()
-  const { data: shop } = await userSupabase
+  const { data: shop, error: shopError } = await userSupabase
     .from('bazaar_shops')
     .select('id')
     .eq('owner_id', user.id)
-    .single()
+    .maybeSingle()
 
+  if (shopError) console.error('getShopOrders shop error:', shopError)
   if (!shop) return []
 
-  // Admin client bypasses RLS so the bazaar_orders join works correctly.
-  const supabase = createBazaarAdmin()
+  const admin = createBazaarAdmin()
 
-  const { data, error } = await supabase
+  // Step 1: get order items for this shop (admin — bypasses RLS).
+  const { data: items, error: itemsError } = await admin
     .from('bazaar_order_items')
-    .select('*, bazaar_orders(id, order_number, status, delivery_address, delivery_fee, created_at, scheduled_date, scheduled_slot, fulfillment_type, customer_id, bazaar_profiles(full_name, phone))')
+    .select('id, order_id, product_id, shop_id, product_name, quantity, unit_price, pickup_status, created_at')
     .eq('shop_id', shop.id)
     .order('created_at', { ascending: false })
+    .limit(100)
 
-  if (error) console.error('getShopOrders error:', error)
-  return data || []
+  if (itemsError) {
+    console.error('getShopOrders items error:', itemsError)
+    return []
+  }
+  if (!items?.length) return []
+
+  // Step 2: fetch the parent orders for those item rows.
+  // We avoid a nested join here because bazaar_orders has TWO foreign keys to
+  // bazaar_profiles (customer_id and driver_id) — PostgREST can't resolve the
+  // ambiguity when you embed bazaar_profiles inside the join and silently
+  // returns null for the entire bazaar_orders object.
+  const orderIds = [...new Set(items.map(i => i.order_id))]
+
+  const { data: orders, error: ordersError } = await admin
+    .from('bazaar_orders')
+    .select('id, order_number, status, delivery_address, delivery_fee, created_at, scheduled_date, scheduled_slot, fulfillment_type, customer_id, bazaar_profiles!customer_id(full_name, phone)')
+    .in('id', orderIds)
+
+  if (ordersError) console.error('getShopOrders orders error:', ordersError)
+
+  const orderMap = Object.fromEntries((orders ?? []).map(o => [o.id, o]))
+
+  // Return items in the shape the page expects: item.bazaar_orders = order object.
+  return items.map(item => ({
+    ...item,
+    bazaar_orders: orderMap[item.order_id] ?? null,
+  }))
 }
 
 // Market owner: accept an incoming order
