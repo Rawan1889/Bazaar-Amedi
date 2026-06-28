@@ -4,7 +4,6 @@ import { getShopOrders } from '@/lib/bazaar/order-actions'
 import { redirect } from 'next/navigation'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { ShopOrderList } from './shop-order-list'
-import { ShopOrdersRefresher } from '@/app/components/shop-orders-refresher'
 
 export default async function ShopOrdersPage() {
   const user = await getBazaarUser()
@@ -39,7 +38,6 @@ export default async function ShopOrdersPage() {
 
   return (
     <div>
-      {shop && <ShopOrdersRefresher shopId={shop.id} />}
 
       <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: '#1E1C19' }}>
         Orders

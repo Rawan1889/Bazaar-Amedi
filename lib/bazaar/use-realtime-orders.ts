@@ -38,7 +38,7 @@ export function useRealtimeOrders(userId: string | null, role: string | null) {
     }
 
     const channel = supabase
-      .channel('order-updates')
+      .channel(`order-updates-${userId}`)
       // UPDATE: filtered to user's own orders (customer) or assigned orders (driver)
       .on(
         'postgres_changes',
@@ -116,7 +116,7 @@ export function useRealtimeShopOrders(shopId: string | null) {
     const supabase = createBazaarClient()
 
     const channel = supabase
-      .channel('shop-order-items')
+      .channel(`shop-order-items-${shopId}`)
       .on(
         'postgres_changes',
         {
@@ -152,7 +152,7 @@ export function useRealtimeAvailableOrders(isOnline: boolean) {
     const supabase = createBazaarClient()
 
     const channel = supabase
-      .channel('available-orders')
+      .channel('available-orders-driver')
       .on(
         'postgres_changes',
         {
