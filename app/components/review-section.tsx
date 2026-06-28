@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { submitReview } from '@/lib/bazaar/review-actions'
 import { StarRating } from './star-rating'
+import { ClientDate } from './client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -164,7 +165,7 @@ export function ReviewSection({ shopId, reviews, averageRating, reviewCount }: P
                   </span>
                 </div>
                 <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
-                  {new Date(review.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  <ClientDate date={review.created_at} format="short-date" />
                 </span>
               </div>
               <StarRating rating={review.rating} size={12} />

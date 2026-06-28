@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { createFlashSale, endFlashSale } from '@/lib/bazaar/flash-sale-actions'
+import { ClientDate } from '@/app/components/client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -93,7 +94,7 @@ function SaleCard({ sale }: { sale: FlashSale }) {
 
       <div className="flex items-center justify-between">
         <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
-          Ends: {new Date(sale.ends_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          Ends: <ClientDate date={sale.ends_at} />
         </div>
         {isLive && (
           <button

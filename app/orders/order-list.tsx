@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import { useTransition } from 'react'
 import { ReorderButton } from '@/app/components/reorder-button'
 import { cancelOrder } from '@/lib/bazaar/order-actions'
+import { ClientDate } from '@/app/components/client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -81,7 +82,7 @@ function OrderCard({ o }: { o: Order }) {
             {shopNames.join(' + ')}
           </span>
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
-            {new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            <ClientDate date={o.created_at} />
           </span>
         </div>
         <div className="flex items-center gap-2">

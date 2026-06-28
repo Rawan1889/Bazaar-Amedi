@@ -2,6 +2,7 @@
 
 import { useTransition, useState } from 'react'
 import { suspendUser, unsuspendUser, approveDriver, changeUserRole } from '@/lib/bazaar/admin-actions'
+import { ClientDate } from '@/app/components/client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -142,7 +143,7 @@ function UserRow({ user }: { user: User }) {
       </td>
 
       <td className="py-3 px-4 font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
-        {new Date(user.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+        <ClientDate date={user.created_at} format="long-date" />
       </td>
     </>
   )

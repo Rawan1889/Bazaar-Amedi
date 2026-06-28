@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { acceptOrder, updateOrderStatus, setDriverOnline } from '@/lib/bazaar/order-actions'
 import { useRealtimeAvailableOrders } from '@/lib/bazaar/use-realtime-orders'
 import { OrderChat } from '@/app/components/order-chat'
+import { ClientDate } from '@/app/components/client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -296,7 +297,7 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
             </svg>
-            {order.scheduled_date ? new Date(order.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {order.scheduled_slot}
+            {order.scheduled_date ? <ClientDate date={order.scheduled_date} format="scheduled" /> : ''} · {order.scheduled_slot}
           </div>
         )}
         {order.note && (

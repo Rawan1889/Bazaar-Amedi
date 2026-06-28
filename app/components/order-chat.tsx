@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { getMessages, sendMessage, type ChatMessage } from '@/lib/bazaar/chat-actions'
+import { ClientDate } from '@/app/components/client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -118,7 +119,7 @@ export function OrderChat({ orderId, currentUserId, defaultOpen = false }: Props
                       <div className="font-[family-name:var(--font-dm-sans)] text-[13px] whitespace-pre-wrap break-words">{m.body}</div>
                     </div>
                     <div className="font-[family-name:var(--font-dm-mono)] text-[9px] mt-0.5" style={{ color: c.stone }}>
-                      {mine ? 'You' : (roleLabel[m.sender_role] || m.sender_role)} · {new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                      {mine ? 'You' : (roleLabel[m.sender_role] || m.sender_role)} · <ClientDate date={m.created_at} format="time" />
                     </div>
                   </div>
                 )

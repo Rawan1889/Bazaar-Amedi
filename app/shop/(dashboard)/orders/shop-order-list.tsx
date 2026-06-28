@@ -3,6 +3,7 @@
 import { useTransition } from 'react'
 import { acceptShopOrder, markShopOrderReady, markPickupCollected } from '@/lib/bazaar/order-actions'
 import { OrderChat } from '@/app/components/order-chat'
+import { ClientDate } from '@/app/components/client-date'
 
 const c = {
   green:    '#2D8A5E',
@@ -84,14 +85,14 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
           {order.bazaar_profiles?.full_name ?? 'Customer'} — {order.bazaar_profiles?.phone ?? ''}
         </div>
         <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: c.stone }}>
-          {new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          <ClientDate date={order.created_at} />
         </div>
         {order.scheduled_slot && (
           <div className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ background: 'rgba(232,168,56,0.1)', color: '#E8A838' }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
             </svg>
-            Scheduled: {order.scheduled_date ? new Date(order.scheduled_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {order.scheduled_slot}
+            Scheduled: {order.scheduled_date ? <ClientDate date={order.scheduled_date} format="scheduled" /> : ''} · {order.scheduled_slot}
           </div>
         )}
       </div>
