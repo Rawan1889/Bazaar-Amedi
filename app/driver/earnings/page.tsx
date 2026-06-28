@@ -59,17 +59,43 @@ export default async function DriverEarningsPage() {
 
         {/* Cash to remit */}
         {cash.amount > 0 && (
-          <div className="rounded-[14px] p-5 mb-6 flex items-center justify-between" style={{ background: c.saffronBg, border: `1px solid ${c.saffron}` }}>
-            <div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
-                Cash to remit
+          <div className="rounded-[14px] p-5 mb-6 flex flex-col gap-4" style={{ background: c.saffronBg, border: `1px solid ${c.saffron}` }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
+                  Cash to remit
+                </div>
+                <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
+                  COD collected from {cash.orders} order{cash.orders !== 1 ? 's' : ''}
+                </div>
               </div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
-                COD collected from {cash.orders} order{cash.orders !== 1 ? 's' : ''} — hand in to the office
+              <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffron }}>
+                {formatIQD(cash.amount)}
               </div>
             </div>
-            <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffron }}>
-              {formatIQD(cash.amount)}
+
+            <div className="flex flex-col gap-1.5 pt-3 font-[family-name:var(--font-dm-sans)]" style={{ borderTop: '1px dashed rgba(232, 168, 56, 0.3)' }}>
+              <div className="font-[family-name:var(--font-dm-mono)] text-[9px] uppercase tracking-[0.15em] mb-1" style={{ color: c.stone }}>
+                Owed per shop
+              </div>
+              {cash.shops.map((s, idx) => (
+                <div key={idx} className="flex justify-between text-[12px]" style={{ color: c.charcoal }}>
+                  <span className="flex items-center gap-1.5">🏪 {s.name}</span>
+                  <span className="font-medium">{formatIQD(s.amount)}</span>
+                </div>
+              ))}
+              {cash.deliveryFees > 0 && (
+                <div className="flex justify-between text-[12px] mt-0.5" style={{ color: c.charcoal }}>
+                  <span className="flex items-center gap-1.5">🛵 Delivery fees (office/driver)</span>
+                  <span className="font-medium">{formatIQD(cash.deliveryFees)}</span>
+                </div>
+              )}
+              {cash.discounts > 0 && (
+                <div className="flex justify-between text-[12px] mt-0.5" style={{ color: c.stone }}>
+                  <span className="flex items-center gap-1.5">🎟️ Coupons & adjustments</span>
+                  <span className="font-medium">-{formatIQD(cash.discounts)}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
