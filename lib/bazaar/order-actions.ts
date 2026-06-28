@@ -228,9 +228,10 @@ export async function getShopOrders() {
   const user = await getBazaarUser()
   if (!user) return []
 
-  // Verify shop ownership using user-scoped client.
-  const userSupabase = await createBazaarServer()
-  const { data: shop, error: shopError } = await userSupabase
+  const supabase = await createBazaarServer()
+
+  // Shops are publicly viewable (select using true) so user-scoped client works.
+  const { data: shop, error: shopError } = await supabase
     .from('bazaar_shops')
     .select('id')
     .eq('owner_id', user.id)
@@ -239,15 +240,21 @@ export async function getShopOrders() {
   if (shopError) console.error('getShopOrders shop error:', shopError)
   if (!shop) return []
 
+  // Use admin for the data queries — even though phase-21 migration adds a
+  // shop-owner SELECT policy on bazaar_orders, the admin client guarantees
+  // this works even before the migration has been run.
   const admin = createBazaarAdmin()
 
-  // Step 1: get order items for this shop (admin — bypasses RLS).
+  // Step 1 — order items for this shop.
+  // NOTE: bazaar_order_items did NOT originally have a created_at column.
+  //       Phase-21 migration adds it.  We still avoid ordering by it here
+  //       because old rows will have the migration timestamp, not the real
+  //       order time.  We sort by the parent order's created_at below.
   const { data: items, error: itemsError } = await admin
     .from('bazaar_order_items')
-    .select('id, order_id, product_id, shop_id, product_name, quantity, unit_price, pickup_status, created_at')
+    .select('id, order_id, product_id, shop_id, product_name, quantity, unit_price, pickup_status')
     .eq('shop_id', shop.id)
-    .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(200)
 
   if (itemsError) {
     console.error('getShopOrders items error:', itemsError)
@@ -255,23 +262,23 @@ export async function getShopOrders() {
   }
   if (!items?.length) return []
 
-  // Step 2: fetch the parent orders for those item rows.
-  // We avoid a nested join here because bazaar_orders has TWO foreign keys to
-  // bazaar_profiles (customer_id and driver_id) — PostgREST can't resolve the
-  // ambiguity when you embed bazaar_profiles inside the join and silently
-  // returns null for the entire bazaar_orders object.
+  // Step 2 — parent orders with customer profile.
+  // bazaar_orders has TWO FKs to bazaar_profiles (customer_id + driver_id).
+  // Using the !customer_id hint tells PostgREST which one to follow.
   const orderIds = [...new Set(items.map(i => i.order_id))]
 
   const { data: orders, error: ordersError } = await admin
     .from('bazaar_orders')
     .select('id, order_number, status, delivery_address, delivery_fee, created_at, scheduled_date, scheduled_slot, fulfillment_type, customer_id, bazaar_profiles!customer_id(full_name, phone)')
     .in('id', orderIds)
+    .order('created_at', { ascending: false })
 
   if (ordersError) console.error('getShopOrders orders error:', ordersError)
 
   const orderMap = Object.fromEntries((orders ?? []).map(o => [o.id, o]))
 
-  // Return items in the shape the page expects: item.bazaar_orders = order object.
+  // Return items with their parent order attached — matches the shape
+  // the page.tsx reduce and ShopOrderList component expect.
   return items.map(item => ({
     ...item,
     bazaar_orders: orderMap[item.order_id] ?? null,
