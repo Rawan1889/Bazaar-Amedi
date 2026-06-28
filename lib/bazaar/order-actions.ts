@@ -265,6 +265,7 @@ export async function acceptShopOrder(orderId: string) {
 
   if (error) return { error: error.message }
   revalidatePath('/shop/orders')
+  revalidatePath('/driver')
   return { success: true }
 }
 
@@ -299,6 +300,7 @@ export async function markShopOrderReady(orderId: string) {
 
   if (error) return { error: error.message }
   revalidatePath('/shop/orders')
+  revalidatePath('/driver')
   return { success: true }
 }
 
@@ -313,15 +315,18 @@ export async function getAvailableOrders() {
 
   const supabase = createBazaarAdmin()
 
-  const { data } = await supabase
+  // Include 'confirmed' (shop preparing) so driver can see upcoming orders early.
+  // 'ready' means shop finished preparing — driver can accept that one.
+  const { data, error } = await supabase
     .from('bazaar_orders')
-    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
-    .eq('status', 'ready')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles(full_name, phone)')
+    .in('status', ['confirmed', 'ready'])
     .eq('fulfillment_type', 'delivery')
     .is('driver_id', null)
     .order('created_at', { ascending: false })
     .limit(20)
 
+  if (error) console.error('getAvailableOrders error:', error)
   return data || []
 }
 
@@ -367,13 +372,14 @@ export async function getMyDeliveries() {
 
   const supabase = createBazaarAdmin()
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('bazaar_orders')
-    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone)')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles(full_name, phone)')
     .eq('driver_id', user.id)
     .in('status', ['picking_up', 'delivering'])
     .order('created_at', { ascending: false })
 
+  if (error) console.error('getMyDeliveries error:', error)
   return data || []
 }
 
@@ -440,6 +446,8 @@ export async function updateOrderStatus(orderId: string, status: string, deliver
   }
 
   revalidatePath('/driver')
+  revalidatePath('/orders')
+  revalidatePath('/shop/orders')
   return { success: true }
 }
 

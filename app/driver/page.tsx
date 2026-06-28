@@ -5,6 +5,7 @@ import { getAvailableOrders, getMyDeliveries } from '@/lib/bazaar/order-actions'
 import { DriverOrderList } from './driver-orders'
 import { DriverLocationBroadcaster } from '@/app/components/driver-location-broadcaster'
 import { DriverNav } from '@/app/components/driver-nav'
+import { DriverRefresher } from '@/app/components/driver-refresher'
 
 export default async function DriverDashboard() {
   const user = await getBazaarUser()
@@ -50,6 +51,7 @@ export default async function DriverDashboard() {
           {active.length} active, {available.length} available
         </p>
 
+        <DriverRefresher />
         <DriverLocationBroadcaster active={active.length > 0} />
 
         <DriverOrderList active={active} available={available} userId={user.id} />
