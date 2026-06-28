@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
-import { sendPushToUser, sendPushToRole } from './push-notifications'
+import { sendPushToUser, sendPushToOnlineDrivers } from './push-notifications'
 import { applyCoupon } from './coupon-actions'
 import { feeForZone } from './zone-utils'
 
@@ -199,15 +199,11 @@ export async function placeOrder(data: {
     }
   }
 
-  // Pickup orders never go to a driver.
-  if (!isPickup) {
-    sendPushToRole('driver', {
-      type: 'new_order',
-      title: 'New delivery available',
-      body: `${data.items.length} item(s) to ${data.deliveryAddress}`,
-      url: '/driver',
-    })
-  }
+  // Pickup orders never involve a driver.
+  // NOTE: drivers are notified later, in markShopOrderReady(), once the order
+  // is actually in 'ready' status and they can accept it.  Notifying at
+  // placement (status: pending) would send drivers to a dashboard that shows
+  // nothing, because getAvailableOrders() only returns confirmed/ready orders.
 
   return { success: true, orderId: order.id }
 }
@@ -232,15 +228,21 @@ export async function getShopOrders() {
   const user = await getBazaarUser()
   if (!user) return []
 
-  const supabase = await createBazaarServer()
-
-  const { data: shop } = await supabase
+  // Use the user-scoped client only to verify shop ownership, then switch to
+  // the admin client for the actual query.  The market_admin role has no RLS
+  // policy on bazaar_orders (only customers and drivers do), so a user-scoped
+  // join to bazaar_orders returns null — causing orders to silently disappear.
+  const userSupabase = await createBazaarServer()
+  const { data: shop } = await userSupabase
     .from('bazaar_shops')
     .select('id')
     .eq('owner_id', user.id)
     .single()
 
   if (!shop) return []
+
+  // Admin client bypasses RLS so the bazaar_orders join works correctly.
+  const supabase = createBazaarAdmin()
 
   const { data, error } = await supabase
     .from('bazaar_order_items')
@@ -301,6 +303,15 @@ export async function markShopOrderReady(orderId: string) {
   if (error) return { error: error.message }
   revalidatePath('/shop/orders')
   revalidatePath('/driver')
+
+  // Notify online drivers that an order is now ready for pickup.
+  sendPushToOnlineDrivers({
+    type: 'order_ready',
+    title: '📦 Order ready for pickup',
+    body: `An order is packed and waiting — tap to accept.`,
+    url: '/driver',
+  })
+
   return { success: true }
 }
 
@@ -386,9 +397,28 @@ export async function getMyDeliveries() {
 export async function acceptOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Only drivers can accept orders.' }
+  if (!user.is_approved) return { error: 'Your driver account is not yet approved.' }
 
   const supabase = createBazaarAdmin()
 
+  // First check if the order still exists and is unclaimed — gives a better
+  // error message than a silent DB constraint failure.
+  const { data: existing } = await supabase
+    .from('bazaar_orders')
+    .select('id, driver_id, status')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (!existing) return { error: 'Order not found.' }
+  if (existing.driver_id !== null) {
+    return { error: 'This order was already claimed by another driver.' }
+  }
+  if (!['confirmed', 'ready'].includes(existing.status)) {
+    return { error: 'This order is no longer available.' }
+  }
+
+  // Atomic claim — the WHERE driver_id IS NULL ensures only one driver wins
+  // even if two tap simultaneously.
   const { error } = await supabase
     .from('bazaar_orders')
     .update({ driver_id: user.id, status: 'picking_up' })
@@ -495,5 +525,24 @@ export async function cancelOrder(orderId: string) {
 
   if (error) return { error: error.message }
   revalidatePath('/orders')
+  return { success: true }
+}
+
+// Toggle the calling driver's online/offline status.
+// Online drivers receive push notifications for new orders and their panel
+// shows available deliveries. Offline drivers see an "You're offline" screen.
+export async function setDriverOnline(online: boolean) {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
+  if (!user.is_approved) return { error: 'Account not yet approved.' }
+
+  const supabase = createBazaarAdmin()
+  const { error } = await supabase
+    .from('bazaar_profiles')
+    .update({ is_online: online })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/driver')
   return { success: true }
 }

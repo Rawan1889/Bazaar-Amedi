@@ -36,8 +36,13 @@ export default async function DriverDashboard() {
     )
   }
 
-  const available = await getAvailableOrders()
-  const active = await getMyDeliveries()
+  // Only fetch orders when driver is online — saves unnecessary DB queries
+  // and avoids showing stale data when they go offline then refresh.
+  const isOnline = user.is_online ?? false
+  const [available, active] = await Promise.all([
+    isOnline ? getAvailableOrders() : Promise.resolve([]),
+    isOnline ? getMyDeliveries()    : Promise.resolve([]),
+  ])
 
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: '#FAFAF7' }}>
@@ -48,13 +53,20 @@ export default async function DriverDashboard() {
           Deliveries
         </h1>
         <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-8" style={{ color: '#7A756E' }}>
-          {active.length} active, {available.length} available
+          {isOnline
+            ? `${active.length} active · ${available.length} available`
+            : 'Go online to start receiving orders'}
         </p>
 
         <DriverRefresher />
         <DriverLocationBroadcaster active={active.length > 0} />
 
-        <DriverOrderList active={active} available={available} userId={user.id} />
+        <DriverOrderList
+          active={active}
+          available={available}
+          userId={user.id}
+          isOnline={isOnline}
+        />
       </div>
     </div>
   )

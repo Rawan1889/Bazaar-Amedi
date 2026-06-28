@@ -129,6 +129,28 @@ export async function sendPushToRole(
   )
 }
 
+// Only notify drivers who are currently online — avoids waking up off-duty drivers.
+export async function sendPushToOnlineDrivers(
+  notification: { title: string; body: string; url?: string; type: string }
+) {
+  if (!initWebPush()) return
+
+  const admin = createBazaarAdmin()
+
+  const { data: drivers } = await admin
+    .from('bazaar_profiles')
+    .select('id')
+    .eq('role', 'driver')
+    .eq('is_online', true)
+    .eq('is_approved', true)
+
+  if (!drivers?.length) return
+
+  await Promise.allSettled(
+    drivers.map(d => sendPushToUser(d.id, notification))
+  )
+}
+
 export async function getMyNotifications() {
   const user = await getBazaarUser()
   if (!user) return []

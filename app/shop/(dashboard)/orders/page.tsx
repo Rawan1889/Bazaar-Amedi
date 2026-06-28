@@ -20,7 +20,8 @@ export default async function ShopOrdersPage() {
   const orderItems = await getShopOrders()
 
   const groupedByOrder = orderItems.reduce((acc: Record<string, { order: Record<string, unknown>; items: typeof orderItems }>, item: Record<string, unknown>) => {
-    const order = item.bazaar_orders as Record<string, unknown>
+    const order = item.bazaar_orders as Record<string, unknown> | null
+    if (!order?.id) return acc   // guard: skip orphaned items with no order data
     const orderId = order.id as string
     if (!acc[orderId]) {
       acc[orderId] = { order, items: [] }

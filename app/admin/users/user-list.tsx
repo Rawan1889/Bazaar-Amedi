@@ -32,6 +32,7 @@ type User = {
   neighborhood: string | null
   is_suspended: boolean
   is_approved: boolean
+  is_online: boolean
   created_at: string
 }
 
@@ -50,8 +51,18 @@ function UserRow({ user }: { user: User }) {
             {user.full_name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
-              {user.full_name}
+            <div className="flex items-center gap-1.5">
+              <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
+                {user.full_name}
+              </span>
+              {/* Online dot — only shown for drivers */}
+              {user.role === 'driver' && (
+                <span
+                  title={user.is_online ? 'Online' : 'Offline'}
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: user.is_online ? c.green : c.cream2 }}
+                />
+              )}
             </div>
             <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
               {user.phone ?? '—'}

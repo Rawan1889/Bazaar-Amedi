@@ -7,6 +7,8 @@ export interface BazaarProfile {
   phone: string
   avatar_url: string | null
   neighborhood: string | null
+  is_approved: boolean
+  is_online: boolean
   created_at: string
 }
 

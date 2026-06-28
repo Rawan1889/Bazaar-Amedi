@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { acceptOrder, updateOrderStatus } from '@/lib/bazaar/order-actions'
+import { acceptOrder, updateOrderStatus, setDriverOnline } from '@/lib/bazaar/order-actions'
+import { useRealtimeAvailableOrders } from '@/lib/bazaar/use-realtime-orders'
 import { OrderChat } from '@/app/components/order-chat'
 
 const c = {
@@ -39,7 +40,104 @@ interface Order {
   bazaar_profiles: { full_name: string; phone: string } | null
 }
 
-// Orders being prepared by the shop — driver can see but not yet pick up
+// ──────────────────────────────────────────────
+// Online / Offline toggle pill
+// ──────────────────────────────────────────────
+function OnlineToggle({ isOnline }: { isOnline: boolean }) {
+  const [online, setOnline] = useState(isOnline)
+  const [isPending, startTransition] = useTransition()
+
+  function toggle() {
+    const next = !online
+    startTransition(async () => {
+      const res = await setDriverOnline(next)
+      if (!res?.error) setOnline(next)
+    })
+  }
+
+  return (
+    <div className="flex items-center justify-between mb-8 p-4 rounded-[14px]"
+      style={{ background: online ? c.greenBg : c.cream, border: `1px solid ${online ? 'rgba(45,138,94,0.25)' : c.cream2}` }}
+    >
+      <div>
+        <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: online ? c.green : c.charcoal }}>
+          {online ? "You're online" : "You're offline"}
+        </div>
+        <div className="font-[family-name:var(--font-dm-sans)] text-[12px] mt-0.5" style={{ color: c.stone }}>
+          {online ? 'Receiving orders & push notifications' : 'Not receiving orders or notifications'}
+        </div>
+      </div>
+
+      {/* Toggle switch */}
+      <button
+        onClick={toggle}
+        disabled={isPending}
+        aria-label={online ? 'Go offline' : 'Go online'}
+        className="relative flex-shrink-0 w-12 h-6 rounded-full border-none cursor-pointer transition-all duration-300"
+        style={{
+          background: online ? c.green : c.cream2,
+          opacity: isPending ? 0.6 : 1,
+        }}
+      >
+        <span
+          className="absolute top-[2px] w-5 h-5 rounded-full transition-all duration-300"
+          style={{
+            background: c.white,
+            left: online ? 'calc(100% - 22px)' : '2px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+          }}
+        />
+      </button>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────
+// Offline screen (Option B — hides all orders)
+// ──────────────────────────────────────────────
+function OfflineScreen({ isOnline }: { isOnline: boolean }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <OnlineToggle isOnline={isOnline} />
+      <div className="rounded-[14px] p-10 text-center" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: c.cream }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={c.stone} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M8 12h8M12 8v8" />
+          </svg>
+        </div>
+        <h2 className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium mb-2" style={{ color: c.charcoal }}>
+          You're offline
+        </h2>
+        <p className="font-[family-name:var(--font-dm-sans)] text-[13px] max-w-[280px] mx-auto" style={{ color: c.stone }}>
+          Toggle online above to start receiving delivery requests and push notifications.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────
+// Toast for race-condition errors
+// ──────────────────────────────────────────────
+function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-[12px] flex items-center gap-3 shadow-lg"
+      style={{ background: c.terra, color: '#fff', maxWidth: '90vw' }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+      </svg>
+      <span className="font-[family-name:var(--font-dm-sans)] text-[13px] flex-1">{message}</span>
+      <button onClick={onDismiss} className="bg-transparent border-none cursor-pointer p-0" style={{ color: 'rgba(255,255,255,0.7)' }}>✕</button>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────
+// PreparingCard — order confirmed by shop, not yet ready
+// ──────────────────────────────────────────────
 function PreparingCard({ order }: { order: Order }) {
   const shopNames = [...new Set(order.bazaar_order_items.map(i => i.bazaar_shops.name))]
 
@@ -73,10 +171,21 @@ function PreparingCard({ order }: { order: Order }) {
   )
 }
 
-// Orders ready — driver can accept and pick up
-function AvailableOrderCard({ order }: { order: Order }) {
+// ──────────────────────────────────────────────
+// AvailableOrderCard — ready for driver to claim
+// ──────────────────────────────────────────────
+function AvailableOrderCard({ order, onError }: { order: Order; onError: (msg: string) => void }) {
   const [isPending, startTransition] = useTransition()
   const shopNames = [...new Set(order.bazaar_order_items.map(i => i.bazaar_shops.name))]
+
+  function handleAccept() {
+    startTransition(async () => {
+      const res = await acceptOrder(order.id)
+      if (res?.error) {
+        onError(res.error)
+      }
+    })
+  }
 
   return (
     <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -102,7 +211,7 @@ function AvailableOrderCard({ order }: { order: Order }) {
       </div>
 
       <button
-        onClick={() => startTransition(() => { acceptOrder(order.id) })}
+        onClick={handleAccept}
         disabled={isPending}
         className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
         style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
@@ -113,7 +222,9 @@ function AvailableOrderCard({ order }: { order: Order }) {
   )
 }
 
-// Active deliveries — driver has accepted and is in progress
+// ──────────────────────────────────────────────
+// ActiveOrderCard — driver has accepted, in progress
+// ──────────────────────────────────────────────
 function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
   const [isPending, startTransition] = useTransition()
   const [code, setCode] = useState('')
@@ -275,22 +386,44 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
   )
 }
 
+// ──────────────────────────────────────────────
+// Main export
+// ──────────────────────────────────────────────
 export function DriverOrderList({
   active,
   available,
   userId,
+  isOnline,
 }: {
   active: Order[]
   available: Order[]
   userId: string
+  isOnline: boolean
 }) {
+  const [toastError, setToastError] = useState<string | null>(null)
+
+  // Live subscription — refreshes the list when orders change. Only when online.
+  useRealtimeAvailableOrders(isOnline)
+
+  // Option B: show offline screen when driver is not online
+  if (!isOnline) {
+    return <OfflineScreen isOnline={false} />
+  }
+
   const preparing = available.filter(o => o.status === 'confirmed')
   const ready     = available.filter(o => o.status === 'ready')
-
-  const isEmpty = active.length === 0 && preparing.length === 0 && ready.length === 0
+  const isEmpty   = active.length === 0 && preparing.length === 0 && ready.length === 0
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Online toggle at the top */}
+      <OnlineToggle isOnline={isOnline} />
+
+      {/* Error toast for race-condition "order already taken" */}
+      {toastError && (
+        <ErrorToast message={toastError} onDismiss={() => setToastError(null)} />
+      )}
+
       {/* Active deliveries driver already accepted */}
       {active.length > 0 && (
         <div>
@@ -313,7 +446,9 @@ export function DriverOrderList({
             Shop has finished packing — accept to pick up.
           </p>
           <div className="flex flex-col gap-4">
-            {ready.map(order => <AvailableOrderCard key={order.id} order={order} />)}
+            {ready.map(order => (
+              <AvailableOrderCard key={order.id} order={order} onError={setToastError} />
+            ))}
           </div>
         </div>
       )}
