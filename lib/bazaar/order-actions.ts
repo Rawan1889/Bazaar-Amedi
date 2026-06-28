@@ -318,12 +318,8 @@ export async function markShopOrderReady(orderId: string) {
 
   if (!shop) return { error: 'No shop found' }
 
-  // Mark this shop's items as ready
-  await supabase
-    .from('bazaar_order_items')
-    .update({ pickup_status: 'ready' })
-    .eq('order_id', orderId)
-    .eq('shop_id', shop.id)
+  // pickup_status only has 'pending' and 'picked_up' — no intermediate 'ready' state.
+  // The driver marks items as picked_up when they collect from the shop.
 
   // Mark order as ready for driver
   const { error } = await supabase
@@ -361,7 +357,7 @@ export async function getAvailableOrders() {
   // 'ready' means shop finished preparing — driver can accept that one.
   const { data, error } = await supabase
     .from('bazaar_orders')
-    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles(full_name, phone)')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!customer_id(full_name, phone)')
     .in('status', ['confirmed', 'ready'])
     .eq('fulfillment_type', 'delivery')
     .is('driver_id', null)
@@ -416,7 +412,7 @@ export async function getMyDeliveries() {
 
   const { data, error } = await supabase
     .from('bazaar_orders')
-    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles(full_name, phone)')
+    .select('*, bazaar_order_items(*, bazaar_shops(name, address)), bazaar_profiles!customer_id(full_name, phone)')
     .eq('driver_id', user.id)
     .in('status', ['picking_up', 'delivering'])
     .order('created_at', { ascending: false })
