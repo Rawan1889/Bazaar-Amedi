@@ -118,8 +118,8 @@ export default async function OrderDetailPage({
           </span>
         </div>
 
-        {/* Handoff code — shown while out for delivery, or ready for pickup */}
-        {((isEnRoute && !isPickupOrder) || (isPickupOrder && o.status === 'ready')) && o.delivery_code && (
+        {/* Handoff code — shown for all active orders before they are completed/cancelled */}
+        {o.status !== 'delivered' && o.status !== 'cancelled' && o.delivery_code && (
           <div className="rounded-[14px] p-5 mb-6 flex items-center justify-between" style={{ background: c.greenBg, border: `1px solid ${c.green}` }}>
             <div>
               <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
