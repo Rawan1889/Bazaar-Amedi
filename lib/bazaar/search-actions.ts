@@ -12,7 +12,7 @@ export async function searchProducts(query: string) {
   const pattern = `%${q}%`
   const { data } = await supabase
     .from('bazaar_products')
-    .select('id, name_en, price, unit, image_url, shop_id, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_flash_sales(sale_price, ends_at, is_active)')
+    .select('id, name_en, price, unit, image_url, shop_id, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_flash_sales(sale_price, ends_at, is_active), bazaar_product_variants(id, stock_qty, price, in_stock)')
     .eq('in_stock', true)
     .eq('bazaar_shops.is_approved', true)
     .or(`name_en.ilike.${pattern},name_ku.ilike.${pattern},name_ar.ilike.${pattern}`)

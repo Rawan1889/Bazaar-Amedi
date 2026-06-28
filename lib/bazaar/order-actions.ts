@@ -9,6 +9,7 @@ import { feeForZone } from './zone-utils'
 
 interface CartItemInput {
   productId: string
+  variantId?: string
   shopId: string
   name: string
   price: number
@@ -43,6 +44,38 @@ export async function placeOrder(data: {
     if (shopIds.size > 1) return { error: 'Pickup is only available for single-shop orders.' }
   } else if (!data.deliveryAddress.trim()) {
     return { error: 'Delivery address is required.' }
+  }
+
+  // Pre-validate stock availability
+  const adminClient = createBazaarAdmin()
+  for (const item of data.items) {
+    let variant = null
+    if (item.variantId) {
+      const { data: v } = await adminClient
+        .from('bazaar_product_variants')
+        .select('id, stock_qty, in_stock')
+        .eq('id', item.variantId)
+        .maybeSingle()
+      variant = v
+    } else {
+      const effectivePrice = item.salePrice ?? item.price
+      const { data: v } = await adminClient
+        .from('bazaar_product_variants')
+        .select('id, stock_qty, in_stock')
+        .eq('product_id', item.productId)
+        .eq('price', effectivePrice)
+        .maybeSingle()
+      variant = v
+    }
+
+    if (variant) {
+      if (variant.stock_qty !== null && variant.stock_qty < item.quantity) {
+        return { error: `Sorry, only ${variant.stock_qty} unit(s) of "${item.name}" are available in stock.` }
+      }
+      if (!variant.in_stock && variant.stock_qty !== null && variant.stock_qty <= 0) {
+        return { error: `Sorry, "${item.name}" is currently out of stock.` }
+      }
+    }
   }
 
   const supabase = await createBazaarServer()
@@ -123,18 +156,26 @@ export async function placeOrder(data: {
   if (itemsError) return { error: itemsError.message }
 
   // Decrement stock_qty on product variants for each ordered item.
-  // Match variant by product_id + price so we don't need variant_id on cart items.
   const admin = createBazaarAdmin()
   for (const item of data.items) {
-    const effectivePrice = item.salePrice ?? item.price
-    const { data: variant } = await admin
-      .from('bazaar_product_variants')
-      .select('id, stock_qty')
-      .eq('product_id', item.productId)
-      .eq('price', effectivePrice)
-      .not('stock_qty', 'is', null)
-      .limit(1)
-      .maybeSingle()
+    let variant = null
+    if (item.variantId) {
+      const { data: v } = await admin
+        .from('bazaar_product_variants')
+        .select('id, stock_qty')
+        .eq('id', item.variantId)
+        .maybeSingle()
+      variant = v
+    } else {
+      const effectivePrice = item.salePrice ?? item.price
+      const { data: v } = await admin
+        .from('bazaar_product_variants')
+        .select('id, stock_qty')
+        .eq('product_id', item.productId)
+        .eq('price', effectivePrice)
+        .maybeSingle()
+      variant = v
+    }
     if (variant && variant.stock_qty !== null) {
       const newQty = Math.max(0, variant.stock_qty - item.quantity)
       await admin

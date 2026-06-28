@@ -70,6 +70,7 @@ export default function CartPage() {
       const result = await placeOrder({
         items: items.map(i => ({
           productId: i.productId,
+          variantId: i.variantId,
           shopId: i.shopId,
           name: i.name,
           price: i.price,
@@ -224,7 +225,7 @@ export default function CartPage() {
 
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.productId, item.quantity - 1, item.variantId)}
                           className="w-7 h-7 rounded-[6px] flex items-center justify-center border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[14px]"
                           style={{ background: c.cream, color: c.stone }}
                         >
@@ -234,7 +235,7 @@ export default function CartPage() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variantId)}
                           className="w-7 h-7 rounded-[6px] flex items-center justify-center border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[14px]"
                           style={{ background: c.cream, color: c.stone }}
                         >
@@ -243,7 +244,7 @@ export default function CartPage() {
                       </div>
 
                       <button
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeItem(item.productId, item.variantId)}
                         className="p-1 border-none bg-transparent cursor-pointer"
                         style={{ color: c.stone }}
                       >

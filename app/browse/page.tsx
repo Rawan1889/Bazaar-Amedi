@@ -45,7 +45,7 @@ export default async function BrowsePage({
   // Active flash sales
   const { data: flashSales } = await supabase
     .from('bazaar_flash_sales')
-    .select('*, bazaar_products(id, name_en, name_ku, name_ar, shop_id, unit, price, image_url, bazaar_shops(name, slug)), bazaar_product_variants(amount, unit)')
+    .select('*, bazaar_products(id, name_en, name_ku, name_ar, shop_id, unit, price, image_url, bazaar_shops(name, slug)), bazaar_product_variants(id, amount, unit, stock_qty)')
     .eq('is_active', true)
     .gt('ends_at', new Date().toISOString())
     .order('ends_at', { ascending: true })
@@ -67,7 +67,7 @@ export default async function BrowsePage({
 
   let productsQuery = supabase
     .from('bazaar_products')
-    .select('*, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active), bazaar_product_variants(stock_qty)')
+    .select('*, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active), bazaar_product_variants(id, stock_qty, price, in_stock)')
     .eq('in_stock', true)
     .eq('bazaar_shops.is_approved', true)
     .order('created_at', { ascending: false })
@@ -133,9 +133,10 @@ export default async function BrowsePage({
                 bazaar_shops: { name: string; slug: string }
                 bazaar_categories: { name_en: string; name_ku: string | null; name_ar: string | null } | null
                 bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
-                bazaar_product_variants: { stock_qty: number | null }[] | null
+                bazaar_product_variants: { id: string; stock_qty: number | null; price: number; in_stock: boolean }[] | null
               }
               const activeSale = p.bazaar_flash_sales?.find(s => s.is_active && new Date(s.ends_at) > new Date())
+              const defaultVariant = p.bazaar_product_variants?.find(v => v.price === p.price) || p.bazaar_product_variants?.[0]
               const stocks = (p.bazaar_product_variants || []).map(v => v.stock_qty).filter((s): s is number => s != null && s > 0)
               const lowStock = stocks.length > 0 ? Math.min(...stocks) : null
               const showLowStock = lowStock != null && lowStock <= 5
@@ -216,6 +217,7 @@ export default async function BrowsePage({
                       </div>
                       <AddToCartButton
                         productId={p.id}
+                        variantId={defaultVariant?.id}
                         shopId={p.shop_id}
                         shopName={p.bazaar_shops.name}
                         shopSlug={p.bazaar_shops.slug}
@@ -224,6 +226,7 @@ export default async function BrowsePage({
                         salePrice={activeSale?.sale_price ?? null}
                         unit={p.unit}
                         imageUrl={p.image_url}
+                        stockQty={defaultVariant?.stock_qty}
                       />
                     </div>
                   </div>

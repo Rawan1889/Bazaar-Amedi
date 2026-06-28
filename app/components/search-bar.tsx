@@ -102,8 +102,10 @@ export function SearchBar() {
               id: string; name_en: string; price: number; unit: string; image_url: string | null; shop_id: string
               bazaar_shops: { name: string; slug: string }
               bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
+              bazaar_product_variants: { id: string; stock_qty: number | null; price: number; in_stock: boolean }[] | null
             }
             const activeSale = p.bazaar_flash_sales?.find(s => s.is_active && new Date(s.ends_at) > new Date())
+            const defaultVariant = p.bazaar_product_variants?.find(v => v.price === p.price) || p.bazaar_product_variants?.[0]
 
             return (
               <div
@@ -142,6 +144,7 @@ export function SearchBar() {
                   </span>
                   <AddToCartButton
                     productId={p.id}
+                    variantId={defaultVariant?.id}
                     shopId={p.shop_id}
                     shopName={p.bazaar_shops.name}
                     shopSlug={p.bazaar_shops.slug}
@@ -150,6 +153,7 @@ export function SearchBar() {
                     salePrice={activeSale?.sale_price ?? null}
                     unit={p.unit}
                     imageUrl={p.image_url}
+                    stockQty={defaultVariant?.stock_qty}
                   />
                 </div>
               </div>

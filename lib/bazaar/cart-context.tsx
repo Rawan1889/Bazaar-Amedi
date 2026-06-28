@@ -14,6 +14,7 @@ export interface CartItem {
   unit: string
   imageUrl: string | null
   quantity: number
+  stockQty?: number | null
 }
 
 interface CartState {
@@ -65,6 +66,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems(prev => {
       const existing = prev.find(i => i.productId === item.productId && i.variantId === item.variantId)
       if (existing) {
+        if (existing.stockQty !== undefined && existing.stockQty !== null && existing.quantity >= existing.stockQty) {
+          alert(`Sorry, only ${existing.stockQty} unit(s) are available in stock.`)
+          return prev
+        }
         return prev.map(i =>
           (i.productId === item.productId && i.variantId === item.variantId)
             ? { ...i, quantity: i.quantity + 1 }
@@ -83,9 +88,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (quantity <= 0) {
       setItems(prev => prev.filter(i => !(i.productId === productId && i.variantId === variantId)))
     } else {
-      setItems(prev =>
-        prev.map(i => (i.productId === productId && i.variantId === variantId) ? { ...i, quantity } : i)
-      )
+      setItems(prev => {
+        const item = prev.find(i => i.productId === productId && i.variantId === variantId)
+        if (item && item.stockQty !== undefined && item.stockQty !== null && quantity > item.stockQty) {
+          alert(`Sorry, only ${item.stockQty} unit(s) are available in stock.`)
+          return prev
+        }
+        return prev.map(i => (i.productId === productId && i.variantId === variantId) ? { ...i, quantity } : i)
+      })
     }
   }, [])
 

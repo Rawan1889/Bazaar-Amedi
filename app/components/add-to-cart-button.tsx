@@ -19,6 +19,7 @@ interface Props {
   salePrice: number | null
   unit: string
   imageUrl: string | null
+  stockQty?: number | null
 }
 
 export function AddToCartButton(props: Props) {
@@ -39,7 +40,15 @@ export function AddToCartButton(props: Props) {
           {existing.quantity}
         </span>
         <button
-          onClick={e => { e.preventDefault(); e.stopPropagation(); updateQuantity(props.productId, existing.quantity + 1, props.variantId) }}
+          onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (props.stockQty !== undefined && props.stockQty !== null && existing.quantity >= props.stockQty) {
+              alert(`Sorry, only ${props.stockQty} unit(s) are available in stock.`)
+              return
+            }
+            updateQuantity(props.productId, existing.quantity + 1, props.variantId)
+          }}
           className="w-6 h-6 rounded-[4px] flex items-center justify-center border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[12px]"
           style={{ background: c.green, color: c.white }}
         >

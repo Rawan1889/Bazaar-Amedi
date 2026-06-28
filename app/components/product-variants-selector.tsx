@@ -143,6 +143,7 @@ export function ProductVariantsSelector({
             salePrice={activeSalePrice}
             unit={currentUnit}
             imageUrl={imageUrl}
+            stockQty={selectedVariant?.stock_qty}
           />
         ) : (
           <div className="inline-block px-4 py-2 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ background: c.cream, color: c.stone }}>

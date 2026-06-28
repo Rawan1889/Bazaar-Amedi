@@ -52,7 +52,7 @@ type Sale = {
     price?: number
     bazaar_shops: { name: string; slug: string }
   } | null
-  bazaar_product_variants: { amount: number; unit: string } | null
+  bazaar_product_variants: { id: string; amount: number; unit: string; stock_qty: number | null } | null
 }
 
 function SaleCard({ sale }: { sale: Sale }) {
@@ -116,6 +116,7 @@ function SaleCard({ sale }: { sale: Sale }) {
             </div>
             <AddToCartButton
               productId={p.id}
+              variantId={sale.bazaar_product_variants?.id}
               shopId={p.shop_id}
               shopName={p.bazaar_shops.name}
               shopSlug={p.bazaar_shops.slug}
@@ -124,6 +125,7 @@ function SaleCard({ sale }: { sale: Sale }) {
               salePrice={sale.sale_price}
               unit={p.unit}
               imageUrl={p.image_url}
+              stockQty={sale.bazaar_product_variants?.stock_qty}
             />
           </div>
         </div>
