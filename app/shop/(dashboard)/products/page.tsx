@@ -40,7 +40,7 @@ export default async function ProductsPage() {
 
   const { data: products } = await supabase
     .from('bazaar_products')
-    .select('*, bazaar_categories(name_en), bazaar_product_images(id, url, sort_order)')
+    .select('*, bazaar_categories(name_en), bazaar_product_images(id, url, sort_order), bazaar_product_variants(id, amount, unit, price, stock_qty)')
     .eq('shop_id', shop.id)
     .order('sort_order', { ascending: true })
 

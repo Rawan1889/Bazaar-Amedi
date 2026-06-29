@@ -18,6 +18,14 @@ const c = {
 
 interface GalleryImage { id: string; url: string; sort_order: number }
 
+interface Variant {
+  id: string
+  amount: number
+  unit: string
+  price: number
+  stock_qty: number | null
+}
+
 interface Product {
   id: string
   name_en: string
@@ -28,6 +36,7 @@ interface Product {
   description: string | null
   bazaar_categories: { name_en: string } | null
   bazaar_product_images?: GalleryImage[]
+  bazaar_product_variants?: Variant[]
 }
 
 function formatIQD(amount: number) {
@@ -119,6 +128,38 @@ function ProductRow({ product }: { product: Product }) {
             <span className="font-[family-name:var(--font-dm-sans)] text-[11px] truncate" style={{ color: c.stone }}>
               {product.description}
             </span>
+          )}
+        </div>
+
+        {/* Stock Display Section */}
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          {(!product.bazaar_product_variants || product.bazaar_product_variants.length <= 1) ? (
+            <span className="font-[family-name:var(--font-dm-sans)] text-[11px] font-medium px-2 py-0.5 rounded-[4px]"
+              style={{
+                background: (product.bazaar_product_variants?.[0]?.stock_qty ?? null) === 0 ? c.terraBg : c.greenBg,
+                color: (product.bazaar_product_variants?.[0]?.stock_qty ?? null) === 0 ? c.terra : c.green
+              }}
+            >
+              📦 Stock: {product.bazaar_product_variants?.[0]?.stock_qty ?? 'Unlimited'}
+            </span>
+          ) : (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-[family-name:var(--font-dm-sans)] text-[11px] font-medium" style={{ color: c.stone }}>
+                📦 Stock options:
+              </span>
+              {product.bazaar_product_variants.map(v => (
+                <span
+                  key={v.id}
+                  className="font-[family-name:var(--font-dm-mono)] text-[10px] px-1.5 py-0.5 rounded-[4px]"
+                  style={{
+                    background: v.stock_qty === 0 ? c.terraBg : 'rgba(30,28,25,0.04)',
+                    color: v.stock_qty === 0 ? c.terra : c.charcoal
+                  }}
+                >
+                  {v.amount} {v.unit} ({v.stock_qty ?? '∞'})
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>
