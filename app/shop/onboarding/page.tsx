@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { OnboardingWizard } from './onboarding-wizard'
+import { getActiveZones } from '@/lib/bazaar/zone-actions'
 
 export default async function ShopOnboardingPage() {
   const user = await getBazaarUser()
@@ -35,11 +36,14 @@ export default async function ShopOnboardingPage() {
     .order('created_at', { ascending: false })
     .limit(10)
 
+  const zones = await getActiveZones()
+
   return (
     <OnboardingWizard
       shop={shop}
       categories={categories || []}
       products={products || []}
+      zones={zones}
       currentStep={shop?.onboarding_step || 0}
     />
   )

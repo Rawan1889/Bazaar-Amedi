@@ -3,6 +3,7 @@ import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
 import { ShopSettingsForm } from './settings-form'
+import { getActiveZones } from '@/lib/bazaar/zone-actions'
 
 export default async function ShopSettingsPage() {
   const user = await getBazaarUser()
@@ -30,7 +31,7 @@ export default async function ShopSettingsPage() {
         {shop ? 'Update your shop details' : 'Set up your shop to start selling'}
       </p>
 
-      <ShopSettingsForm shop={shop} categories={categories || []} />
+      <ShopSettingsForm shop={shop} categories={categories || []} zones={await getActiveZones()} />
     </div>
   )
 }

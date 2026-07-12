@@ -72,7 +72,6 @@ export default async function OrderDetailPage({
     delivery_lat: number | null; delivery_lng: number | null
     driver_lat: number | null; driver_lng: number | null
     scheduled_date: string | null; scheduled_slot: string | null
-    delivery_code: string | null
     fulfillment_type: string | null
     bazaar_order_items: { id: string; product_name: string; quantity: number; unit_price: number; pickup_status: string; bazaar_shops: { name: string; slug: string } }[]
   }
@@ -93,10 +92,14 @@ export default async function OrderDetailPage({
       <nav className="sticky top-0 z-10 px-6 py-4" style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}>
         <div className="max-w-[600px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="no-underline">
+            <Link href="/" className="no-underline flex items-center mr-2">
               <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
                 bazaar<span style={{ color: c.green }}>.</span>
               </span>
+            </Link>
+            <span style={{ color: c.cream2 }}>|</span>
+            <Link href="/" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
+              Home
             </Link>
             <span style={{ color: c.cream2 }}>/</span>
             <Link href="/orders" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
@@ -118,22 +121,6 @@ export default async function OrderDetailPage({
           </span>
         </div>
 
-        {/* Handoff code — shown for all active orders before they are completed/cancelled */}
-        {o.status !== 'delivered' && o.status !== 'cancelled' && o.delivery_code && (
-          <div className="rounded-[14px] p-5 mb-6 flex items-center justify-between" style={{ background: c.greenBg, border: `1px solid ${c.green}` }}>
-            <div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
-                {isPickupOrder ? 'Your pickup code' : 'Your delivery code'}
-              </div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
-                {isPickupOrder ? 'Show this at the shop to collect your order' : 'Give this to the driver to confirm your delivery'}
-              </div>
-            </div>
-            <div className="font-[family-name:var(--font-dm-mono)] text-[28px] font-medium tracking-[0.2em]" style={{ color: c.green }}>
-              {o.delivery_code}
-            </div>
-          </div>
-        )}
 
         {/* Live tracking map — shown while out for delivery */}
         {isEnRoute && hasTrackingCoords && (

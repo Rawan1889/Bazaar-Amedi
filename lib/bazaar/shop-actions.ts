@@ -26,6 +26,8 @@ export async function updateShop(formData: FormData) {
   const phone = (formData.get('phone') as string)?.trim() || null
   const address = (formData.get('address') as string)?.trim() || null
   const categoryId = (formData.get('category_id') as string) || null
+  const neighborhood = (formData.get('neighborhood') as string)?.trim() || null
+  const zoneId = (formData.get('zone_id') as string) || null
   const isOpen = formData.get('is_open') === 'true'
 
   const { data: existing } = await supabase
@@ -37,7 +39,7 @@ export async function updateShop(formData: FormData) {
   if (existing) {
     const { error } = await supabase
       .from('bazaar_shops')
-      .update({ name, description, phone, address, category_id: categoryId, is_open: isOpen })
+      .update({ name, description, phone, address, category_id: categoryId, neighborhood, zone_id: zoneId, is_open: isOpen })
       .eq('id', existing.id)
 
     if (error) return { error: error.message }
@@ -53,6 +55,8 @@ export async function updateShop(formData: FormData) {
         phone,
         address,
         category_id: categoryId,
+        neighborhood,
+        zone_id: zoneId,
         is_open: isOpen,
         is_approved: false,
       })

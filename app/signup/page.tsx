@@ -5,6 +5,8 @@ import { useState, useEffect, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { bazaarSignup } from '@/lib/bazaar/auth'
+import { getActiveZones } from '@/lib/bazaar/zone-actions'
+import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 
 const c = {
   green:      '#2D8A5E',
@@ -154,6 +156,11 @@ function SignupFormInner() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [zones, setZones] = useState<DeliveryZone[]>([])
+
+  useEffect(() => {
+    getActiveZones().then(setZones)
+  }, [])
 
   useEffect(() => {
     if (roleParam && ['customer', 'market', 'driver'].includes(roleParam)) {
@@ -270,6 +277,11 @@ function SignupFormInner() {
                 { value: 'other', label: 'Other' },
               ]}
             />
+            <SelectField
+              name="zoneId"
+              label="Delivery Zone"
+              options={zones.map(z => ({ value: z.id, label: `${z.name} (${new Intl.NumberFormat('en-IQ').format(z.fee)} IQD)` }))}
+            />
           </>
         )}
 
@@ -290,6 +302,22 @@ function SignupFormInner() {
                 { value: 'household', label: 'Household & Cleaning' },
                 { value: 'other', label: 'Other' },
               ]}
+            />
+            <SelectField
+              name="neighborhood"
+              label="Neighborhood"
+              options={[
+                { value: 'amedi-center', label: 'Amedi Center' },
+                { value: 'sulav', label: 'Sulav' },
+                { value: 'sarsink', label: 'Sarsink' },
+                { value: 'barzan', label: 'Barzan' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
+            <SelectField
+              name="zoneId"
+              label="Delivery Zone"
+              options={zones.map(z => ({ value: z.id, label: `${z.name} (${new Intl.NumberFormat('en-IQ').format(z.fee)} IQD)` }))}
             />
             <Field name="location" label="Shop location / address" placeholder="Near Amedi bazaar, main street" />
           </>

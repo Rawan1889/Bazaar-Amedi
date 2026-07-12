@@ -62,6 +62,7 @@ export async function bazaarSignup(formData: FormData) {
 
   const bazaarRole = role === 'market' ? 'market_admin' : role === 'driver' ? 'driver' : 'customer'
   const neighborhood = formData.get('neighborhood') as string | null
+  const zoneId = formData.get('zoneId') as string | null
 
   const { error: profileError } = await admin
     .from('bazaar_profiles')
@@ -71,6 +72,7 @@ export async function bazaarSignup(formData: FormData) {
       full_name: fullName,
       phone: `+964${phone.replace(/\s+/g, '')}`,
       neighborhood: neighborhood || null,
+      zone_id: zoneId || null,
       // Drivers require admin approval before they can take deliveries.
       // Customers and market owners are approved on signup.
       is_approved: bazaarRole !== 'driver',
@@ -102,6 +104,8 @@ export async function bazaarSignup(formData: FormData) {
         address: location || null,
         phone: `+964${phone.replace(/\s+/g, '')}`,
         is_approved: false,
+        neighborhood: neighborhood || null,
+        zone_id: zoneId || null,
       })
     }
   }

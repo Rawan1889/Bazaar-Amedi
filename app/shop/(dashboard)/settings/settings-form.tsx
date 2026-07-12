@@ -23,9 +23,17 @@ interface Shop {
   phone: string | null
   address: string | null
   category_id: string | null
+  neighborhood: string | null
+  zone_id: string | null
   is_open: boolean
   logo_url: string | null
   cover_url: string | null
+}
+
+interface Zone {
+  id: string
+  name: string
+  fee: number
 }
 
 function FormField({ name, label, defaultValue, placeholder, type = 'text' }: {
@@ -102,9 +110,10 @@ function ImageUploadSlot({
   )
 }
 
-export function ShopSettingsForm({ shop, categories }: {
+export function ShopSettingsForm({ shop, categories, zones }: {
   shop: Shop | null
   categories: { id: string; name_en: string }[]
+  zones: Zone[]
 }) {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -181,6 +190,25 @@ export function ShopSettingsForm({ shop, categories }: {
             <FormField name="description" label="Description (optional)" defaultValue={shop?.description} placeholder="Tell customers about your shop" />
             <FormField name="phone" label="Phone number" defaultValue={shop?.phone} placeholder="+964 750 123 4567" type="tel" />
             <FormField name="address" label="Address" defaultValue={shop?.address} placeholder="Near Amedi bazaar, main street" />
+            <FormField name="neighborhood" label="Neighborhood" defaultValue={shop?.neighborhood} placeholder="e.g. Sulava, Qadishaye" />
+
+            {zones.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                  Delivery zone
+                </label>
+                <select
+                  name="zone_id" defaultValue={shop?.zone_id || ''}
+                  className="w-full rounded-[10px] px-4 py-3 text-[14px] font-[family-name:var(--font-dm-sans)] outline-none appearance-none cursor-pointer"
+                  style={{ border: `1px solid ${c.cream2}`, color: c.charcoal, background: c.white }}
+                >
+                  <option value="">Select zone...</option>
+                  {zones.map(z => (
+                    <option key={z.id} value={z.id}>{z.name} — {z.fee.toLocaleString()} IQD</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="flex flex-col gap-1.5">
               <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>

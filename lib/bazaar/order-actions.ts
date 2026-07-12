@@ -131,7 +131,6 @@ export async function placeOrder(data: {
       zone_id: data.zoneId ?? null,
       scheduled_date: data.scheduledDate ?? null,
       scheduled_slot: data.scheduledSlot ?? null,
-      delivery_code: String(Math.floor(1000 + Math.random() * 9000)),
       fulfillment_type: isPickup ? 'pickup' : 'delivery',
     })
     .select('id')
@@ -499,7 +498,7 @@ export async function acceptOrder(orderId: string) {
   return { success: true }
 }
 
-export async function updateOrderStatus(orderId: string, status: string, deliveryCode?: string) {
+export async function updateOrderStatus(orderId: string, status: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
 
@@ -507,16 +506,12 @@ export async function updateOrderStatus(orderId: string, status: string, deliver
 
   const { data: orderData } = await supabase
     .from('bazaar_orders')
-    .select('customer_id, order_number, delivery_code')
+    .select('customer_id, order_number')
     .eq('id', orderId)
     .single()
 
   const update: Record<string, unknown> = { status }
   if (status === 'delivered') {
-    // Require the customer's handoff code to confirm delivery (proof of delivery).
-    if (orderData?.delivery_code && deliveryCode?.trim() !== orderData.delivery_code) {
-      return { error: 'Incorrect delivery code. Ask the customer for their 4-digit code.' }
-    }
     update.delivered_at = new Date().toISOString()
   }
 
