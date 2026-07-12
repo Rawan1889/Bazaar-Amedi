@@ -15,7 +15,8 @@ const c = {
 const statusMessages: Record<string, string> = {
   new:         'New order placed',
   pending:     'Order is pending',
-  confirmed:   'Order confirmed by driver',
+  confirmed:   'Shop confirmed your order',
+  ready:       'Order ready for pickup',
   picking_up:  'Driver is picking up your items',
   delivering:  'Your order is on its way',
   delivered:   'Order delivered',
