@@ -1,14 +1,15 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/lib/bazaar/cart-context'
 import { placeOrder } from '@/lib/bazaar/order-actions'
 import { CouponInput } from '@/app/components/coupon-input'
 import { CheckoutAddress, type SelectedAddress } from '@/app/components/checkout-address'
 import { DeliverySlotPicker, type SelectedSlot } from '@/app/components/delivery-slot-picker'
-import { feeForZone } from '@/lib/bazaar/zone-utils'
+import { computeDeliveryFee, EXTRA_SHOP_SURCHARGE } from '@/lib/bazaar/zone-utils'
+import { getShopZones } from '@/lib/bazaar/zone-actions'
 
 const c = {
   green:    '#2D8A5E',
@@ -47,10 +48,22 @@ export default function CartPage() {
   // the UI and the order submitted stay consistent (pickup is single-shop only).
   const isPickup = fulfillment === 'pickup' && canPickup
   const zone = selectedAddress?.zone ?? null
-  // No zone on the address (e.g. saved before zones existed) → server falls back
-  // to the default 2500 fee, so mirror that here for a consistent total.
-  // Pickup has no delivery fee.
-  const deliveryFee = isPickup ? 0 : (zone ? feeForZone(zone, subtotal) : 2500)
+
+  // Fetch each shop's zone once per shopId set so we can preview the multi-shop
+  // fee (farthest zone + surcharge per extra shop) client-side. Server still
+  // recomputes on placeOrder.
+  const [shopZones, setShopZones] = useState<{ fee: number }[]>([])
+  const shopIdsKey = shopGroups.map(g => g.shopId).sort().join(',')
+  useEffect(() => {
+    if (!shopIdsKey) { setShopZones([]); return }
+    let cancelled = false
+    getShopZones(shopIdsKey.split(',')).then(z => { if (!cancelled) setShopZones(z) })
+    return () => { cancelled = true }
+  }, [shopIdsKey])
+
+  const deliveryFee = isPickup
+    ? 0
+    : computeDeliveryFee({ customerZone: zone, shopZones, subtotal, shopCount })
   const discount = coupon?.discount || 0
   const total = Math.max(0, subtotal - discount) + deliveryFee
   const freeDelivery = !isPickup && zone?.free_delivery_threshold != null && subtotal >= zone.free_delivery_threshold
@@ -284,7 +297,9 @@ export default function CartPage() {
                   )}
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
                     <span style={{ color: c.stone }}>
-                      {isPickup ? 'Pickup' : `Delivery fee${zone ? ` · ${zone.name}` : ''}`}
+                      {isPickup
+                        ? 'Pickup'
+                        : `Delivery fee${zone ? ` · ${zone.name}` : ''}${!isPickup && shopCount > 1 ? ` · +${formatIQD(EXTRA_SHOP_SURCHARGE)} × ${shopCount - 1} extra shop${shopCount - 1 > 1 ? 's' : ''}` : ''}`}
                     </span>
                     <span style={{ color: (freeDelivery || isPickup) ? c.green : c.charcoal }}>
                       {(freeDelivery || isPickup) ? 'Free' : formatIQD(deliveryFee)}

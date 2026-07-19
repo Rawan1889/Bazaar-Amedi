@@ -5,7 +5,7 @@ import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
 import { sendPushToUser, sendPushToOnlineDrivers } from './push-notifications'
 import { applyCoupon } from './coupon-actions'
-import { feeForZone } from './zone-utils'
+import { computeDeliveryFee } from './zone-utils'
 
 interface CartItemInput {
   productId: string
@@ -84,22 +84,44 @@ export async function placeOrder(data: {
     (sum, i) => sum + (i.salePrice ?? i.price) * i.quantity, 0
   )
 
-  // Resolve the delivery fee server-side from the chosen zone — never trust a
-  // fee from the client. Enforce the zone's minimum order value too.
+  // Resolve the delivery fee server-side from the involved zones — never trust
+  // a fee from the client. Rule: base = farthest zone fee among customer's zone
+  // and each shop's zone; +500 IQD per additional shop beyond the first.
   // Pickup orders have no delivery fee.
   let deliveryFee = isPickup ? 0 : 2500
-  if (!isPickup && data.zoneId) {
-    const { data: zone } = await supabase
-      .from('bazaar_delivery_zones')
-      .select('fee, min_order, free_delivery_threshold, is_active')
-      .eq('id', data.zoneId)
-      .maybeSingle()
-    if (zone && zone.is_active) {
-      if (zone.min_order && subtotal < zone.min_order) {
-        return { error: `Minimum order for this area is ${zone.min_order.toLocaleString('en-IQ')} IQD.` }
-      }
-      deliveryFee = feeForZone(zone, subtotal)
+  if (!isPickup) {
+    const shopIds = [...new Set(data.items.map(i => i.shopId))]
+    const { data: shopRows } = await supabase
+      .from('bazaar_shops')
+      .select('zone_id')
+      .in('id', shopIds)
+    const shopZoneIds = (shopRows || [])
+      .map(r => r.zone_id as string | null)
+      .filter((id): id is string => !!id)
+    const allZoneIds = [...new Set([data.zoneId, ...shopZoneIds].filter((id): id is string => !!id))]
+    const { data: zones } = allZoneIds.length
+      ? await supabase
+          .from('bazaar_delivery_zones')
+          .select('id, fee, min_order, free_delivery_threshold, is_active')
+          .in('id', allZoneIds)
+      : { data: [] }
+    const activeZones = (zones || []).filter(z => z.is_active)
+    const customerZone = data.zoneId ? activeZones.find(z => z.id === data.zoneId) ?? null : null
+
+    if (customerZone?.min_order && subtotal < customerZone.min_order) {
+      return { error: `Minimum order for this area is ${customerZone.min_order.toLocaleString('en-IQ')} IQD.` }
     }
+
+    const shopZones = shopZoneIds
+      .map(zid => activeZones.find(z => z.id === zid))
+      .filter((z): z is NonNullable<typeof z> => !!z)
+
+    deliveryFee = computeDeliveryFee({
+      customerZone,
+      shopZones,
+      subtotal,
+      shopCount: shopIds.length,
+    })
   }
 
   // Re-validate the coupon server-side — never trust the discount the client sent.

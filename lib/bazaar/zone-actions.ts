@@ -7,6 +7,24 @@ import type { DeliveryZone } from './zone-utils'
 
 export type { DeliveryZone }
 
+// Fetch active delivery zones for a set of shops. Used by the cart to preview
+// the multi-shop delivery fee (farthest zone) before checkout.
+export async function getShopZones(shopIds: string[]): Promise<Pick<DeliveryZone, 'fee'>[]> {
+  if (shopIds.length === 0) return []
+  const supabase = await createBazaarServer()
+  const { data: shops } = await supabase
+    .from('bazaar_shops')
+    .select('zone_id')
+    .in('id', shopIds)
+  const zoneIds = (shops || []).map(s => s.zone_id).filter((id): id is string => !!id)
+  if (zoneIds.length === 0) return []
+  const { data: zones } = await supabase
+    .from('bazaar_delivery_zones')
+    .select('fee, is_active')
+    .in('id', zoneIds)
+  return (zones || []).filter(z => z.is_active).map(z => ({ fee: z.fee }))
+}
+
 // Public: active zones for the checkout / address picker.
 export async function getActiveZones(): Promise<DeliveryZone[]> {
   const supabase = await createBazaarServer()
