@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateShop, addProduct } from '@/lib/bazaar/shop-actions'
 import { updateOnboardingStep, completeOnboarding } from '@/lib/bazaar/onboarding-actions'
+import { uploadProductImage } from '@/lib/bazaar/image-upload'
 
 const c = {
   green:      '#2D8A5E',
@@ -91,6 +92,22 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
   const [isPending, startTransition] = useTransition()
   const [localProducts, setLocalProducts] = useState<Product[]>(products)
   const [productAdded, setProductAdded] = useState(false)
+  const [productImage, setProductImage] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const productImageInput = useRef<HTMLInputElement>(null)
+
+  async function handleProductImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingImage(true)
+    setProductError(null)
+    const fd = new FormData()
+    fd.append('file', file)
+    const result = await uploadProductImage(fd)
+    setUploadingImage(false)
+    if (result.error) setProductError(result.error)
+    else if (result.url) setProductImage(result.url)
+  }
   const router = useRouter()
 
   function goToStep(newStep: number) {
@@ -274,6 +291,7 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
                   const unit = (formData.get('unit') as string) || 'piece'
                   const stockQty = (formData.get('quantity') as string) || ''
                   formData.set('variants', JSON.stringify([{ amount: '1', unit, price, stockQty }]))
+                  if (productImage) formData.set('image_url', productImage)
                   startTransition(async () => {
                     const result = await addProduct(formData)
                     if (result?.error) { setProductError(result.error); return }
@@ -285,6 +303,7 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
                       in_stock: true,
                     }, ...prev])
                     setProductAdded(true)
+                    setProductImage(null)
                     const form = document.querySelector('form[data-product-form]') as HTMLFormElement
                     form?.reset()
                   })
@@ -295,6 +314,28 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
                   Add a product
                 </h3>
                 <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                      Product photo
+                    </label>
+                    <div
+                      className="w-24 h-24 rounded-[10px] overflow-hidden cursor-pointer flex items-center justify-center flex-shrink-0"
+                      style={{ background: c.greenBg, border: `1px dashed ${c.cream2}` }}
+                      onClick={() => productImageInput.current?.click()}
+                    >
+                      {productImage ? (
+                        <img src={productImage} alt="Product preview" className="w-full h-full object-cover" />
+                      ) : uploadingImage ? (
+                        <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>Uploading…</span>
+                      ) : (
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={c.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </div>
+                    <input ref={productImageInput} type="file" accept="image/*" className="hidden" onChange={handleProductImage} />
+                  </div>
+
                   <FormField name="name_en" label="Product name" placeholder="e.g. Fresh tomatoes" required />
                   <div className="grid grid-cols-2 gap-4">
                     <FormField name="price" label="Price (IQD)" placeholder="2500" type="number" required />
