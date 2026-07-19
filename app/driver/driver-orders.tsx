@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { acceptOrder, updateOrderStatus, setDriverOnline } from '@/lib/bazaar/order-actions'
+import { acceptOrder, updateOrderStatus, markShopPickedUp, setDriverOnline } from '@/lib/bazaar/order-actions'
 import { useRealtimeAvailableOrders } from '@/lib/bazaar/use-realtime-orders'
 import { OrderChat } from '@/app/components/order-chat'
 import { ClientDate } from '@/app/components/client-date'
@@ -37,7 +37,7 @@ interface Order {
   scheduled_slot: string | null
   note: string | null
   created_at: string
-  bazaar_order_items: { product_name: string; quantity: number; pickup_status: string; bazaar_shops: { name: string; address: string | null } }[]
+  bazaar_order_items: { shop_id: string; product_name: string; quantity: number; pickup_status: string; bazaar_shops: { name: string; address: string | null } }[]
   bazaar_profiles: { full_name: string; phone: string } | null
 }
 
@@ -230,9 +230,22 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
+  // Group items by shop so we can show a per-shop pickup checklist.
   const shopStops = [...new Map(
-    order.bazaar_order_items.map(i => [i.bazaar_shops.name, i.bazaar_shops])
-  ).entries()]
+    order.bazaar_order_items.map(i => [
+      i.shop_id,
+      {
+        id: i.shop_id,
+        name: i.bazaar_shops.name,
+        address: i.bazaar_shops.address,
+        pickedUp: order.bazaar_order_items
+          .filter(it => it.shop_id === i.shop_id)
+          .every(it => it.pickup_status === 'picked_up'),
+      },
+    ])
+  ).values()]
+
+  const allPickedUp = shopStops.every(s => s.pickedUp)
 
   const nextStatus = order.status === 'picking_up' ? 'delivering'
     : order.status === 'delivering' ? 'delivered' : null
@@ -258,22 +271,40 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
         </span>
       </div>
 
-      {/* Shop pickup stops */}
+      {/* Shop pickup stops — driver marks each shop as picked up */}
       <div className="mb-3 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
         <div className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase mb-2" style={{ color: c.stone }}>
-          Pickup route
+          Pickup route ({shopStops.filter(s => s.pickedUp).length}/{shopStops.length} picked up)
         </div>
-        {shopStops.map(([name, shop], idx) => (
-          <div key={name} className="flex items-center gap-2 mb-1.5">
-            <div className="w-5 h-5 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[9px]" style={{ background: c.greenBg, color: c.green }}>
-              {idx + 1}
+        {shopStops.map((shop, idx) => (
+          <div key={shop.id} className="flex items-center justify-between gap-2 mb-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[9px] flex-shrink-0" style={{
+                background: shop.pickedUp ? c.green : c.greenBg,
+                color: shop.pickedUp ? '#fff' : c.green,
+              }}>
+                {shop.pickedUp ? '✓' : idx + 1}
+              </div>
+              <div className="min-w-0">
+                <span className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium" style={{ color: c.charcoal, textDecoration: shop.pickedUp ? 'line-through' : 'none' }}>{shop.name}</span>
+                {shop.address && (
+                  <span className="font-[family-name:var(--font-dm-sans)] text-[10px] ml-2" style={{ color: c.stone }}>{shop.address}</span>
+                )}
+              </div>
             </div>
-            <div>
-              <span className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium" style={{ color: c.charcoal }}>{name}</span>
-              {shop.address && (
-                <span className="font-[family-name:var(--font-dm-sans)] text-[10px] ml-2" style={{ color: c.stone }}>{shop.address}</span>
-              )}
-            </div>
+            {order.status === 'picking_up' && !shop.pickedUp && (
+              <button
+                onClick={() => startTransition(async () => {
+                  const res = await markShopPickedUp(order.id, shop.id)
+                  if (res?.error) setError(res.error)
+                })}
+                disabled={isPending}
+                className="px-2.5 py-1 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px] font-medium border-none cursor-pointer flex-shrink-0"
+                style={{ background: c.greenBg, color: c.green, opacity: isPending ? 0.6 : 1 }}
+              >
+                Mark picked up
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -355,14 +386,27 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
           )}
         </div>
       ) : nextStatus && (
-        <button
-          onClick={() => startTransition(() => { updateOrderStatus(order.id, nextStatus) })}
-          disabled={isPending}
-          className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
-          style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
-        >
-          {isPending ? 'Updating...' : nextLabel}
-        </button>
+        <>
+          <button
+            onClick={() => startTransition(async () => {
+              const res = await updateOrderStatus(order.id, nextStatus)
+              if (res?.error) setError(res.error)
+            })}
+            disabled={isPending || (order.status === 'picking_up' && !allPickedUp)}
+            className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
+            style={{
+              background: (order.status === 'picking_up' && !allPickedUp) ? c.cream2 : c.green,
+              color: (order.status === 'picking_up' && !allPickedUp) ? c.stone : '#fff',
+              opacity: isPending ? 0.7 : 1,
+              cursor: (order.status === 'picking_up' && !allPickedUp) ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {isPending ? 'Updating...' : (order.status === 'picking_up' && !allPickedUp) ? `Pick up from all shops first` : nextLabel}
+          </button>
+          {error && (
+            <p className="font-[family-name:var(--font-dm-sans)] text-[12px] mt-2" style={{ color: c.terra }}>{error}</p>
+          )}
+        </>
       )}
 
       <div className="mt-3">

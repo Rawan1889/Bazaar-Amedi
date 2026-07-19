@@ -364,7 +364,11 @@ export async function acceptShopOrder(orderId: string) {
   return { success: true }
 }
 
-// Market owner: mark order ready for driver pickup
+// Market owner: mark this shop's portion of the order ready for driver pickup.
+// pickup_status values: 'pending' → 'ready' → 'picked_up'.
+// The order's overall status only advances to 'ready' when EVERY shop's items
+// are ready — this stops the driver from grabbing a multi-shop order while
+// some shops are still packing.
 export async function markShopOrderReady(orderId: string) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
@@ -380,28 +384,46 @@ export async function markShopOrderReady(orderId: string) {
 
   if (!shop) return { error: 'No shop found' }
 
-  // pickup_status only has 'pending' and 'picked_up' — no intermediate 'ready' state.
-  // The driver marks items as picked_up when they collect from the shop.
+  // Mark this shop's items as ready.
+  const { error: itemsError } = await supabase
+    .from('bazaar_order_items')
+    .update({ pickup_status: 'ready' })
+    .eq('order_id', orderId)
+    .eq('shop_id', shop.id)
+    .eq('pickup_status', 'pending')
 
-  // Mark order as ready for driver
-  const { error } = await supabase
-    .from('bazaar_orders')
-    .update({ status: 'ready' })
-    .eq('id', orderId)
+  if (itemsError) return { error: itemsError.message }
 
-  if (error) return { error: error.message }
+  // Check whether every item across every shop in this order is ready (or
+  // already picked up). Only then does the order become available to drivers.
+  const { data: allItems } = await supabase
+    .from('bazaar_order_items')
+    .select('pickup_status')
+    .eq('order_id', orderId)
+
+  const allReady = (allItems || []).every(
+    i => i.pickup_status === 'ready' || i.pickup_status === 'picked_up'
+  )
+
+  if (allReady) {
+    const { error } = await supabase
+      .from('bazaar_orders')
+      .update({ status: 'ready' })
+      .eq('id', orderId)
+    if (error) return { error: error.message }
+
+    // Notify online drivers only once, when the whole order is ready.
+    sendPushToOnlineDrivers({
+      type: 'order_ready',
+      title: '📦 Order ready for pickup',
+      body: `An order is packed and waiting — tap to accept.`,
+      url: '/driver',
+    })
+  }
+
   revalidatePath('/shop/orders')
   revalidatePath('/driver')
-
-  // Notify online drivers that an order is now ready for pickup.
-  sendPushToOnlineDrivers({
-    type: 'order_ready',
-    title: '📦 Order ready for pickup',
-    body: `An order is packed and waiting — tap to accept.`,
-    url: '/driver',
-  })
-
-  return { success: true }
+  return { success: true, allReady }
 }
 
 // Legacy alias kept for any remaining callers
@@ -502,8 +524,8 @@ export async function acceptOrder(orderId: string) {
   if (existing.driver_id !== null) {
     return { error: 'This order was already claimed by another driver.' }
   }
-  if (!['confirmed', 'ready'].includes(existing.status)) {
-    return { error: 'This order is no longer available.' }
+  if (existing.status !== 'ready') {
+    return { error: 'This order is not ready for pickup yet — a shop is still preparing.' }
   }
 
   // Atomic claim — the WHERE driver_id IS NULL ensures only one driver wins
@@ -513,6 +535,37 @@ export async function acceptOrder(orderId: string) {
     .update({ driver_id: user.id, status: 'picking_up' })
     .eq('id', orderId)
     .is('driver_id', null)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/driver')
+  return { success: true }
+}
+
+// Driver marks that they've collected this shop's items from the shop.
+// pickup_status: 'ready' → 'picked_up'. Once all shops on the order are
+// picked_up, the driver can advance the order to 'delivering' / 'delivered'.
+export async function markShopPickedUp(orderId: string, shopId: string) {
+  const user = await getBazaarUser()
+  if (!user || user.role !== 'driver') return { error: 'Only drivers can pick up.' }
+
+  const supabase = createBazaarAdmin()
+
+  const { data: order } = await supabase
+    .from('bazaar_orders')
+    .select('driver_id')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (!order || order.driver_id !== user.id) {
+    return { error: 'You are not the driver for this order.' }
+  }
+
+  const { error } = await supabase
+    .from('bazaar_order_items')
+    .update({ pickup_status: 'picked_up' })
+    .eq('order_id', orderId)
+    .eq('shop_id', shopId)
 
   if (error) return { error: error.message }
 
@@ -531,6 +584,20 @@ export async function updateOrderStatus(orderId: string, status: string) {
     .select('customer_id, order_number')
     .eq('id', orderId)
     .single()
+
+  // Block transition to 'delivering' or 'delivered' until every shop has been
+  // marked as picked up. Otherwise a driver could tap "Delivered" while some
+  // shops still have items on the shelf.
+  if (status === 'delivering' || status === 'delivered') {
+    const { data: items } = await supabase
+      .from('bazaar_order_items')
+      .select('pickup_status')
+      .eq('order_id', orderId)
+    const allPickedUp = (items || []).every(i => i.pickup_status === 'picked_up')
+    if (!allPickedUp) {
+      return { error: 'Pick up items from every shop before marking this order as delivered.' }
+    }
+  }
 
   const update: Record<string, unknown> = { status }
   if (status === 'delivered') {
