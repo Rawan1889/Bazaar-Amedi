@@ -2,6 +2,16 @@
 
 import { createBazaarServer } from './supabase-server'
 
+export async function existingProductIds(ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return []
+  const supabase = await createBazaarServer()
+  const { data } = await supabase
+    .from('bazaar_products')
+    .select('id')
+    .in('id', ids)
+  return (data || []).map(r => r.id as string)
+}
+
 export async function searchProducts(query: string) {
   if (!query || query.trim().length < 2) return []
 

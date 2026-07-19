@@ -33,3 +33,14 @@ export function getRecentlyViewed(): ViewedProduct[] {
     return []
   }
 }
+
+export function keepOnlyIds(existingIds: string[]) {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = localStorage.getItem(KEY)
+    if (!raw) return
+    const list: ViewedProduct[] = JSON.parse(raw)
+    const set = new Set(existingIds)
+    localStorage.setItem(KEY, JSON.stringify(list.filter(p => set.has(p.id))))
+  } catch { /* ignore */ }
+}

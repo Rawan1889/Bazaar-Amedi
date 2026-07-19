@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getRecentlyViewed, type ViewedProduct } from '@/lib/bazaar/recently-viewed'
+import { getRecentlyViewed, keepOnlyIds, type ViewedProduct } from '@/lib/bazaar/recently-viewed'
+import { existingProductIds } from '@/lib/bazaar/search-actions'
 
 const c = {
   green:    '#2D8A5E',
@@ -20,7 +21,16 @@ function formatIQD(amount: number) {
 export function RecentlyViewed() {
   const [items, setItems] = useState<ViewedProduct[]>([])
 
-  useEffect(() => { setItems(getRecentlyViewed()) }, [])
+  useEffect(() => {
+    const cached = getRecentlyViewed()
+    if (cached.length === 0) return
+    existingProductIds(cached.map(p => p.id)).then(alive => {
+      const set = new Set(alive)
+      const kept = cached.filter(p => set.has(p.id))
+      keepOnlyIds(alive)
+      setItems(kept)
+    })
+  }, [])
 
   if (items.length === 0) return null
 
