@@ -8,6 +8,7 @@ import { RealtimeWrapper } from '@/app/components/realtime-wrapper'
 import { MobileNav } from '@/app/components/mobile-nav'
 import { PWARegister } from '@/app/components/pwa-register'
 import { AuthNotifications } from '@/app/components/auth-notifications'
+import { AutoTranslator } from '@/app/components/auto-translator'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
       <body>
         <LocaleProvider>
+          <AutoTranslator />
           <FavoritesProvider>
             <CartProvider>
               <RealtimeWrapper />
