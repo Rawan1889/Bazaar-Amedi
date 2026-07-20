@@ -41,6 +41,7 @@ interface OrderGroup {
 
 function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
   const order = group.order as {
     id: string
     order_number: number
@@ -107,9 +108,19 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         ))}
       </div>
 
+      {error && (
+        <div className="rounded-[8px] px-3 py-2 mb-2 font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ background: 'rgba(201,74,58,0.08)', color: '#C94A3A' }}>
+          {error}
+        </div>
+      )}
+
       {order.status === 'pending' && (
         <button
-          onClick={() => startTransition(() => { acceptShopOrder(order.id) })}
+          onClick={() => startTransition(async () => {
+            setError(null)
+            const r = await acceptShopOrder(order.id)
+            if (r?.error) setError(r.error)
+          })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
           style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
@@ -120,7 +131,11 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
 
       {order.status === 'confirmed' && (
         <button
-          onClick={() => startTransition(() => { markShopOrderReady(order.id) })}
+          onClick={() => startTransition(async () => {
+            setError(null)
+            const r = await markShopOrderReady(order.id)
+            if (r?.error) setError(r.error)
+          })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
           style={{ background: c.saffron, color: '#fff', opacity: isPending ? 0.7 : 1 }}

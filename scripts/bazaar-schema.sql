@@ -173,7 +173,7 @@ create table if not exists public.bazaar_order_items (
   quantity integer not null default 1,
   unit_price integer not null,
   pickup_status text not null default 'pending' check (
-    pickup_status in ('pending', 'picked_up')
+    pickup_status in ('pending', 'ready', 'picked_up')
   )
 );
 
