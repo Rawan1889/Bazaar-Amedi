@@ -5,16 +5,19 @@
 // the active locale using the auto-translations dictionary. Set dir="rtl" and
 // lang on <html> when Arabic or Kurdish is active so layout mirrors.
 //
-// Trade-off: individual components don't have to know about locale. New copy
-// added anywhere is translated automatically as long as it exists in the
-// dictionary (or falls back silently to English if not).
+// Guardrails to stop the observer from looping on its own edits:
+//  * disconnect/reconnect around every mutation we make
+//  * skip writes when the new value already equals the current value
+//  * debounce mutation-driven rescans through requestAnimationFrame
 
 import { useEffect } from 'react'
 import { useLocale } from '@/lib/bazaar/locale-context'
 import { AUTO_AR, AUTO_KU } from '@/lib/bazaar/auto-translations'
 
-const ORIGINAL_ATTR = 'data-i18n-en'
+const ORIGINAL_KEY = '__i18nOriginal'
 const ATTRS_TO_TRANSLATE = ['placeholder', 'title', 'aria-label', 'alt'] as const
+
+type WithOriginal = { [ORIGINAL_KEY]?: string }
 
 export function AutoTranslator() {
   const { locale } = useLocale()
@@ -28,7 +31,56 @@ export function AutoTranslator() {
     document.documentElement.lang = locale
     document.documentElement.dir = (locale === 'ar' || locale === 'ku') ? 'rtl' : 'ltr'
 
-    function translateNode(root: Node) {
+    let observer: MutationObserver | null = null
+    let scanQueued = false
+
+    function translateTextNode(node: Text) {
+      const meta = node as unknown as WithOriginal
+      const original = meta[ORIGINAL_KEY] ?? node.nodeValue ?? ''
+      const trimmed = original.trim()
+      if (!trimmed) return
+
+      if (!dict) {
+        if (meta[ORIGINAL_KEY] !== undefined) {
+          if (node.nodeValue !== original) node.nodeValue = original
+          delete meta[ORIGINAL_KEY]
+        }
+        return
+      }
+
+      const translated = dict[trimmed]
+      if (!translated) return
+      const lead = original.match(/^\s*/)?.[0] ?? ''
+      const trail = original.match(/\s*$/)?.[0] ?? ''
+      const target = lead + translated + trail
+      if (node.nodeValue === target) return
+      meta[ORIGINAL_KEY] = original
+      node.nodeValue = target
+    }
+
+    function translateElement(el: Element) {
+      for (const attr of ATTRS_TO_TRANSLATE) {
+        const current = el.getAttribute(attr)
+        if (current === null) continue
+        const stashKey = `data-i18n-${attr}`
+        const originalVal = el.getAttribute(stashKey) ?? current
+        const trimmed = originalVal.trim()
+        if (!dict) {
+          if (el.hasAttribute(stashKey)) {
+            if (el.getAttribute(attr) !== originalVal) el.setAttribute(attr, originalVal)
+            el.removeAttribute(stashKey)
+          }
+          continue
+        }
+        const translated = dict[trimmed]
+        if (!translated) continue
+        if (current === translated) continue
+        if (!el.hasAttribute(stashKey)) el.setAttribute(stashKey, originalVal)
+        el.setAttribute(attr, translated)
+      }
+    }
+
+    function walk(root: Node) {
       // Text nodes
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
         acceptNode(n) {
@@ -40,86 +92,49 @@ export function AutoTranslator() {
           return NodeFilter.FILTER_ACCEPT
         },
       })
-      const nodes: Text[] = []
       let cur: Node | null = walker.nextNode()
-      while (cur) { nodes.push(cur as Text); cur = walker.nextNode() }
-      for (const node of nodes) {
-        const stashed = (node as unknown as Record<string, unknown>)[ORIGINAL_ATTR] as string | undefined
-        const original = stashed ?? node.nodeValue ?? ''
-        const trimmed = original.trim()
-        if (!trimmed) continue
-        if (!dict) {
-          // Locale is English — restore original if we stashed one
-          if (stashed !== undefined) {
-            node.nodeValue = stashed
-            delete (node as unknown as Record<string, unknown>)[ORIGINAL_ATTR]
-          }
-          continue
-        }
-        const translated = dict[trimmed]
-        if (!translated) continue
-        // Stash the English value so we can restore if user switches back
-        ;(node as unknown as Record<string, unknown>)[ORIGINAL_ATTR] = original
-        // Preserve leading/trailing whitespace
-        const lead = original.match(/^\s*/)?.[0] ?? ''
-        const trail = original.match(/\s*$/)?.[0] ?? ''
-        node.nodeValue = lead + translated + trail
+      while (cur) {
+        translateTextNode(cur as Text)
+        cur = walker.nextNode()
       }
+      if (root instanceof Element) {
+        translateElement(root)
+        root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => translateElement(el))
+      }
+    }
 
-      // Attribute values on elements
-      const elements = (root as Element).querySelectorAll?.('[placeholder],[title],[aria-label],[alt]')
-      if (!elements) return
-      elements.forEach(el => {
-        for (const attr of ATTRS_TO_TRANSLATE) {
-          const val = el.getAttribute(attr)
-          if (!val) continue
-          const stashKey = `${ORIGINAL_ATTR}-${attr}`
-          const originalVal = el.getAttribute(stashKey) ?? val
-          const trimmed = originalVal.trim()
-          if (!dict) {
-            if (el.hasAttribute(stashKey)) {
-              el.setAttribute(attr, originalVal)
-              el.removeAttribute(stashKey)
-            }
-            continue
-          }
-          const translated = dict[trimmed]
-          if (!translated) continue
-          if (!el.hasAttribute(stashKey)) el.setAttribute(stashKey, originalVal)
-          el.setAttribute(attr, translated)
-        }
+    function safeWalk(root: Node) {
+      if (!observer) { walk(root); return }
+      observer.disconnect()
+      try {
+        walk(root)
+      } finally {
+        observer.observe(document.body, {
+          subtree: true,
+          childList: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: [...ATTRS_TO_TRANSLATE],
+        })
+      }
+    }
+
+    function queueScan(target: Node = document.body) {
+      if (scanQueued) return
+      scanQueued = true
+      requestAnimationFrame(() => {
+        scanQueued = false
+        safeWalk(target)
       })
     }
 
-    translateNode(document.body)
+    observer = new MutationObserver(() => queueScan())
+    safeWalk(document.body)
 
-    // Watch for React re-renders / navigation
-    const observer = new MutationObserver(mutations => {
-      for (const m of mutations) {
-        m.addedNodes.forEach(n => {
-          if (n.nodeType === Node.ELEMENT_NODE || n.nodeType === Node.TEXT_NODE) {
-            translateNode(n)
-          }
-        })
-        if (m.type === 'characterData' && m.target) {
-          translateNode(m.target.parentNode ?? m.target)
-        }
-        if (m.type === 'attributes' && m.target instanceof Element) {
-          const attr = m.attributeName
-          if (attr && (ATTRS_TO_TRANSLATE as readonly string[]).includes(attr)) {
-            translateNode(m.target)
-          }
-        }
-      }
-    })
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: [...ATTRS_TO_TRANSLATE],
-    })
-    return () => observer.disconnect()
+    return () => {
+      observer?.disconnect()
+      observer = null
+    }
   }, [locale])
 
   return null
