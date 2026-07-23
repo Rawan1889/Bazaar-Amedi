@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { bazaarLogout } from '@/lib/bazaar/auth'
+import { LanguageSwitcher } from '@/app/components/language-switcher'
 
 const c = {
   green:    '#2D8A5E',
@@ -88,6 +89,7 @@ export function DriverNav({ userName, exact = false }: Props) {
             })}
           </div>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.stone }}>
               {userName}
             </span>

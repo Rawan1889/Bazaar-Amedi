@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import { usePathname } from 'next/navigation'
 import type { BazaarProfile } from '@/lib/bazaar/types'
 import { bazaarLogout } from '@/lib/bazaar/auth'
+import { LanguageSwitcher } from '@/app/components/language-switcher'
 
 const c = {
   green:    '#2D8A5E',
@@ -89,6 +90,9 @@ export function AdminSidebar({ user }: { user: BazaarProfile }) {
               Super admin
             </div>
           </div>
+        </div>
+        <div className="mb-2">
+          <LanguageSwitcher />
         </div>
         <form action={bazaarLogout}>
           <button
