@@ -1,6 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { acceptShopOrder, markShopOrderReady, markPickupCollected, cancelShopOrder } from '@/lib/bazaar/order-actions'
 import { OrderChat } from '@/app/components/order-chat'
 import { ClientDate } from '@/app/components/client-date'
@@ -42,6 +43,7 @@ interface OrderGroup {
 function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
   const order = group.order as {
     id: string
     order_number: number
@@ -120,6 +122,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
             setError(null)
             const r = await acceptShopOrder(order.id)
             if (r?.error) setError(r.error)
+            else router.refresh()
           })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
@@ -135,6 +138,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
             setError(null)
             const r = await markShopOrderReady(order.id)
             if (r?.error) setError(r.error)
+            else router.refresh()
           })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
@@ -146,7 +150,12 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
 
       {order.status === 'ready' && isPickup && (
         <button
-          onClick={() => startTransition(() => { markPickupCollected(order.id) })}
+          onClick={() => startTransition(async () => {
+            setError(null)
+            const r = await markPickupCollected(order.id)
+            if (r?.error) setError(r.error)
+            else router.refresh()
+          })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
           style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
@@ -174,7 +183,12 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         <button
           onClick={() => {
             if (confirm('Cancel this order? This action cannot be undone.')) {
-              startTransition(() => { cancelShopOrder(order.id) })
+              startTransition(async () => {
+                setError(null)
+                const r = await cancelShopOrder(order.id)
+                if (r?.error) setError(r.error)
+                else router.refresh()
+              })
             }
           }}
           disabled={isPending}
