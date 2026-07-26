@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname } from 'next/navigation'
@@ -31,12 +32,34 @@ const links: { href: string; label: string; icon: string }[] = [
 
 export function AdminSidebar({ user }: { user: BazaarProfile }) {
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  useEffect(() => { setOpen(false) }, [pathname])
 
   return (
-    <aside
-      className="fixed left-0 top-0 bottom-0 w-[240px] flex flex-col py-6 px-4"
-      style={{ background: c.white, borderRight: `1px solid ${c.cream2}` }}
-    >
+    <>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-label="Open menu"
+        className="md:hidden fixed top-3 left-3 z-40 w-10 h-10 rounded-[10px] flex items-center justify-center"
+        style={{ background: c.white, border: `1px solid ${c.cream2}` }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.charcoal} strokeWidth="1.75" strokeLinecap="round">
+          <path d={open ? 'M6 6l12 12M6 18L18 6' : 'M4 6h16M4 12h16M4 18h16'} />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          onClick={() => setOpen(false)}
+          className="md:hidden fixed inset-0 z-30"
+          style={{ background: 'rgba(30,28,25,0.4)' }}
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-0 bottom-0 w-[240px] flex flex-col py-6 px-4 z-40 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+        style={{ background: c.white, borderRight: `1px solid ${c.cream2}` }}
+      >
       <Link href="/" className="no-underline mb-2 px-3">
         <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
           bazaar<span style={{ color: c.green }}>.</span>
@@ -106,6 +129,7 @@ export function AdminSidebar({ user }: { user: BazaarProfile }) {
           </button>
         </form>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

@@ -19,7 +19,7 @@ export function CartBar() {
   if (itemCount === 0) return null
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
+    <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-1rem)]">
       <Link
         href="/cart"
         className="flex items-center gap-4 px-5 py-3 rounded-[14px] no-underline shadow-lg transition-all duration-200"
