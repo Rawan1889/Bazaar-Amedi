@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
-import { notFound } from 'next/navigation'
-import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
+import { notFound, redirect } from 'next/navigation'
+import { getBazaarUser } from '@/lib/bazaar/auth'
 import Link from 'next/link'
 import { AddToCartButton } from '@/app/components/add-to-cart-button'
 import { CartBar } from '@/app/components/cart-bar'
+import { CustomerNav } from '@/app/components/customer-nav'
 import { ShopFavoriteButton } from './shop-favorite-button'
 import { FavoriteButton } from '@/app/components/favorite-button'
 import { getShopReviews, getShopRating } from '@/lib/bazaar/review-actions'
@@ -43,7 +44,6 @@ export default async function ShopPublicPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  await redirectNonCustomers()
   const { slug } = await params
   const supabase = await createBazaarServer()
 
@@ -54,6 +54,15 @@ export default async function ShopPublicPage({
     .single()
 
   if (!shop) notFound()
+
+  // Route non-customers away from shops that aren't theirs. A shop owner
+  // viewing their own storefront is fine — that's the "preview my shop" flow.
+  const user = await getBazaarUser()
+  if (user && user.role !== 'customer' && shop.owner_id !== user.id) {
+    if (user.role === 'market_admin') redirect('/shop')
+    if (user.role === 'driver') redirect('/driver')
+    if (user.role === 'super_admin') redirect('/admin')
+  }
 
   const { data: products } = await supabase
     .from('bazaar_products')
@@ -74,27 +83,8 @@ export default async function ShopPublicPage({
 
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
-      {/* Nav */}
-      <nav className="sticky top-0 z-10 px-6 py-4" style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}>
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="no-underline">
-              <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-                bazaar<span style={{ color: c.green }}>.</span>
-              </span>
-            </Link>
-            <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.cream2 }}>/</span>
-            <Link href="/browse" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
-              Browse
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* Shared nav — includes the profile-circle dropdown with role-aware links */}
+      <CustomerNav />
 
       {/* Cover image */}
       {shop.cover_url && (
