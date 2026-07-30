@@ -112,6 +112,44 @@ export function CustomerNav() {
                     </div>
                   </div>
 
+                  {/* Role-specific dashboard shortcut */}
+                  {profile.role !== 'customer' && (
+                    <Link
+                      href={
+                        profile.role === 'super_admin' ? '/admin' :
+                        profile.role === 'market_admin' ? '/shop' :
+                        profile.role === 'driver' ? '/driver' : '/'
+                      }
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 no-underline transition-colors duration-150 hover:bg-[rgba(45,138,94,0.05)]"
+                      style={{ borderBottom: `1px solid ${c.cream2}` }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.green }}>
+                        {profile.role === 'super_admin' ? 'Admin Dashboard' :
+                         profile.role === 'market_admin' ? 'Shop Dashboard' :
+                         'Driver Dashboard'}
+                      </span>
+                    </Link>
+                  )}
+
+                  {/* Mobile-only: browse links (desktop already has them in the nav) */}
+                  <div className="md:hidden">
+                    {([
+                      { href: '/browse', label: 'Browse', path: 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35' },
+                      { href: '/shops',  label: 'Shops',  path: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5' },
+                    ] as { href: string; label: string; path: string }[]).map(item => (
+                      <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 no-underline transition-colors duration-150 hover:bg-[rgba(45,138,94,0.05)]">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.stone} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d={item.path} />
+                        </svg>
+                        <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.charcoal }}>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+
                   {([
                     { href: '/orders',    label: 'My Orders',   path: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
                     { href: '/favorites', label: 'Saved Items', path: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z' },
