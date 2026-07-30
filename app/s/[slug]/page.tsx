@@ -260,8 +260,8 @@ export default async function ShopPublicPage({
                         <LocalizedName en={p.bazaar_categories.name_en} ku={p.bazaar_categories.name_ku} ar={p.bazaar_categories.name_ar} />
                       </div>
                     )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
                         {activeSale ? (
                           <>
                             <span className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.terra }}>
@@ -292,6 +292,7 @@ export default async function ShopPublicPage({
                         unit={p.unit}
                         imageUrl={p.image_url}
                         stockQty={defaultVariant?.stock_qty}
+                        fullWidthMobile
                       />
                     </div>
                   </div>

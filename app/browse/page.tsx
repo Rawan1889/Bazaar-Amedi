@@ -195,8 +195,8 @@ export default async function BrowsePage({
                     <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2 truncate" style={{ color: c.stone }}>
                       {p.bazaar_shops.name}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
                         {activeSale ? (
                           <>
                             <span className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.terra }}>
@@ -227,6 +227,7 @@ export default async function BrowsePage({
                         unit={p.unit}
                         imageUrl={p.image_url}
                         stockQty={defaultVariant?.stock_qty}
+                        fullWidthMobile
                       />
                     </div>
                   </div>
