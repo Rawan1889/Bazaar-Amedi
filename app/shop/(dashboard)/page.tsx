@@ -39,8 +39,8 @@ export default async function ShopDashboard() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: c.charcoal }}>
-          Welcome back, {user!.full_name.split(' ')[0]}
+        <h1 className="font-[family-name:var(--font-dm-sans)] text-[22px] md:text-[28px] font-medium mb-1 truncate" style={{ color: c.charcoal }}>
+          Welcome back{user?.full_name && !user.full_name.includes('@') ? `, ${user.full_name.split(' ')[0]}` : ''}
         </h1>
         <p className="font-[family-name:var(--font-dm-sans)] text-[14px]" style={{ color: c.stone }}>
           {shop ? `Managing ${shop.name}` : 'Set up your shop to get started'}
@@ -69,17 +69,17 @@ export default async function ShopDashboard() {
       )}
 
       {shop && (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-2 md:gap-4 mb-8">
           {stats.map(s => (
             <div
               key={s.label}
-              className="rounded-[14px] p-5"
+              className="rounded-[14px] p-3 md:p-5 min-w-0"
               style={{ background: c.white, border: `1px solid ${c.cream2}` }}
             >
-              <div className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase mb-2" style={{ color: c.stone }}>
+              <div className="font-[family-name:var(--font-dm-mono)] text-[9px] md:text-[10px] tracking-[0.1em] uppercase mb-2 truncate" style={{ color: c.stone }}>
                 {s.label}
               </div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium" style={{ color: s.color }}>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[16px] md:text-[24px] font-medium truncate" style={{ color: s.color }}>
                 {s.value}
               </div>
             </div>
@@ -91,7 +91,7 @@ export default async function ShopDashboard() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <a
             href="/shop/products"
-            className="shop-quick-action-green flex items-center gap-3 rounded-[14px] px-5 py-4 no-underline transition-all duration-150"
+            className="shop-quick-action-green flex items-center gap-3 rounded-[14px] px-4 py-4 no-underline transition-all duration-150 min-w-0"
             style={{ background: c.white, border: `1px solid ${c.cream2}` }}
           >
             <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.greenBg }}>
@@ -99,15 +99,15 @@ export default async function ShopDashboard() {
                 <path d="M12 4v16m8-8H4" />
               </svg>
             </div>
-            <div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>Add product</div>
-              <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>Add to your catalog</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium truncate" style={{ color: c.charcoal }}>Add product</div>
+              <div className="font-[family-name:var(--font-dm-mono)] text-[10px] truncate" style={{ color: c.stone }}>Add to your catalog</div>
             </div>
           </a>
 
           <a
             href="/shop/flash-sales"
-            className="shop-quick-action-saffron flex items-center gap-3 rounded-[14px] px-5 py-4 no-underline transition-all duration-150"
+            className="shop-quick-action-saffron flex items-center gap-3 rounded-[14px] px-4 py-4 no-underline transition-all duration-150 min-w-0"
             style={{ background: c.white, border: `1px solid ${c.cream2}` }}
           >
             <div className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0" style={{ background: c.saffronBg }}>
@@ -115,9 +115,9 @@ export default async function ShopDashboard() {
                 <path d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>Flash sale</div>
-              <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>Create a timed deal</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium truncate" style={{ color: c.charcoal }}>Flash sale</div>
+              <div className="font-[family-name:var(--font-dm-mono)] text-[10px] truncate" style={{ color: c.stone }}>Create a timed deal</div>
             </div>
           </a>
         </div>

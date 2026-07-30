@@ -84,6 +84,11 @@ export function MobileNav() {
   const { itemCount } = useCart()
   const { favoriteCount } = useFavorites()
 
+  // Customer bottom nav is for customer-facing routes only. Hide it inside role
+  // dashboards, onboarding, login/signup — those have their own drawers.
+  const hideOn = ['/shop', '/admin', '/driver', '/login', '/signup']
+  if (hideOn.some(p => pathname === p || pathname.startsWith(p + '/'))) return null
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 md:hidden"
