@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { getMyOrders } from '@/lib/bazaar/order-actions'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
+import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { MobileNav } from '@/app/components/mobile-nav'
 import { OrderList } from './order-list'
@@ -14,6 +15,7 @@ const c = {
 } as const
 
 export default async function OrdersPage() {
+  await redirectNonCustomers()
   const user = await getBazaarUser()
   if (!user) redirect('/login')
 

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { notFound } from 'next/navigation'
+import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
 import Link from 'next/link'
 import { AddToCartButton } from '@/app/components/add-to-cart-button'
 import { CartBar } from '@/app/components/cart-bar'
@@ -42,6 +43,7 @@ export default async function ShopPublicPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  await redirectNonCustomers()
   const { slug } = await params
   const supabase = await createBazaarServer()
 

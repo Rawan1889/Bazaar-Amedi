@@ -10,6 +10,7 @@ import { CheckoutAddress, type SelectedAddress } from '@/app/components/checkout
 import { DeliverySlotPicker, type SelectedSlot } from '@/app/components/delivery-slot-picker'
 import { computeDeliveryFee, EXTRA_SHOP_SURCHARGE } from '@/lib/bazaar/zone-utils'
 import { getShopZones } from '@/lib/bazaar/zone-actions'
+import { RedirectNonCustomers } from '@/app/components/redirect-non-customers'
 
 const c = {
   green:    '#2D8A5E',
@@ -161,6 +162,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-[100dvh]" style={{ background: c.bg }}>
+      <RedirectNonCustomers />
       <nav className="sticky top-0 z-10 px-6 py-4" style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}>
         <div className="max-w-[800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">

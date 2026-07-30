@@ -118,27 +118,44 @@ export function CustomerNav() {
                     </div>
                   </div>
 
-                  {/* Role-specific dashboard shortcut */}
+                  {/* Full role-specific nav — one tap to any sub-page */}
                   {profile.role !== 'customer' && (
-                    <Link
-                      href={
-                        profile.role === 'super_admin' ? '/admin' :
-                        profile.role === 'market_admin' ? '/shop' :
-                        profile.role === 'driver' ? '/driver' : '/'
-                      }
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 no-underline transition-colors duration-150 hover:bg-[rgba(45,138,94,0.05)]"
-                      style={{ borderBottom: `1px solid ${c.cream2}` }}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
-                      <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.green }}>
-                        {profile.role === 'super_admin' ? 'Admin Dashboard' :
-                         profile.role === 'market_admin' ? 'Shop Dashboard' :
-                         'Driver Dashboard'}
-                      </span>
-                    </Link>
+                    <div style={{ borderBottom: `1px solid ${c.cream2}` }}>
+                      {(profile.role === 'market_admin' ? [
+                        { href: '/shop',              label: 'Dashboard' },
+                        { href: '/shop/products',     label: 'Products' },
+                        { href: '/shop/orders',       label: 'Orders' },
+                        { href: '/shop/flash-sales',  label: 'Flash Sales' },
+                        { href: '/shop/coupons',      label: 'Coupons' },
+                        { href: '/shop/analytics',    label: 'Analytics' },
+                        { href: '/shop/earnings',     label: 'Earnings' },
+                        { href: '/shop/settings',     label: 'Settings' },
+                      ] : profile.role === 'driver' ? [
+                        { href: '/driver',            label: 'Deliveries' },
+                        { href: '/driver/earnings',   label: 'Earnings' },
+                      ] : profile.role === 'super_admin' ? [
+                        { href: '/admin',             label: 'Overview' },
+                        { href: '/admin/shops',       label: 'Shops' },
+                        { href: '/admin/categories',  label: 'Categories' },
+                        { href: '/admin/orders',      label: 'All Orders' },
+                        { href: '/admin/zones',       label: 'Delivery Zones' },
+                        { href: '/admin/cash',        label: 'Driver Cash' },
+                        { href: '/admin/payouts',     label: 'Payouts' },
+                        { href: '/admin/banners',     label: 'Promo Banner' },
+                        { href: '/admin/users',       label: 'Users' },
+                      ] : []).map(link => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 no-underline transition-colors duration-150 hover:bg-[rgba(45,138,94,0.05)]"
+                        >
+                          <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.charcoal }}>
+                            {link.label}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
                   )}
 
                   {/* Mobile-only: browse links — customers only */}

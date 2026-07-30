@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
+import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
 import Link from 'next/link'
 import { CartBar } from '@/app/components/cart-bar'
 import { CustomerNav } from '@/app/components/customer-nav'
@@ -17,6 +18,7 @@ const c = {
 } as const
 
 export default async function ShopsPage() {
+  await redirectNonCustomers()
   const supabase = await createBazaarServer()
 
   const { data: shops } = await supabase
