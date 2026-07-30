@@ -140,9 +140,20 @@ function Nav() {
               {item}
             </a>
           ))}
-          <a href="/signup" className="text-[15px] font-medium no-underline py-3 text-center rounded-[8px]" style={{ background: c.green, color: '#fff' }}>
-            Get started
-          </a>
+          {userInfo && dashboardLink ? (
+            <a href={dashboardLink} className="text-[15px] font-medium no-underline py-3 text-center rounded-[8px]" style={{ background: c.green, color: '#fff' }}>
+              {dashboardLabel}
+            </a>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <a href="/login" className="text-[15px] font-medium no-underline py-3 text-center rounded-[8px]" style={{ background: c.greenBg, color: c.green }}>
+                Sign in
+              </a>
+              <a href="/signup" className="text-[15px] font-medium no-underline py-3 text-center rounded-[8px]" style={{ background: c.green, color: '#fff' }}>
+                Get started
+              </a>
+            </div>
+          )}
         </div>
       )}
     </nav>
