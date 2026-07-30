@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCart } from '@/lib/bazaar/cart-context'
 import { useFavorites } from '@/lib/bazaar/favorites-context'
+import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import type { Route } from 'next'
 
 const c = {
@@ -83,11 +85,29 @@ export function MobileNav() {
   const pathname = usePathname()
   const { itemCount } = useCart()
   const { favoriteCount } = useFavorites()
+  const [role, setRole] = useState<string | null | undefined>(undefined)
+
+  useEffect(() => {
+    const supabase = createBazaarClient()
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) { setRole(null); return }
+      const { data: p } = await supabase
+        .from('bazaar_profiles')
+        .select('role')
+        .eq('id', data.session.user.id)
+        .single()
+      setRole(p?.role ?? null)
+    })
+  }, [])
 
   // Customer bottom nav is for customer-facing routes only. Hide it inside role
   // dashboards, onboarding, login/signup — those have their own drawers.
   const hideOn = ['/shop', '/admin', '/driver', '/login', '/signup']
   if (hideOn.some(p => pathname === p || pathname.startsWith(p + '/'))) return null
+
+  // Also hide for non-customer roles anywhere they end up — shopkeepers,
+  // drivers, and admins don't need shopper tabs.
+  if (role && role !== 'customer') return null
 
   return (
     <nav
