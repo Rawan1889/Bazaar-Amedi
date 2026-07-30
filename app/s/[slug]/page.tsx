@@ -63,6 +63,7 @@ export default async function ShopPublicPage({
     if (user.role === 'driver') redirect('/driver')
     if (user.role === 'super_admin') redirect('/admin')
   }
+  const isOwnerView = !!user && user.id === shop.owner_id
 
   const { data: products } = await supabase
     .from('bazaar_products')
@@ -114,15 +115,17 @@ export default async function ShopPublicPage({
               <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: c.charcoal }}>
                 {shop.name}
               </h1>
-              <div className="flex items-center gap-2">
-                <FollowButton shopId={shop.id} initialFollowing={following} followerCount={followerCount} />
-                <ShopFavoriteButton
-                  shopId={shop.id}
-                  shopName={shop.name}
-                  shopSlug={shop.slug}
-                  logoUrl={shop.logo_url}
-                />
-              </div>
+              {!isOwnerView && (
+                <div className="flex items-center gap-2">
+                  <FollowButton shopId={shop.id} initialFollowing={following} followerCount={followerCount} />
+                  <ShopFavoriteButton
+                    shopId={shop.id}
+                    shopName={shop.name}
+                    shopSlug={shop.slug}
+                    logoUrl={shop.logo_url}
+                  />
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               {shop.bazaar_categories && (
@@ -229,6 +232,7 @@ export default async function ShopPublicPage({
                         SALE
                       </div>
                     )}
+                    {!isOwnerView && (
                     <div className="absolute top-2 right-2">
                       <FavoriteButton
                         item={{
@@ -242,6 +246,7 @@ export default async function ShopPublicPage({
                         }}
                       />
                     </div>
+                    )}
                   </div>
                   <div className="p-3">
                     <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium mb-0.5" style={{ color: c.charcoal }}>
@@ -272,20 +277,22 @@ export default async function ShopPublicPage({
                           /{p.unit}
                         </span>
                       </div>
-                      <AddToCartButton
-                        productId={p.id}
-                        variantId={defaultVariant?.id}
-                        shopId={shop.id}
-                        shopName={shop.name}
-                        shopSlug={shop.slug}
-                        name={p.name_en}
-                        price={p.price}
-                        salePrice={activeSale?.sale_price ?? null}
-                        unit={p.unit}
-                        imageUrl={p.image_url}
-                        stockQty={defaultVariant?.stock_qty}
-                        fullWidthMobile
-                      />
+                      {!isOwnerView && (
+                        <AddToCartButton
+                          productId={p.id}
+                          variantId={defaultVariant?.id}
+                          shopId={shop.id}
+                          shopName={shop.name}
+                          shopSlug={shop.slug}
+                          name={p.name_en}
+                          price={p.price}
+                          salePrice={activeSale?.sale_price ?? null}
+                          unit={p.unit}
+                          imageUrl={p.image_url}
+                          stockQty={defaultVariant?.stock_qty}
+                          fullWidthMobile
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -302,7 +309,7 @@ export default async function ShopPublicPage({
         />
       </div>
 
-      <CartBar />
+      {!isOwnerView && <CartBar />}
     </div>
   )
 }
