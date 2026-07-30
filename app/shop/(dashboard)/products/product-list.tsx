@@ -83,7 +83,7 @@ function ProductRow({ product }: { product: Product }) {
   return (
     <div style={{ borderBottom: `1px solid ${c.cream2}` }}>
     <div
-      className="flex items-center gap-4 px-5 py-4 transition-all duration-100"
+      className="flex flex-wrap items-center gap-3 md:gap-4 px-4 md:px-5 py-4 transition-all duration-100"
       style={{ opacity: isPending ? 0.5 : 1 }}
     >
       <div
@@ -114,7 +114,7 @@ function ProductRow({ product }: { product: Product }) {
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 basis-[calc(100%-3.5rem)] md:basis-auto">
         <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium truncate" style={{ color: c.charcoal }}>
           {product.name_en}
         </div>
@@ -164,7 +164,7 @@ function ProductRow({ product }: { product: Product }) {
         </div>
       </div>
 
-      <div className="text-right flex-shrink-0">
+      <div className="text-left md:text-right flex-shrink-0 ml-auto md:ml-0">
         <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
           {formatIQD(product.price)}
         </div>

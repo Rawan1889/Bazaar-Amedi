@@ -51,12 +51,12 @@ export default async function ProductsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: '#1E1C19' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="min-w-0">
+          <h1 className="font-[family-name:var(--font-dm-sans)] text-[22px] md:text-[28px] font-medium mb-1 truncate" style={{ color: '#1E1C19' }}>
             Products
           </h1>
-          <p className="font-[family-name:var(--font-dm-sans)] text-[14px]" style={{ color: '#7A756E' }}>
+          <p className="font-[family-name:var(--font-dm-sans)] text-[13px] md:text-[14px]" style={{ color: '#7A756E' }}>
             {products?.length ?? 0} products in your catalog
           </p>
         </div>
