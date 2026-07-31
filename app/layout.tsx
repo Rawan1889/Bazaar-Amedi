@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { DM_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/lib/bazaar/cart-context'
@@ -45,9 +45,20 @@ export const metadata: Metadata = {
   },
   other: {
     'mobile-web-app-capable': 'yes',
-    'theme-color': '#2D8A5E',
     'apple-mobile-web-app-capable': 'yes',
   },
+}
+
+// Explicit viewport so Safari renders at the device width instead of the
+// default 980px desktop scale (which is what makes the dashboard look zoomed
+// in on iPhone). `viewportFit: 'cover'` lets us paint under the notch/home
+// bar; we already handle safe-area-inset in the mobile nav.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#2D8A5E',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
