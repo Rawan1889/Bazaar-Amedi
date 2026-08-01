@@ -25,11 +25,11 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'bazaar. — Shop Every Market in Amedi',
+  title: 'kela. — Shop Every Market in Amedi',
   description:
     'Compare prices across local shops, catch flash sales, and get everything delivered in one trip. The marketplace built for Amedi.',
   openGraph: {
-    title: 'bazaar. — Shop Every Market in Amedi',
+    title: 'kela. — Shop Every Market in Amedi',
     description: 'Compare prices, catch flash sales, one delivery from multiple shops.',
     type: 'website',
   },
@@ -37,10 +37,13 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'bazaar.',
+    title: 'kela.',
   },
   icons: {
-    icon: '/icon-192.svg',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+    ],
     apple: '/icon-192.svg',
   },
   other: {

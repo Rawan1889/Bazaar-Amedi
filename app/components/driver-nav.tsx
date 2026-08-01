@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from '@/app/components/language-switcher'
+import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
   green:    '#2D8A5E',
@@ -66,8 +67,9 @@ export function DriverNav({ userName, exact = false }: Props) {
       >
         <div className="max-w-[800px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <KelaMark size={22} gateColor="rgba(250,250,247,0.95)" />
             <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-              bazaar<span style={{ color: c.green }}>.</span>
+              kela<span style={{ color: c.green }}>.</span>
             </span>
             <span className="font-[family-name:var(--font-dm-mono)] text-[10px] px-2 py-0.5 rounded-[4px]" style={{ background: c.greenBg, color: c.green }}>
               Driver

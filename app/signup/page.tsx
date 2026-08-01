@@ -405,7 +405,7 @@ export default function BazaarSignupPage() {
         <div className="text-center mb-8">
           <a href="/" className="inline-block no-underline">
             <span className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium" style={{ color: c.charcoal }}>
-              bazaar<span style={{ color: c.green }}>.</span>
+              kela<span style={{ color: c.green }}>.</span>
             </span>
           </a>
           <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mt-1" style={{ color: c.stone }}>

@@ -122,7 +122,7 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
       <div className="px-6 pt-8 pb-6 text-center">
         <a href="/" className="inline-block no-underline mb-4">
           <span className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.charcoal }}>
-            bazaar<span style={{ color: c.green }}>.</span>
+            kela<span style={{ color: c.green }}>.</span>
           </span>
         </a>
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-1" style={{ color: c.charcoal }}>

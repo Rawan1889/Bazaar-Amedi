@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from './language-switcher'
+import { KelaMark } from './kela-mark'
 import { useCart } from '@/lib/bazaar/cart-context'
 
 const c = {
@@ -63,9 +64,10 @@ export function CustomerNav() {
       style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}
     >
       <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-        <Link href="/" className="no-underline">
+        <Link href="/" className="no-underline flex items-center gap-2">
+          <KelaMark size={22} gateColor="rgba(250,250,247,0.9)" />
           <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-            bazaar<span style={{ color: c.green }}>.</span>
+            kela<span style={{ color: c.green }}>.</span>
           </span>
         </Link>
 

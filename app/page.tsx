@@ -70,7 +70,7 @@ function Nav() {
             className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium"
             style={{ color: c.charcoal, letterSpacing: '-0.02em' }}
           >
-            bazaar<span style={{ color: c.green }}>.</span>
+            kela<span style={{ color: c.green }}>.</span>
           </span>
         </a>
 
@@ -682,7 +682,7 @@ function Footer() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium" style={{ color: c.stoneLight }}>
-            bazaar<span style={{ color: 'rgba(45,138,94,0.4)' }}>.</span>
+            kela<span style={{ color: 'rgba(45,138,94,0.4)' }}>.</span>
           </span>
           <div className="flex gap-6 flex-wrap justify-center">
             {[

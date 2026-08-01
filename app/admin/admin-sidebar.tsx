@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import type { BazaarProfile } from '@/lib/bazaar/types'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from '@/app/components/language-switcher'
+import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
   green:    '#2D8A5E',
@@ -60,9 +61,10 @@ export function AdminSidebar({ user }: { user: BazaarProfile }) {
         className={`fixed left-0 top-0 bottom-0 w-[240px] flex flex-col py-6 px-4 z-40 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
         style={{ background: c.white, borderRight: `1px solid ${c.cream2}` }}
       >
-      <Link href="/" className="no-underline mb-2 px-3">
+      <Link href="/" className="no-underline mb-2 px-3 flex items-center gap-2">
+        <KelaMark size={22} gateColor={c.white} />
         <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-          bazaar<span style={{ color: c.green }}>.</span>
+          kela<span style={{ color: c.green }}>.</span>
         </span>
       </Link>
       <div className="px-3 mb-6">

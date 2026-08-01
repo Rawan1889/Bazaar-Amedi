@@ -120,7 +120,7 @@ export default function CartPage() {
           <div className="max-w-[800px] mx-auto">
             <Link href="/" className="no-underline">
               <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-                bazaar<span style={{ color: c.green }}>.</span>
+                kela<span style={{ color: c.green }}>.</span>
               </span>
             </Link>
           </div>
@@ -168,7 +168,7 @@ export default function CartPage() {
           <div className="flex items-center gap-4">
             <Link href="/" className="no-underline">
               <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-                bazaar<span style={{ color: c.green }}>.</span>
+                kela<span style={{ color: c.green }}>.</span>
               </span>
             </Link>
             <span style={{ color: c.cream2 }}>/</span>

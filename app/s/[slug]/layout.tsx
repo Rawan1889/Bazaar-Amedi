@@ -17,17 +17,17 @@ export async function generateMetadata({
     .single()
 
   if (!shop) {
-    return { title: 'Shop not found — bazaar.' }
+    return { title: 'Shop not found — kela.' }
   }
 
   const category = (shop.bazaar_categories as unknown as { name_en: string } | null)?.name_en
   const description = shop.description || `Browse products from ${shop.name} in Amedi. ${category ? `Category: ${category}.` : ''} Compare prices and order for delivery.`
 
   return {
-    title: `${shop.name} — bazaar.`,
+    title: `${shop.name} — kela.`,
     description,
     openGraph: {
-      title: `${shop.name} — bazaar.`,
+      title: `${shop.name} — kela.`,
       description,
       type: 'website',
       ...(shop.logo_url ? { images: [{ url: shop.logo_url }] } : {}),

@@ -8,6 +8,7 @@ import type { BazaarProfile } from '@/lib/bazaar/types'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { NotificationBell } from '@/app/components/notification-bell'
 import { LanguageSwitcher } from '@/app/components/language-switcher'
+import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
   green:     '#2D8A5E',
@@ -67,9 +68,10 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
         style={{ background: c.white, borderRight: `1px solid ${c.cream2}` }}
       >
       <div className="flex items-center justify-between mb-8 px-3">
-        <Link href="/" className="no-underline">
+        <Link href="/" className="no-underline flex items-center gap-2">
+          <KelaMark size={22} gateColor={c.white} />
           <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
-            bazaar<span style={{ color: c.green }}>.</span>
+            kela<span style={{ color: c.green }}>.</span>
           </span>
         </Link>
         <NotificationBell dropdownSide="left" />
