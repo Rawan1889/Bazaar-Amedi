@@ -10,11 +10,13 @@
 export function KelaMark({
   size = 22,
   gateColor = '#FAFAF7',
+  color = '#1E1C19',
   className,
   title = 'kela',
 }: {
   size?: number
   gateColor?: string
+  color?: string
   className?: string
   title?: string
 }) {
@@ -26,6 +28,7 @@ export function KelaMark({
       role="img"
       aria-label={title}
       className={className}
+      style={{ color, flexShrink: 0 }}
     >
       {/* stem / tower */}
       <rect x="20" y="12" width="20" height="96" fill="currentColor" />
