@@ -347,7 +347,10 @@ export async function getShopOrders() {
   }))
 }
 
-// Market owner: accept an incoming order
+// Market owner: accept an incoming order. On a multi-shop order the first shop
+// to accept flips the whole order 'pending' → 'confirmed' (visible to drivers
+// as preparing); subsequent shops are already implicitly in the flow and skip
+// the accept step in the UI. Only the first shop's call updates the row.
 export async function acceptShopOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
@@ -357,6 +360,7 @@ export async function acceptShopOrder(orderId: string) {
     .from('bazaar_orders')
     .update({ status: 'confirmed' })
     .eq('id', orderId)
+    .eq('status', 'pending')
 
   if (error) return { error: error.message }
   revalidatePath('/shop/orders')

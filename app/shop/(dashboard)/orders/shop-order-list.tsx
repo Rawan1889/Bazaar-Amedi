@@ -56,9 +56,18 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
     bazaar_profiles: { full_name: string; phone: string } | null
   }
   const isPickup = order.fulfillment_type === 'pickup'
-  const items = group.items as { product_name: string; quantity: number; unit_price: number }[]
+  const items = group.items as { product_name: string; quantity: number; unit_price: number; pickup_status?: string }[]
   const total = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
   const status = STATUS_META[order.status] ?? { label: order.status, color: c.stone, bg: c.cream }
+
+  // Per-shop state derived from this shop's own items — independent of what
+  // other shops on the same order have done. A single order can have multiple
+  // shops; each one accepts and marks-ready on its own.
+  const shopReady = items.length > 0 && items.every(i => i.pickup_status === 'ready' || i.pickup_status === 'picked_up')
+  const shopPickedUp = items.length > 0 && items.every(i => i.pickup_status === 'picked_up')
+  const canStillAccept = order.status === 'pending'                       // first shop to act
+  const canMarkReady = !canStillAccept && !shopReady && !['delivered','cancelled'].includes(order.status)
+  const isWaitingForOthers = shopReady && !shopPickedUp && order.status === 'confirmed'
 
   return (
     <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -116,7 +125,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         </div>
       )}
 
-      {order.status === 'pending' && (
+      {canStillAccept && (
         <button
           onClick={() => startTransition(async () => {
             setError(null)
@@ -132,7 +141,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         </button>
       )}
 
-      {order.status === 'confirmed' && (
+      {canMarkReady && (
         <button
           onClick={() => startTransition(async () => {
             setError(null)
@@ -162,6 +171,13 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         >
           {isPending ? 'Updating...' : 'Customer collected — mark done'}
         </button>
+      )}
+
+      {isWaitingForOthers && (
+        <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center"
+          style={{ background: c.greenBg, color: c.green }}>
+          ✓ Your part is ready — waiting for the other shop(s)
+        </div>
       )}
 
       {order.status === 'ready' && !isPickup && (
