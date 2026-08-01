@@ -207,11 +207,61 @@ export async function changeUserRole(userId: string, role: string) {
   revalidatePath('/admin/users')
 }
 
-export async function adminCancelOrder(orderId: string) {
+export async function adminCancelOrder(orderId: string, reason?: string) {
   await requireAdmin()
-  const supabase = await createBazaarServer()
+  const supabase = createBazaarAdmin()
+
+  const { data: order } = await supabase
+    .from('bazaar_orders')
+    .select('id, order_number, status, customer_id, driver_id')
+    .eq('id', orderId)
+    .single()
+  if (!order || order.status === 'cancelled') {
+    revalidatePath('/admin/orders')
+    return
+  }
+
+  const { data: items } = await supabase
+    .from('bazaar_order_items')
+    .select('shop_id, bazaar_shops(owner_id)')
+    .eq('order_id', orderId)
+
   await supabase.from('bazaar_orders').update({ status: 'cancelled' }).eq('id', orderId)
+
+  const body = reason ? `Order cancelled by admin — ${reason}` : `Order cancelled by admin.`
+  sendPushToUser(order.customer_id, {
+    type: 'order_status',
+    title: `Order #${order.order_number} cancelled`,
+    body,
+    url: `/orders/${orderId}`,
+  })
+  if (order.driver_id) {
+    sendPushToUser(order.driver_id, {
+      type: 'order_status',
+      title: `Order #${order.order_number} cancelled`,
+      body,
+      url: `/driver`,
+    })
+  }
+  const notified = new Set<string>()
+  for (const it of (items || [])) {
+    const ownerId = (it as unknown as { bazaar_shops?: { owner_id?: string } | null }).bazaar_shops?.owner_id
+    if (ownerId && !notified.has(ownerId)) {
+      notified.add(ownerId)
+      sendPushToUser(ownerId, {
+        type: 'order_status',
+        title: `Order #${order.order_number} cancelled`,
+        body,
+        url: `/shop/orders`,
+      })
+    }
+  }
+
   revalidatePath('/admin/orders')
+  revalidatePath('/shop/orders')
+  revalidatePath('/driver')
+  revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
 }
 
 export async function adminSetOrderStatus(orderId: string, status: string) {

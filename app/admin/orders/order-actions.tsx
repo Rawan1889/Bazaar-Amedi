@@ -37,7 +37,11 @@ export function OrderActions({ orderId, currentStatus }: { orderId: string; curr
       </select>
       <button
         disabled={pending}
-        onClick={() => startTransition(() => adminCancelOrder(orderId))}
+        onClick={() => {
+          const reason = window.prompt('Reason for cancelling this order? (shown to customer, driver, and shops)')
+          if (reason === null) return
+          startTransition(() => adminCancelOrder(orderId, reason.trim() || undefined))
+        }}
         className="px-3 py-1.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px] font-medium border-none cursor-pointer"
         style={{ background: c.terraBg, color: c.terra, opacity: pending ? 0.6 : 1 }}
       >

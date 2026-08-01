@@ -712,7 +712,7 @@ export async function cancelShopOrder(orderId: string) {
 
   const { data: shop } = await userSupabase
     .from('bazaar_shops')
-    .select('id')
+    .select('id, name')
     .eq('owner_id', user.id)
     .single()
 
@@ -730,7 +730,7 @@ export async function cancelShopOrder(orderId: string) {
 
   const { data: order } = await supabase
     .from('bazaar_orders')
-    .select('status')
+    .select('id, order_number, status, customer_id, driver_id')
     .eq('id', orderId)
     .single()
 
@@ -745,9 +745,27 @@ export async function cancelShopOrder(orderId: string) {
     .eq('id', orderId)
 
   if (error) return { error: error.message }
+
+  const body = `Order cancelled by ${shop.name}.`
+  sendPushToUser(order.customer_id, {
+    type: 'order_status',
+    title: `Order #${order.order_number} cancelled`,
+    body,
+    url: `/orders/${orderId}`,
+  })
+  if (order.driver_id) {
+    sendPushToUser(order.driver_id, {
+      type: 'order_status',
+      title: `Order #${order.order_number} cancelled`,
+      body,
+      url: `/driver`,
+    })
+  }
+
   revalidatePath('/shop/orders')
   revalidatePath('/driver')
   revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
   return { success: true }
 }
 
