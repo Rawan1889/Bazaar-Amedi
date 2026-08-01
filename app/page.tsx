@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
+import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
   green:      '#2D8A5E',
@@ -65,7 +66,8 @@ function Nav() {
       }}
     >
       <div className="max-w-[1200px] mx-auto px-6 md:px-10 flex items-center justify-between h-[64px]">
-        <a href="/" className="no-underline flex items-center gap-1">
+        <a href="/" className="no-underline flex items-center gap-2">
+          <KelaMark size={26} gateColor="#FAFAF7" />
           <span
             className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium"
             style={{ color: c.charcoal, letterSpacing: '-0.02em' }}
@@ -681,7 +683,8 @@ function Footer() {
     <footer className="py-10" style={{ borderTop: `1px solid ${c.cream2}` }}>
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium" style={{ color: c.stoneLight }}>
+          <span className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium flex items-center gap-2" style={{ color: c.stoneLight }}>
+            <KelaMark size={20} color="#9A958E" gateColor="rgba(250,250,247,0)" />
             kela<span style={{ color: 'rgba(45,138,94,0.4)' }}>.</span>
           </span>
           <div className="flex gap-6 flex-wrap justify-center">
