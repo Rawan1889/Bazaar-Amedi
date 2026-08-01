@@ -140,17 +140,31 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
 // PreparingCard — order confirmed by shop, not yet ready
 // ──────────────────────────────────────────────
 function PreparingCard({ order }: { order: Order }) {
-  const shopNames = [...new Set(order.bazaar_order_items.map(i => i.bazaar_shops.name))]
+  // Per-shop status derived from items' pickup_status — one shop can be ready
+  // while another is still packing. Driver sees which is which and can plan.
+  const perShop = [...new Map(
+    order.bazaar_order_items.map(i => [
+      i.shop_id,
+      {
+        id: i.shop_id,
+        name: i.bazaar_shops.name,
+        ready: order.bazaar_order_items
+          .filter(it => it.shop_id === i.shop_id)
+          .every(it => it.pickup_status === 'ready' || it.pickup_status === 'picked_up'),
+      },
+    ])
+  ).values()]
+  const readyCount = perShop.filter(s => s.ready).length
 
   return (
-    <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.saffron}`, opacity: 0.85 }}>
+    <div className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.saffron}`, opacity: 0.9 }}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
             Order #{order.order_number}
           </span>
           <span className="px-2 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium" style={{ background: c.saffronBg, color: c.saffron }}>
-            Preparing
+            {readyCount}/{perShop.length} shops ready
           </span>
         </div>
         <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.green }}>
@@ -158,15 +172,32 @@ function PreparingCard({ order }: { order: Order }) {
         </span>
       </div>
 
-      <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-1" style={{ color: c.stone }}>
-        {shopNames.join(' + ')}
-      </div>
       <div className="font-[family-name:var(--font-dm-sans)] text-[12px] mb-3" style={{ color: c.stone }}>
         {order.bazaar_order_items.length} items → {order.delivery_address}
       </div>
 
+      {/* Per-shop readiness — the point of this card */}
+      <div className="flex flex-col gap-1.5 mb-3 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
+        {perShop.map(shop => (
+          <div key={shop.id} className="flex items-center justify-between text-[12px] font-[family-name:var(--font-dm-sans)]">
+            <span style={{ color: c.charcoal }}>{shop.name}</span>
+            <span
+              className="px-2 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
+              style={{
+                background: shop.ready ? c.greenBg : c.saffronBg,
+                color:      shop.ready ? c.green   : c.saffron,
+              }}
+            >
+              {shop.ready ? '✓ Ready' : '🕐 Preparing'}
+            </span>
+          </div>
+        ))}
+      </div>
+
       <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center" style={{ background: c.saffronBg, color: c.saffron }}>
-        Shop is preparing — available soon
+        {readyCount === perShop.length
+          ? 'All shops ready — order will appear in Available soon'
+          : `Waiting on ${perShop.length - readyCount} shop${perShop.length - readyCount !== 1 ? 's' : ''}`}
       </div>
     </div>
   )

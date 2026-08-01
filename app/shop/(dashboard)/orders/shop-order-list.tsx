@@ -110,13 +110,30 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
         )}
       </div>
 
-      <div className="flex flex-col gap-1 mb-4 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
-        {items.map((item, idx) => (
-          <div key={idx} className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.charcoal }}>
-            <span>{item.quantity}× {item.product_name}</span>
-            <span style={{ color: c.stone }}>{formatIQD(item.unit_price * item.quantity)}</span>
-          </div>
-        ))}
+      <div className="flex flex-col gap-1.5 mb-4 pb-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
+        {items.map((item, idx) => {
+          const chip = item.pickup_status === 'picked_up'
+            ? { label: 'Picked up', bg: c.terraBg, color: c.terra }
+            : item.pickup_status === 'ready'
+              ? { label: 'Ready',   bg: c.greenBg, color: c.green }
+              : null
+          return (
+            <div key={idx} className="flex items-center justify-between gap-3 font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.charcoal }}>
+              <span className="flex items-center gap-2 min-w-0 flex-1">
+                <span>{item.quantity}× {item.product_name}</span>
+                {chip && (
+                  <span
+                    className="px-1.5 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[9px] font-medium flex-shrink-0"
+                    style={{ background: chip.bg, color: chip.color }}
+                  >
+                    {chip.label}
+                  </span>
+                )}
+              </span>
+              <span style={{ color: c.stone }}>{formatIQD(item.unit_price * item.quantity)}</span>
+            </div>
+          )
+        })}
       </div>
 
       {error && (
