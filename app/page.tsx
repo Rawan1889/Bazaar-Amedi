@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { KelaMark } from '@/app/components/kela-mark'
+import { LanguageSwitcher } from '@/app/components/language-switcher'
 
 const c = {
   green:      '#2D8A5E',
@@ -92,6 +93,7 @@ function Nav() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
+          <LanguageSwitcher />
           {userInfo && dashboardLink ? (
             <a
               href={dashboardLink}
@@ -137,6 +139,9 @@ function Nav() {
 
       {open && (
         <div className="md:hidden px-6 pb-6 flex flex-col gap-4" style={{ background: c.bg }}>
+          <div className="flex justify-start pt-2">
+            <LanguageSwitcher />
+          </div>
           {['How it works', 'Markets', 'Flash Sales', 'Deliver with us'].map(item => (
             <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="text-[15px] no-underline py-2" style={{ color: c.charcoal }} onClick={() => setOpen(false)}>
               {item}
