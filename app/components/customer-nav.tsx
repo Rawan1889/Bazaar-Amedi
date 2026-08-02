@@ -187,7 +187,9 @@ export function CustomerNav() {
                     : [
                         { href: '/profile',   label: 'My Profile',  path: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z' },
                       ]
-                  ).map(item => (
+                  ).concat(profile.role === 'super_admin' ? [] : [
+                    { href: '/support', label: 'Support', path: 'M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3' },
+                  ]).map(item => (
                     <Link
                       key={item.href}
                       href={item.href}
