@@ -19,7 +19,7 @@ export function AuthNotifications() {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-40 hidden md:block">
+      <div className="fixed top-4 right-4 rtl:right-auto rtl:left-4 z-40 hidden md:block">
         <NotificationBell />
       </div>
       <PushPrompt userId={userId} />
