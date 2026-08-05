@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from '@/app/components/language-switcher'
+import { NotificationBell } from '@/app/components/notification-bell'
 import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
@@ -141,6 +142,9 @@ export function DriverNav({ userName, exact = false }: Props) {
               </Link>
             )
           })}
+          <div className="flex flex-col items-center gap-0.5 px-1 py-1">
+            <NotificationBell />
+          </div>
         </div>
       </nav>
     </>

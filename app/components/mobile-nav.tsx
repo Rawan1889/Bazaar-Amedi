@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useCart } from '@/lib/bazaar/cart-context'
 import { useFavorites } from '@/lib/bazaar/favorites-context'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
+import { NotificationBell } from './notification-bell'
 import type { Route } from 'next'
 
 const c = {
@@ -145,6 +146,11 @@ export function MobileNav() {
             </Link>
           )
         })}
+        {role && (
+          <div className="flex flex-col items-center gap-0.5 px-1 py-1">
+            <NotificationBell />
+          </div>
+        )}
       </div>
     </nav>
   )

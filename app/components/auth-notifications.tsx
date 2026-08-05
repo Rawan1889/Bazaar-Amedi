@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
-import { NotificationBell } from './notification-bell'
 import { PushPrompt } from './push-prompt'
 
 export function AuthNotifications() {
@@ -17,13 +16,8 @@ export function AuthNotifications() {
 
   if (!userId) return null
 
-  return (
-    <>
-      {/* Mobile-only floating bell — desktop navs render it inline next to the language switcher. */}
-      <div className="fixed top-4 right-4 rtl:right-auto rtl:left-4 z-40 md:hidden">
-        <NotificationBell />
-      </div>
-      <PushPrompt userId={userId} />
-    </>
-  )
+  // Bell is rendered inline in each role's nav (mobile bottom nav for customer/
+  // driver, sidebar header for shop/admin, desktop header everywhere) so this
+  // component now only owns the push-permission prompt.
+  return <PushPrompt userId={userId} />
 }
