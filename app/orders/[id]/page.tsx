@@ -70,10 +70,22 @@ export default async function OrderDetailPage({
     id: string; order_number: number; status: string; total: number; delivery_fee: number
     delivery_address: string; note: string | null; created_at: string; delivered_at: string | null
     delivery_lat: number | null; delivery_lng: number | null
+    driver_id: string | null
     driver_lat: number | null; driver_lng: number | null
     scheduled_date: string | null; scheduled_slot: string | null
     fulfillment_type: string | null
     bazaar_order_items: { id: string; product_name: string; quantity: number; unit_price: number; pickup_status: string; bazaar_shops: { name: string; slug: string } }[]
+  }
+
+  type DriverInfo = { full_name: string; phone: string | null }
+  let driver: DriverInfo | null = null
+  if (o.driver_id) {
+    const { data: d } = await supabase
+      .from('bazaar_profiles')
+      .select('full_name, phone')
+      .eq('id', o.driver_id)
+      .single()
+    if (d) driver = d as DriverInfo
   }
 
   const isPickupOrder = o.fulfillment_type === 'pickup'
@@ -121,6 +133,35 @@ export default async function OrderDetailPage({
           </span>
         </div>
 
+
+        {/* Driver card — shown as soon as a driver is assigned */}
+        {driver && !isCancelled && (
+          <div className="rounded-[14px] p-4 mb-6 flex items-center gap-4" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[13px] font-medium shrink-0" style={{ background: c.greenBg, color: c.green }}>
+              {driver.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-[family-name:var(--font-dm-mono)] text-[10px] uppercase tracking-wider" style={{ color: c.stone }}>
+                Your driver
+              </div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[15px] font-medium truncate" style={{ color: c.charcoal }}>
+                {driver.full_name}
+              </div>
+            </div>
+            {driver.phone && (
+              <a
+                href={`tel:${driver.phone}`}
+                className="px-3 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[12px] font-medium no-underline flex items-center gap-2 shrink-0"
+                style={{ background: c.green, color: '#fff' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+                </svg>
+                Call
+              </a>
+            )}
+          </div>
+        )}
 
         {/* Live tracking map — shown while out for delivery */}
         {isEnRoute && hasTrackingCoords && (
