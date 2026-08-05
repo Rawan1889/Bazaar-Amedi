@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import type { BazaarProfile } from '@/lib/bazaar/types'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from '@/app/components/language-switcher'
+import { NotificationBell } from '@/app/components/notification-bell'
 import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
@@ -117,8 +118,9 @@ export function AdminSidebar({ user }: { user: BazaarProfile }) {
             </div>
           </div>
         </div>
-        <div className="mb-2">
+        <div className="mb-2 flex items-center gap-2">
           <LanguageSwitcher />
+          <NotificationBell dropdownSide="left" />
         </div>
         <form action={bazaarLogout}>
           <button

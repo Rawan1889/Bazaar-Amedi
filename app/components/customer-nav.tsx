@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from './language-switcher'
+import { NotificationBell } from './notification-bell'
 import { KelaMark } from './kela-mark'
 import { useCart } from '@/lib/bazaar/cart-context'
 
@@ -84,6 +85,11 @@ export function CustomerNav() {
 
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
+          {profile && (
+            <div className="hidden md:block">
+              <NotificationBell />
+            </div>
+          )}
 
           {profile ? (
             <div className="relative" ref={menuRef}>
