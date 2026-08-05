@@ -109,7 +109,7 @@ export function NotificationBell({ dropdownSide = 'right' }: { dropdownSide?: 'l
           {/* Mobile: dim backdrop so the sheet reads as a panel, not a floating strip */}
           <div className="md:hidden fixed inset-0 z-40" style={{ background: 'rgba(30,28,25,0.35)' }} onClick={() => setOpen(false)} />
         <div
-          className={`fixed left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+72px)] w-auto md:absolute md:bottom-auto md:top-12 md:w-[340px] ${dropdownSide === 'left' ? 'md:left-0 md:right-auto' : 'md:right-0 md:left-auto'} max-h-[70dvh] md:max-h-[420px] rounded-[14px] overflow-hidden shadow-lg z-50 flex flex-col`}
+          className={`fixed left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+72px)] w-auto md:absolute md:bottom-auto md:top-12 md:w-[340px] ${dropdownSide === 'left' ? 'md:start-0 md:end-auto' : 'md:end-0 md:start-auto'} max-h-[70dvh] md:max-h-[420px] rounded-[14px] overflow-hidden shadow-lg z-50 flex flex-col`}
           style={{ background: c.white, border: `1px solid ${c.cream2}` }}
         >
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
