@@ -45,7 +45,7 @@ export function PromoBanner() {
       >
         <button
           onClick={dismiss}
-          className="absolute top-4 right-4 p-1 border-none bg-transparent cursor-pointer"
+          className="absolute top-4 end-4 p-1 border-none bg-transparent cursor-pointer"
           style={{ color: c.stone }}
           aria-label="Close"
         >

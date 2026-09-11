@@ -114,7 +114,7 @@ export function CustomerNav() {
 
               {open && (
                 <div
-                  className="absolute right-0 top-[calc(100%+8px)] w-[220px] rounded-[12px] py-1.5 z-50"
+                  className="absolute end-0 top-[calc(100%+8px)] w-[min(220px,calc(100vw-1rem))] max-w-[220px] rounded-[12px] py-1.5 z-50"
                   style={{ background: c.white, border: `1px solid ${c.cream2}`, boxShadow: '0 8px 32px rgba(30,28,25,0.10)' }}
                 >
                   <div className="px-4 py-2.5 border-b" style={{ borderColor: c.cream2 }}>

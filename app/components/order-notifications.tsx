@@ -37,7 +37,7 @@ export function OrderNotifications({ userId, role }: { userId: string; role: str
   if (notifications.length === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-[340px]">
+    <div className="fixed top-4 right-4 rtl:right-auto rtl:left-4 z-50 flex flex-col gap-2 max-w-[calc(100vw-2rem)] md:max-w-[340px]">
       {notifications.slice(0, 3).map(n => (
         <div
           key={`${n.id}-${n.updated_at}`}

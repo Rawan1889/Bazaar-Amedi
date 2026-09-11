@@ -47,7 +47,7 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
       <button
         onClick={() => setOpen(v => !v)}
         aria-label="Open menu"
-        className="md:hidden fixed top-3 left-3 z-40 w-10 h-10 rounded-[10px] flex items-center justify-center"
+        className="md:hidden fixed top-3 start-3 z-40 w-10 h-10 rounded-[10px] flex items-center justify-center"
         style={{ background: c.white, border: `1px solid ${c.cream2}` }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.charcoal} strokeWidth="1.75" strokeLinecap="round">
@@ -65,8 +65,8 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
       )}
 
       <aside
-        className={`fixed left-0 top-0 bottom-0 w-[240px] flex flex-col py-6 px-4 z-40 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
-        style={{ background: c.white, borderRight: `1px solid ${c.cream2}` }}
+        className={`fixed start-0 top-0 bottom-0 w-[min(240px,85vw)] flex flex-col py-6 px-4 z-40 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'} md:translate-x-0`}
+        style={{ background: c.white, borderInlineEnd: `1px solid ${c.cream2}` }}
       >
       <div className="flex items-center justify-between mb-8 px-3">
         <Link href="/" className="no-underline flex items-center gap-2">

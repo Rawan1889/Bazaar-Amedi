@@ -74,7 +74,7 @@ export function PushPrompt({ userId }: { userId: string }) {
 
   return (
     <div
-      className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:max-w-[360px] rounded-[14px] p-5 z-40 shadow-lg"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-4 right-4 md:start-auto md:end-6 md:max-w-[360px] rounded-[14px] p-5 z-40 shadow-lg"
       style={{ background: c.white, border: `1px solid ${c.cream2}` }}
     >
       <div className="flex items-start gap-3">
