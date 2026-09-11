@@ -1,0 +1,22 @@
+English,In AR already?,Kurdish (fill in),Where (file)
+Closed,no,,app/admin/support/page.tsx
+Nothing here.,no,,app/admin/support/page.tsx
+Support inbox,no,,app/admin/support/page.tsx
+"e.g. Sersing, Qubahan",yes,,app/admin/zones/zone-manager.tsx
+Call,no,,app/orders/[id]/page.tsx
+Your driver,no,,app/orders/[id]/page.tsx
+kela,no,,app/page.tsx
+You can still add products while waiting. Your shop will be visible to customers once approved.,no,,app/shop/(dashboard)/page.tsx
+Bulk import products,no,,app/shop/(dashboard)/products/bulk-import.tsx
+Open menu,no,,app/shop/sidebar.tsx
+e.g. Payout hasn't arrived,no,,app/support/new-thread-form.tsx
+Explain what's going on. Include order numbers if it's about a specific order.,no,,app/support/new-thread-form.tsx
+Message,no,,app/support/new-thread-form.tsx
+Subject,no,,app/support/new-thread-form.tsx
+Need help? Open a ticket and the Kela team will get back to you.,no,,app/support/page.tsx
+Support,no,,app/support/page.tsx
+Your tickets,no,,app/support/page.tsx
+This ticket is closed.,no,,app/support/thread-view.tsx
+CSV must include at least,yes,,lib/bazaar/shop-actions.ts
+Subject and message are required.,no,,lib/bazaar/support-actions.ts
+Subject is too long.,no,,lib/bazaar/support-actions.ts

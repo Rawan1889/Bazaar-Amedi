@@ -65,8 +65,13 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
   // shops; each one accepts and marks-ready on its own.
   const shopReady = items.length > 0 && items.every(i => i.pickup_status === 'ready' || i.pickup_status === 'picked_up')
   const shopPickedUp = items.length > 0 && items.every(i => i.pickup_status === 'picked_up')
-  const canStillAccept = order.status === 'pending'                       // first shop to act
-  const canMarkReady = !canStillAccept && !shopReady && !['delivered','cancelled'].includes(order.status)
+  const shopNotAcceptedYet = items.length > 0 && items.some(i => (i.pickup_status ?? 'pending') === 'pending')
+  const isTerminal = ['delivered', 'cancelled'].includes(order.status)
+  // Each shop accepts independently — driven off THIS shop's own items, not
+  // the order-level status. So the 2nd shop still sees Accept even after the
+  // 1st shop's Accept flipped order.status to 'confirmed'.
+  const canStillAccept = shopNotAcceptedYet && !isTerminal
+  const canMarkReady = !canStillAccept && !shopReady && !isTerminal
   const isWaitingForOthers = shopReady && !shopPickedUp && order.status === 'confirmed'
 
   return (
@@ -260,9 +265,19 @@ export function ShopOrderList({ orders, userId }: { orders: OrderGroup[]; userId
     )
   }
 
-  // Filter orders by tab
-  const newOrders = orders.filter(g => g.order.status === 'pending')
-  const preparingOrders = orders.filter(g => ['confirmed', 'ready', 'picking_up', 'delivering'].includes(g.order.status as string))
+  // Filter orders by tab. "New" is anything THIS shop hasn't accepted yet —
+  // covers multi-shop orders where another shop already accepted (flipping
+  // order.status to 'confirmed') while our items are still 'pending'.
+  const isNewForThisShop = (g: OrderGroup) => {
+    const orderStatus = (g.order as { status: string }).status
+    const gItems = g.items as { pickup_status?: string }[]
+    return !['delivered', 'cancelled'].includes(orderStatus) &&
+      gItems.some(i => (i.pickup_status ?? 'pending') === 'pending')
+  }
+  const newOrders = orders.filter(isNewForThisShop)
+  const preparingOrders = orders.filter(g =>
+    !isNewForThisShop(g) && ['confirmed', 'ready', 'picking_up', 'delivering'].includes(g.order.status as string)
+  )
   const pastOrders = orders.filter(g => ['delivered', 'cancelled'].includes(g.order.status as string))
 
   const activeOrders = activeTab === 'new'

@@ -351,20 +351,47 @@ export async function getShopOrders() {
 // to accept flips the whole order 'pending' → 'confirmed' (visible to drivers
 // as preparing); subsequent shops are already implicitly in the flow and skip
 // the accept step in the UI. Only the first shop's call updates the row.
+// Shop owner: accept THIS shop's portion of the order. Only flips this shop's
+// items from pending→accepted; the other shops on a multi-shop order stay in
+// 'pending' until they accept for themselves.
+//
+// The order-level status moves to 'confirmed' as soon as the first shop
+// accepts (so the customer sees "being prepared"), but that alone no longer
+// counts as acceptance for the other shops.
 export async function acceptShopOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
 
   const supabase = createBazaarAdmin()
-  const { error } = await supabase
+  const userSupabase = await createBazaarServer()
+
+  const { data: shop } = await userSupabase
+    .from('bazaar_shops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+  if (!shop) return { error: 'No shop found' }
+
+  const { error: itemsError } = await supabase
+    .from('bazaar_order_items')
+    .update({ pickup_status: 'accepted' })
+    .eq('order_id', orderId)
+    .eq('shop_id', shop.id)
+    .eq('pickup_status', 'pending')
+  if (itemsError) return { error: itemsError.message }
+
+  // Move the order to 'confirmed' the first time any shop accepts. Guarded
+  // by .eq('status','pending') so it's idempotent and safe for the 2nd shop.
+  await supabase
     .from('bazaar_orders')
     .update({ status: 'confirmed' })
     .eq('id', orderId)
     .eq('status', 'pending')
 
-  if (error) return { error: error.message }
   revalidatePath('/shop/orders')
   revalidatePath('/driver')
+  revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
   return { success: true }
 }
 
@@ -388,13 +415,15 @@ export async function markShopOrderReady(orderId: string) {
 
   if (!shop) return { error: 'No shop found' }
 
-  // Mark this shop's items as ready.
+  // Mark this shop's items as ready. Accept whichever prior state they were in
+  // — 'accepted' is the normal path, but 'pending' also works if the shop
+  // skipped the explicit Accept click.
   const { error: itemsError } = await supabase
     .from('bazaar_order_items')
     .update({ pickup_status: 'ready' })
     .eq('order_id', orderId)
     .eq('shop_id', shop.id)
-    .eq('pickup_status', 'pending')
+    .in('pickup_status', ['pending', 'accepted'])
 
   if (itemsError) return { error: itemsError.message }
 
