@@ -108,7 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
       <div className="max-w-[900px] mx-auto px-6 py-8">
         <Link href={`/s/${p.bazaar_shops.slug}`} className="inline-flex items-center gap-1.5 mb-5 no-underline font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.stone }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="rtl:-scale-x-100" aria-hidden="true">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           {p.bazaar_shops.name}

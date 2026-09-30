@@ -174,7 +174,7 @@ function PreparingCard({ order }: { order: Order }) {
       </div>
 
       <div className="font-[family-name:var(--font-dm-sans)] text-[12px] mb-3" style={{ color: c.stone }}>
-        {order.bazaar_order_items.length} items → {order.delivery_address}
+        {order.bazaar_order_items.length} items <span className="inline-block rtl:-scale-x-100" aria-hidden="true">→</span> {order.delivery_address}
       </div>
 
       {/* Per-shop readiness — the point of this card */}
@@ -240,7 +240,7 @@ function AvailableOrderCard({ order, onError }: { order: Order; onError: (msg: s
         {shopNames.join(' + ')}
       </div>
       <div className="font-[family-name:var(--font-dm-sans)] text-[12px] mb-3" style={{ color: c.stone }}>
-        {order.bazaar_order_items.length} items → {order.delivery_address}
+        {order.bazaar_order_items.length} items <span className="inline-block rtl:-scale-x-100" aria-hidden="true">→</span> {order.delivery_address}
       </div>
 
       <button

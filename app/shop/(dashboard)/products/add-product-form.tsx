@@ -218,7 +218,7 @@ export function AddProductForm({ categories }: { categories: { id: string; name_
                   {UNITS.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}
                 </select>
 
-                <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>→</span>
+                <span className="inline-block rtl:-scale-x-100 font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }} aria-hidden="true">→</span>
 
                 {/* Price */}
                 <div className="flex items-center gap-1 flex-1">

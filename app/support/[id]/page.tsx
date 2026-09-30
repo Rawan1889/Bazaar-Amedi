@@ -24,7 +24,7 @@ export default async function SupportThreadPage({ params }: { params: Promise<{ 
     <main className="min-h-[100dvh] px-4 md:px-8 py-6 pb-24 md:pb-8" style={{ background: '#FAFAF7' }}>
       <div className="max-w-[720px] mx-auto">
         <Link href="/support" className="font-[family-name:var(--font-dm-mono)] text-[11px] no-underline" style={{ color: c.stone }}>
-          ← Back to tickets
+          <span className="inline-block rtl:-scale-x-100" aria-hidden="true">←</span> Back to tickets
         </Link>
         <div className="mt-4 rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
           <ThreadView

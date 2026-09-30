@@ -23,7 +23,7 @@ export default async function AdminSupportThreadPage({ params }: { params: Promi
   return (
     <div>
       <Link href="/admin/support" className="font-[family-name:var(--font-dm-mono)] text-[11px] no-underline" style={{ color: c.stone }}>
-        ← Back to inbox
+        <span className="inline-block rtl:-scale-x-100" aria-hidden="true">←</span> Back to inbox
       </Link>
       <div className="mt-4 rounded-[14px] p-5 max-w-[800px]" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
         <ThreadView
