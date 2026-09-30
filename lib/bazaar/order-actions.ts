@@ -23,10 +23,42 @@ type ResolvedItem = {
   name: string
   unitPrice: number
   quantity: number
+  // Set only when that counter is actually tracked (non-null), i.e. needs reserving.
   stockVariantId: string | null
-  variantStock: number | null
-  saleId: string | null
-  saleQty: number | null
+  limitedSaleId: string | null
+}
+
+type Counter = { table: 'bazaar_product_variants' | 'bazaar_flash_sales'; id: string; qty: number }
+
+// Atomically add `delta` to a stock counter using compare-and-swap: the UPDATE
+// only applies if the value is still what we just read, so two simultaneous
+// orders can't both take the last unit. Retries when another order wins the race.
+async function adjustCounter(
+  admin: ReturnType<typeof createBazaarAdmin>,
+  { table, id }: Omit<Counter, 'qty'>,
+  delta: number,
+): Promise<boolean> {
+  const col = table === 'bazaar_flash_sales' ? 'quantity' : 'stock_qty'
+  const flag = table === 'bazaar_flash_sales' ? 'is_active' : 'in_stock'
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { data: row } = await admin.from(table).select(col).eq('id', id).single()
+    const current = (row as Record<string, number | null> | null)?.[col]
+    if (current === null || current === undefined) return true
+    const next = current + delta
+    if (next < 0) return false
+    const { data: updated } = await admin
+      .from(table)
+      .update({ [col]: next, [flag]: next > 0 })
+      .eq('id', id)
+      .eq(col, current)
+      .select('id')
+    if (updated?.length) return true
+  }
+  return false
+}
+
+async function releaseCounters(admin: ReturnType<typeof createBazaarAdmin>, counters: Counter[]) {
+  for (const ctr of counters) await adjustCounter(admin, ctr, ctr.qty)
 }
 
 type ProductRow = {
@@ -96,10 +128,8 @@ async function resolveOrderItems(
       name: chosen ? `${p.name_en} (${chosen.amount} ${chosen.unit})` : p.name_en,
       unitPrice: sale ? Math.min(sale.sale_price, basePrice) : basePrice,
       quantity: line.quantity,
-      stockVariantId: stockVariant?.id ?? null,
-      variantStock: stockVariant?.stock_qty ?? null,
-      saleId: sale?.id ?? null,
-      saleQty: sale?.quantity ?? null,
+      stockVariantId: stockVariant && stockVariant.stock_qty !== null ? stockVariant.id : null,
+      limitedSaleId: sale && sale.quantity !== null ? sale.id : null,
     })
   }
   return { items }
@@ -211,6 +241,24 @@ export async function placeOrder(data: {
   // Written with the service-role client: customers have no direct INSERT
   // rights on orders/items (phase 29), so every order passes this validation.
   const admin = createBazaarAdmin()
+
+  // Reserve stock before creating the order so two customers can't both buy
+  // the last unit. Everything reserved is released if any later step fails.
+  const reserved: Counter[] = []
+  for (const item of items) {
+    const wanted: Counter[] = [
+      ...(item.stockVariantId ? [{ table: 'bazaar_product_variants' as const, id: item.stockVariantId, qty: item.quantity }] : []),
+      ...(item.limitedSaleId ? [{ table: 'bazaar_flash_sales' as const, id: item.limitedSaleId, qty: item.quantity }] : []),
+    ]
+    for (const ctr of wanted) {
+      if (!(await adjustCounter(admin, ctr, -ctr.qty))) {
+        await releaseCounters(admin, reserved)
+        return { error: `Sorry, "${item.name}" just sold out. Please update your cart.` }
+      }
+      reserved.push(ctr)
+    }
+  }
+
   const { data: order, error: orderError } = await admin
     .from('bazaar_orders')
     .insert({
@@ -231,7 +279,10 @@ export async function placeOrder(data: {
     .select('id')
     .single()
 
-  if (orderError) return { error: orderError.message }
+  if (orderError) {
+    await releaseCounters(admin, reserved)
+    return { error: orderError.message }
+  }
 
   const orderItems = items.map(item => ({
     order_id: order.id,
@@ -250,24 +301,8 @@ export async function placeOrder(data: {
   if (itemsError) {
     // Don't leave an order with no items behind.
     await admin.from('bazaar_orders').delete().eq('id', order.id)
+    await releaseCounters(admin, reserved)
     return { error: itemsError.message }
-  }
-
-  for (const item of items) {
-    if (item.stockVariantId && item.variantStock !== null) {
-      const newQty = Math.max(0, item.variantStock - item.quantity)
-      await admin
-        .from('bazaar_product_variants')
-        .update({ stock_qty: newQty, in_stock: newQty > 0 })
-        .eq('id', item.stockVariantId)
-    }
-    if (item.saleId && item.saleQty !== null) {
-      const newQty = Math.max(0, item.saleQty - item.quantity)
-      await admin
-        .from('bazaar_flash_sales')
-        .update({ quantity: newQty, is_active: newQty > 0 })
-        .eq('id', item.saleId)
-    }
   }
 
   // Record coupon usage with the service-role client (customers can't UPDATE coupons under RLS).
