@@ -10,6 +10,7 @@ const c = {
   terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffBg:   'rgba(232,168,56,0.10)',
   charcoal: '#1E1C19',
   stone:    '#716C66',
@@ -20,7 +21,7 @@ const c = {
 
 const ROLE_META: Record<string, { label: string; color: string; bg: string }> = {
   customer:     { label: 'Customer',     color: c.green,    bg: c.greenBg },
-  driver:       { label: 'Driver',       color: c.saffron,  bg: c.saffBg  },
+  driver:       { label: 'Driver',       color: c.saffronText,  bg: c.saffBg  },
   market_admin: { label: 'Market Owner', color: c.terra,    bg: c.terraBg },
   super_admin:  { label: 'Super Admin',  color: c.charcoal, bg: c.cream   },
 }
@@ -85,7 +86,7 @@ function UserRow({ user }: { user: User }) {
         {user.is_suspended ? (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.terra }}>Suspended</span>
         ) : user.role === 'driver' && !user.is_approved ? (
-          <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffron }}>Pending approval</span>
+          <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffronText }}>Pending approval</span>
         ) : (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.green }}>Active</span>
         )}

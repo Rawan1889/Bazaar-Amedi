@@ -5,6 +5,7 @@ const c = {
   greenBg:  'rgba(45,138,94,0.08)',
   terra:    '#A8563F',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   charcoal: '#1E1C19',
   stone:    '#716C66',
@@ -45,7 +46,7 @@ export function AnalyticsDashboard({ data }: Props) {
         {[
           { label: 'Revenue', value: formatIQD(data.totalRevenue), sub: 'from delivered orders', color: c.green },
           { label: 'Orders', value: String(data.totalOrders), sub: 'total order items', color: c.charcoal },
-          { label: 'Items sold', value: String(data.totalItemsSold), sub: `from ${data.totalProducts} products`, color: c.saffron },
+          { label: 'Items sold', value: String(data.totalItemsSold), sub: `from ${data.totalProducts} products`, color: c.saffronText },
           { label: 'Rating', value: data.avgRating > 0 ? String(data.avgRating) : '—', sub: data.reviewCount > 0 ? `${data.reviewCount} reviews` : 'No reviews yet', color: c.terra },
         ].map(stat => (
           <div key={stat.label} className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>

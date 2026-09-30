@@ -12,6 +12,7 @@ const c = {
   terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   indigo:   '#6366F1',
   indigoBg: 'rgba(99,102,241,0.08)',
@@ -323,7 +324,7 @@ export default async function OrderDetailPage({
             )}
             <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[12px]">
               <span style={{ color: c.stone }}>Payment</span>
-              <span className="font-[family-name:var(--font-dm-mono)] text-[10px] px-1.5 py-0.5 rounded-[3px]" style={{ background: c.saffronBg, color: c.saffron }}>
+              <span className="font-[family-name:var(--font-dm-mono)] text-[10px] px-1.5 py-0.5 rounded-[3px]" style={{ background: c.saffronBg, color: c.saffronText }}>
                 Cash on delivery
               </span>
             </div>

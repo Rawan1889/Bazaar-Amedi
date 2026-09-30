@@ -9,6 +9,7 @@ const c = {
   terra:     '#A8563F',
   terraBg:   'rgba(196,101,74,0.08)',
   saffron:   '#E8A838',
+  saffronText: '#8D6514',
   saffronBg: 'rgba(232,168,56,0.08)',
   charcoal:  '#1E1C19',
   stone:     '#716C66',
@@ -21,9 +22,9 @@ function formatIQD(amount: number) {
 }
 
 const statusColors: Record<string, { bg: string; color: string }> = {
-  pending:    { bg: c.saffronBg, color: c.saffron },
+  pending:    { bg: c.saffronBg, color: c.saffronText },
   confirmed:  { bg: c.greenBg,   color: c.green   },
-  picking_up: { bg: c.saffronBg, color: c.saffron },
+  picking_up: { bg: c.saffronBg, color: c.saffronText },
   delivering: { bg: c.greenBg,   color: c.green   },
   delivered:  { bg: c.greenBg,   color: c.green   },
   cancelled:  { bg: c.terraBg,   color: c.terra   },

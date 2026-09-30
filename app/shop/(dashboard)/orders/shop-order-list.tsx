@@ -12,6 +12,7 @@ const c = {
   green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
@@ -27,7 +28,7 @@ function formatIQD(amount: number) {
 }
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  pending:    { label: 'New order',       color: c.saffron, bg: c.saffronBg },
+  pending:    { label: 'New order',       color: c.saffronText, bg: c.saffronBg },
   confirmed:  { label: 'Preparing',       color: c.green,   bg: c.greenBg   },
   ready:      { label: 'Ready',           color: c.green,   bg: c.greenBg   },
   picking_up: { label: 'Driver coming',   color: c.terra,   bg: c.terraBg   },
@@ -175,7 +176,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
           })}
           disabled={isPending}
           className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
-          style={{ background: c.saffron, color: '#fff', opacity: isPending ? 0.7 : 1 }}
+          style={{ background: c.saffron, color: '#1E1C19', opacity: isPending ? 0.7 : 1 }}
         >
           {isPending ? 'Updating...' : '📦 Mark ready for pickup'}
         </button>
@@ -289,7 +290,7 @@ export function ShopOrderList({ orders, userId }: { orders: OrderGroup[]; userId
       : pastOrders
 
   const tabs = [
-    { id: 'new' as const, label: 'New Received', count: newOrders.length, color: c.saffron },
+    { id: 'new' as const, label: 'New Received', count: newOrders.length, color: c.saffronText },
     { id: 'preparing' as const, label: 'Preparing & Ready', count: preparingOrders.length, color: c.green },
     { id: 'past' as const, label: 'Delivered & Past', count: pastOrders.length, color: c.stone },
   ]

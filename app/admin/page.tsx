@@ -5,6 +5,7 @@ const c = {
   green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
@@ -20,7 +21,7 @@ export default async function AdminOverview() {
   const cards = [
     { label: 'Total Users', value: stats.totalUsers, color: c.green, bg: c.greenBg },
     { label: 'Total Shops', value: stats.totalShops, color: c.green, bg: c.greenBg },
-    { label: 'Total Products', value: stats.totalProducts, color: c.saffron, bg: c.saffronBg },
+    { label: 'Total Products', value: stats.totalProducts, color: c.saffronText, bg: c.saffronBg },
     { label: 'Total Orders', value: stats.totalOrders, color: c.terra, bg: c.terraBg },
   ]
 
@@ -58,7 +59,7 @@ export default async function AdminOverview() {
               <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
                 {stats.pendingShops} shop{stats.pendingShops !== 1 ? 's' : ''} pending approval
               </div>
-              <a href="/admin/shops" className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.saffron }}>
+              <a href="/admin/shops" className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.saffronText }}>
                 Review now
               </a>
             </div>

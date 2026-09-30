@@ -14,6 +14,7 @@ const c = {
   green:     '#287A53',
   greenBg:   'rgba(45,138,94,0.08)',
   saffron:   '#E8A838',
+  saffronText: '#8D6514',
   saffronBg: 'rgba(232,168,56,0.12)',
   charcoal:  '#1E1C19',
   stone:     '#716C66',
@@ -105,7 +106,7 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
         <div className="flex items-center gap-2.5 mb-3">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[12px] font-medium flex-shrink-0"
-            style={{ background: c.saffronBg, color: c.saffron }}
+            style={{ background: c.saffronBg, color: c.saffronText }}
           >
             {user.full_name.charAt(0).toUpperCase()}
           </div>
@@ -113,7 +114,7 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
             <div className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium truncate" style={{ color: c.charcoal }}>
               {user.full_name}
             </div>
-            <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffron }}>
+            <div className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffronText }}>
               Market owner
             </div>
           </div>

@@ -14,6 +14,7 @@ const c = {
   terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   charcoal: '#1E1C19',
   stone:    '#716C66',
@@ -27,7 +28,7 @@ function formatIQD(amount: number) {
 }
 
 const statusColors: Record<string, { color: string; bg: string; label: string }> = {
-  pending:     { color: c.saffron, bg: c.saffronBg, label: 'Pending' },
+  pending:     { color: c.saffronText, bg: c.saffronBg, label: 'Pending' },
   confirmed:   { color: c.green, bg: c.greenBg, label: 'Preparing' },
   ready:       { color: c.green, bg: c.greenBg, label: 'Ready — awaiting driver' },
   picking_up:  { color: '#6366F1', bg: 'rgba(99,102,241,0.08)', label: 'Picking up' },

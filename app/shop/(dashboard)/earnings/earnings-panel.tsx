@@ -8,6 +8,7 @@ const c = {
   green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.1)',
   terra:    '#A8563F',
   charcoal: '#1E1C19',
@@ -20,7 +21,7 @@ const c = {
 const fmt = (n: number) => new Intl.NumberFormat('en-IQ').format(n) + ' IQD'
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: 'Pending', color: c.saffron, bg: c.saffronBg },
+  pending: { label: 'Pending', color: c.saffronText, bg: c.saffronBg },
   paid:    { label: 'Paid',    color: c.green,   bg: c.greenBg },
   rejected:{ label: 'Rejected',color: c.terra,   bg: 'rgba(196,101,74,0.08)' },
 }

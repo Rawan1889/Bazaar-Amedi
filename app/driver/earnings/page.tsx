@@ -9,6 +9,7 @@ const c = {
   green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   charcoal: '#1E1C19',
   stone:    '#716C66',
@@ -69,7 +70,7 @@ export default async function DriverEarningsPage() {
                   COD collected from {cash.orders} order{cash.orders !== 1 ? 's' : ''}
                 </div>
               </div>
-              <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffron }}>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffronText }}>
                 {formatIQD(cash.amount)}
               </div>
             </div>
@@ -114,7 +115,7 @@ export default async function DriverEarningsPage() {
             <div className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase mb-2" style={{ color: c.stone }}>
               Today
             </div>
-            <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffron }}>
+            <div className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.saffronText }}>
               {formatIQD(todayEarnings)}
             </div>
             <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.stone }}>

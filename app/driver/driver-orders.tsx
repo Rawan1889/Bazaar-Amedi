@@ -12,6 +12,7 @@ const c = {
   terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:'rgba(232,168,56,0.08)',
   charcoal: '#1E1C19',
   stone:    '#716C66',
@@ -163,7 +164,7 @@ function PreparingCard({ order }: { order: Order }) {
           <span className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
             Order #{order.order_number}
           </span>
-          <span className="px-2 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium" style={{ background: c.saffronBg, color: c.saffron }}>
+          <span className="px-2 py-0.5 rounded-[4px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium" style={{ background: c.saffronBg, color: c.saffronText }}>
             {readyCount}/{perShop.length} shops ready
           </span>
         </div>
@@ -194,7 +195,7 @@ function PreparingCard({ order }: { order: Order }) {
         ))}
       </div>
 
-      <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center" style={{ background: c.saffronBg, color: c.saffron }}>
+      <div className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] text-center" style={{ background: c.saffronBg, color: c.saffronText }}>
         {readyCount === perShop.length
           ? 'All shops ready — order will appear in Available soon'
           : `Waiting on ${perShop.length - readyCount} shop${perShop.length - readyCount !== 1 ? 's' : ''}`}
@@ -354,7 +355,7 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
           </div>
         )}
         {order.scheduled_slot && (
-          <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ background: c.saffronBg, color: c.saffron }}>
+          <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ background: c.saffronBg, color: c.saffronText }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
             </svg>
@@ -362,7 +363,7 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
           </div>
         )}
         {order.note && (
-          <div className="font-[family-name:var(--font-dm-sans)] text-[11px] mt-1" style={{ color: c.saffron }}>
+          <div className="font-[family-name:var(--font-dm-sans)] text-[11px] mt-1" style={{ color: c.saffronText }}>
             Note: {order.note}
           </div>
         )}

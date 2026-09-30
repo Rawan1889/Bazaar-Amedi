@@ -15,6 +15,7 @@ const c = {
   terraBg:    'rgba(196,101,74,0.08)',
   terraBord:  'rgba(196,101,74,0.2)',
   saffron:    '#E8A838',
+  saffronText: '#8D6514',
   saffronBg:  'rgba(232,168,56,0.1)',
   saffronBord:'rgba(232,168,56,0.25)',
   charcoal:   '#1E1C19',
@@ -316,7 +317,7 @@ function HeroSection() {
                   <div className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium" style={{ color: '#fff' }}>Cart — 2 shops, 5 items</div>
                   <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>One delivery trip</div>
                 </div>
-                <div className="font-[family-name:var(--font-dm-mono)] text-[14px] font-medium" style={{ color: c.saffron }}>IQD 47,500</div>
+                <div className="font-[family-name:var(--font-dm-mono)] text-[14px] font-medium" style={{ color: c.saffronText }}>IQD 47,500</div>
               </div>
             </div>
 
@@ -390,7 +391,7 @@ function HowItWorksSection() {
               step: '02',
               title: 'One cart, many shops',
               desc: 'Add items from multiple shops into one order. Kurdish honey from Ahmad, meat from Soran, vegetables from Dara — all in one cart.',
-              color: c.saffron,
+              color: c.saffronText,
               bg: c.saffronBg,
               icon: (
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -466,7 +467,7 @@ function FlashSaleSection() {
                 { shop: 'Dara Market', item: 'Sunflower Oil 2L', was: '8,000', now: '5,500', pct: '31%' },
               ].map((deal, i) => (
                 <div key={i} className="rounded-[10px] p-4 flex items-center gap-4" style={{ background: 'rgba(255,255,255,0.8)' }}>
-                  <div className="w-10 h-10 rounded-[8px] flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[14px] font-bold" style={{ background: c.saffron, color: '#fff' }}>
+                  <div className="w-10 h-10 rounded-[8px] flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[14px] font-bold" style={{ background: c.saffron, color: '#1E1C19' }}>
                     {deal.pct}
                   </div>
                   <div className="flex-1">
@@ -486,7 +487,7 @@ function FlashSaleSection() {
           <div>
             <div
               className="font-[family-name:var(--font-dm-mono)] text-[11px] tracking-[0.12em] uppercase mb-3"
-              style={{ color: c.saffron }}
+              style={{ color: c.saffronText }}
             >
               Flash sales
             </div>
@@ -645,7 +646,7 @@ function DeliverSection() {
             <div className="flex flex-col gap-0">
               {[
                 { name: 'Ahmad\'s Grocery', items: '3 items', status: 'Picked up', color: c.green },
-                { name: 'Soran\'s Butcher', items: '1 item', status: 'Picking up...', color: c.saffron },
+                { name: 'Soran\'s Butcher', items: '1 item', status: 'Picking up...', color: c.saffronText },
                 { name: 'Dara Market', items: '2 items', status: 'Next stop', color: c.stoneLight },
                 { name: 'Your location', items: '', status: 'ETA 12 min', color: c.terra },
               ].map((stop, i) => (

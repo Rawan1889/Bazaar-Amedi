@@ -61,7 +61,7 @@ export default async function ShopDashboard() {
           <a
             href="/shop/settings"
             className="inline-block px-4 py-2 rounded-[8px] no-underline font-[family-name:var(--font-dm-sans)] text-[13px] font-medium"
-            style={{ background: c.saffron, color: '#fff' }}
+            style={{ background: c.saffron, color: '#1E1C19' }}
           >
             Go to settings
           </a>

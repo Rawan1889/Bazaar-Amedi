@@ -9,6 +9,7 @@ const c = {
   green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
+  saffronText: '#8D6514',
   charcoal: '#1E1C19',
   stone:    '#716C66',
   cream:    '#F2EFEA',
@@ -71,7 +72,7 @@ export function ReviewSection({ shopId, reviews, averageRating, reviewCount }: P
           {reviewCount > 0 && (
             <div className="flex items-center gap-1.5">
               <StarRating rating={averageRating} size={14} />
-              <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.saffron }}>
+              <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.saffronText }}>
                 {averageRating}
               </span>
               <span className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: c.stone }}>
