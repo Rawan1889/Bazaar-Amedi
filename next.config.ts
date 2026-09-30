@@ -13,6 +13,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Put <title>/<meta>/Open Graph in <head> for every client, not just the
+  // bots on Next's built-in list — Viber and Telegram (big in Kurdistan)
+  // aren't on it, so their link previews could miss titles and images.
+  htmlLimitedBots: /.*/,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },

@@ -318,7 +318,7 @@ function HeroSection() {
                   <div className="font-[family-name:var(--font-dm-sans)] text-[12px] font-medium" style={{ color: '#fff' }}>Cart — 2 shops, 5 items</div>
                   <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>One delivery trip</div>
                 </div>
-                <div className="font-[family-name:var(--font-dm-mono)] text-[14px] font-medium" style={{ color: c.saffronText }}>IQD 47,500</div>
+                <div className="font-[family-name:var(--font-dm-mono)] text-[14px] font-medium" style={{ color: c.saffron }}>IQD 47,500</div>
               </div>
             </div>
 
