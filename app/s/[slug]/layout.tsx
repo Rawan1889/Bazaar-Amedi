@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import type { Metadata } from 'next'
+import { DEFAULT_OG_IMAGE } from '@/lib/bazaar/site'
 
 export async function generateMetadata({
   params,
@@ -33,7 +34,7 @@ export async function generateMetadata({
       description,
       type: 'website',
       url: `/s/${slug}`,
-      ...(image ? { images: [{ url: image, alt: shop.name }] } : {}),
+      images: [image ? { url: image, alt: shop.name } : DEFAULT_OG_IMAGE],
     },
   }
 }

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { cache } from 'react'
 import type { Metadata } from 'next'
+import { DEFAULT_OG_IMAGE } from '@/lib/bazaar/site'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       description,
       type: 'website',
       url: `/p/${id}`,
-      ...(product.image_url ? { images: [{ url: product.image_url, alt: product.name_en }] } : {}),
+      images: [product.image_url ? { url: product.image_url, alt: product.name_en } : DEFAULT_OG_IMAGE],
     },
   }
 }
