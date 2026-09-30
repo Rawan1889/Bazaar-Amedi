@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
@@ -78,7 +79,7 @@ export default async function ShopsPage() {
                   {/* Cover / header image */}
                   <div className="h-[120px] relative overflow-hidden" style={{ background: c.cream }}>
                     {shop.cover_url ? (
-                      <img src={shop.cover_url} alt={shop.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      <Image src={shop.cover_url} alt={shop.name} width={640} height={240} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <span className="font-[family-name:var(--font-dm-sans)] text-[48px] font-medium" style={{ color: c.cream2 }}>
@@ -114,7 +115,7 @@ export default async function ShopsPage() {
                       style={{ background: shop.logo_url ? 'transparent' : c.greenBg, border: `1px solid ${c.cream2}` }}
                     >
                       {shop.logo_url ? (
-                        <img src={shop.logo_url} alt={shop.name} className="w-full h-full object-cover" />
+                        <Image src={shop.logo_url} alt={shop.name} width={96} height={96} className="w-full h-full object-cover" />
                       ) : (
                         <span className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium" style={{ color: c.green }}>
                           {shop.name.charAt(0)}

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 
 const c = {
@@ -17,7 +18,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
     <div>
       <div className="aspect-square rounded-[16px] overflow-hidden" style={{ background: c.cream, border: `1px solid ${c.cream2}` }}>
         {has ? (
-          <img src={images[active]} alt={alt} className="w-full h-full object-cover" />
+          <Image src={images[active]} alt={alt} width={800} height={800} priority sizes="(min-width: 768px) 560px, 100vw" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="font-[family-name:var(--font-dm-sans)] text-[64px] font-medium" style={{ color: c.cream2 }}>
@@ -37,7 +38,7 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
               className="w-16 h-16 rounded-[10px] overflow-hidden flex-shrink-0 border-none cursor-pointer p-0"
               style={{ outline: i === active ? `2px solid ${c.green}` : `1px solid ${c.cream2}` }}
             >
-              <img src={src} alt={`${alt} ${i + 1}`} className="w-full h-full object-cover" />
+              <Image src={src} alt={`${alt} ${i + 1}`} width={96} height={96} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

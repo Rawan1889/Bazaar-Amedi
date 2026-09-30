@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+import Image from 'next/image'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { notFound, redirect } from 'next/navigation'
 import { getBazaarUser } from '@/lib/bazaar/auth'
@@ -90,7 +91,7 @@ export default async function ShopPublicPage({
       {/* Cover image */}
       {shop.cover_url && (
         <div className="w-full h-[200px] md:h-[280px] overflow-hidden relative">
-          <img src={shop.cover_url} alt={`${shop.name} cover`} className="w-full h-full object-cover" />
+          <Image src={shop.cover_url} alt={`${shop.name} cover`} width={1200} height={400} priority className="w-full h-full object-cover" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(250,250,247,0.9))' }} />
         </div>
       )}
@@ -103,7 +104,7 @@ export default async function ShopPublicPage({
             style={{ background: shop.logo_url ? 'transparent' : c.greenBg, border: `3px solid ${c.bg}` }}
           >
             {shop.logo_url ? (
-              <img src={shop.logo_url} alt={shop.name} className="w-full h-full object-cover rounded-[14px]" />
+              <Image src={shop.logo_url} alt={shop.name} width={128} height={128} className="w-full h-full object-cover rounded-[14px]" />
             ) : (
               <span className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium" style={{ color: c.green }}>
                 {shop.name.charAt(0)}
@@ -216,7 +217,7 @@ export default async function ShopPublicPage({
                 >
                   <div className="aspect-square relative" style={{ background: c.cream }}>
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.name_en} className="w-full h-full object-cover" />
+                      <Image src={p.image_url} alt={p.name_en} width={320} height={320} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <span className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium" style={{ color: c.cream2 }}>

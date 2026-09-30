@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { AddToCartButton } from './add-to-cart-button'
@@ -71,7 +72,7 @@ function SaleCard({ sale }: { sale: Sale }) {
       <Link href={`/s/${p.bazaar_shops.slug}`} className="no-underline block">
         <div className="relative h-[110px]" style={{ background: c.terraBg }}>
           {p.image_url ? (
-            <img src={p.image_url} alt={p.name_en} className="w-full h-full object-cover" />
+            <Image src={p.image_url} alt={p.name_en} width={256} height={256} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <span className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium" style={{ color: c.terraBord }}>

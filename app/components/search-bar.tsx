@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { searchProducts } from '@/lib/bazaar/search-actions'
@@ -117,7 +118,7 @@ export function SearchBar() {
               >
                 <div className="w-10 h-10 rounded-[8px] flex-shrink-0 overflow-hidden" style={{ background: c.cream }}>
                   {p.image_url ? (
-                    <img src={p.image_url} alt={p.name_en} className="w-full h-full object-cover" />
+                    <Image src={p.image_url} alt={p.name_en} width={64} height={64} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <span className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.cream2 }}>

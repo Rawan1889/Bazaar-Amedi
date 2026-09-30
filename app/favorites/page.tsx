@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useFavorites } from '@/lib/bazaar/favorites-context'
 import { FavoriteButton } from '@/app/components/favorite-button'
@@ -98,7 +99,7 @@ export default function FavoritesPage() {
                     >
                       <div className="w-12 h-12 rounded-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: c.greenBg }}>
                         {shop.imageUrl ? (
-                          <img src={shop.imageUrl} alt={shop.name} className="w-full h-full object-cover" />
+                          <Image src={shop.imageUrl} alt={shop.name} width={96} height={96} className="w-full h-full object-cover" />
                         ) : (
                           <span className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium" style={{ color: c.green }}>
                             {shop.name.charAt(0)}
@@ -132,7 +133,7 @@ export default function FavoritesPage() {
                     >
                       <div className="aspect-square relative" style={{ background: c.cream }}>
                         {product.imageUrl ? (
-                          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                          <Image src={product.imageUrl} alt={product.name} width={320} height={320} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <span className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium" style={{ color: c.cream2 }}>

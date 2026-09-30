@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
+import Image from 'next/image'
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { useCart } from '@/lib/bazaar/cart-context'
@@ -221,7 +222,7 @@ export default function CartPage() {
                     <div key={item.productId} className="flex items-center gap-4 px-5 py-3" style={{ borderBottom: `1px solid ${c.cream}` }}>
                       <div className="w-12 h-12 rounded-[8px] flex items-center justify-center flex-shrink-0" style={{ background: c.cream }}>
                         {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-[8px]" />
+                          <Image src={item.imageUrl} alt={item.name} width={96} height={96} className="w-full h-full object-cover rounded-[8px]" />
                         ) : (
                           <span className="font-[family-name:var(--font-dm-sans)] text-[16px] font-medium" style={{ color: c.cream2 }}>
                             {item.name.charAt(0)}

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getRecentlyViewed, keepOnlyIds, type ViewedProduct } from '@/lib/bazaar/recently-viewed'
@@ -49,7 +50,7 @@ export function RecentlyViewed() {
           >
             <div className="aspect-square" style={{ background: c.cream }}>
               {p.image_url ? (
-                <img src={p.image_url} alt={p.name_en} className="w-full h-full object-cover" />
+                <Image src={p.image_url} alt={p.name_en} width={256} height={256} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <span className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium" style={{ color: c.cream2 }}>

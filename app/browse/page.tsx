@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
@@ -136,7 +137,7 @@ export default async function BrowsePage({
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product: Record<string, unknown>) => {
+            {products.map((product: Record<string, unknown>, idx: number) => {
               const p = product as {
                 id: string; shop_id: string; name_en: string; name_ku: string | null; name_ar: string | null; price: number; unit: string; image_url: string | null; description: string | null
                 bazaar_shops: { name: string; slug: string }
@@ -159,7 +160,7 @@ export default async function BrowsePage({
                 >
                   <div className="aspect-square relative" style={{ background: c.cream }}>
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.name_en} className="w-full h-full object-cover" />
+                      <Image src={p.image_url} alt={p.name_en} width={320} height={320} priority={idx < 2} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <span className="font-[family-name:var(--font-dm-sans)] text-[32px] font-medium" style={{ color: c.cream2 }}>
