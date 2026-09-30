@@ -17,6 +17,94 @@ interface CartItemInput {
   quantity: number
 }
 
+type ResolvedItem = {
+  productId: string
+  shopId: string
+  name: string
+  unitPrice: number
+  quantity: number
+  stockVariantId: string | null
+  variantStock: number | null
+  saleId: string | null
+  saleQty: number | null
+}
+
+type ProductRow = {
+  id: string
+  shop_id: string
+  name_en: string
+  price: number
+  in_stock: boolean | null
+  bazaar_shops: { is_approved: boolean | null } | null
+  bazaar_product_variants: { id: string; amount: number; unit: string; price: number; stock_qty: number | null; in_stock: boolean | null }[] | null
+  bazaar_flash_sales: { id: string; sale_price: number; ends_at: string; is_active: boolean | null; quantity: number | null }[] | null
+}
+
+async function resolveOrderItems(
+  admin: ReturnType<typeof createBazaarAdmin>,
+  input: CartItemInput[],
+): Promise<{ items: ResolvedItem[] } | { error: string }> {
+  const productIds = [...new Set(input.map(i => i.productId))]
+  const { data, error } = await admin
+    .from('bazaar_products')
+    .select('id, shop_id, name_en, price, in_stock, bazaar_shops(is_approved), bazaar_product_variants(id, amount, unit, price, stock_qty, in_stock), bazaar_flash_sales(id, sale_price, ends_at, is_active, quantity)')
+    .in('id', productIds)
+  if (error) return { error: 'Could not load products. Please try again.' }
+  const products = new Map((data as unknown as ProductRow[]).map(p => [p.id, p]))
+
+  const now = Date.now()
+  const items: ResolvedItem[] = []
+  const demandByVariant = new Map<string, number>()
+
+  for (const line of input) {
+    const p = products.get(line.productId)
+    if (!p || !p.bazaar_shops?.is_approved) {
+      return { error: 'An item in your cart is no longer available. Please remove it and try again.' }
+    }
+    const variants = p.bazaar_product_variants ?? []
+    let chosen: (typeof variants)[number] | null = null
+    if (line.variantId) {
+      chosen = variants.find(v => v.id === line.variantId) ?? null
+      if (!chosen) return { error: `"${p.name_en}" has changed. Please remove it and add it again.` }
+    }
+    // Stock is tracked on the chosen variant, or the product's default variant.
+    const stockVariant = chosen ?? variants.find(v => v.price === p.price) ?? variants[0] ?? null
+
+    if (p.in_stock === false || (stockVariant && stockVariant.in_stock === false && (stockVariant.stock_qty ?? 0) <= 0)) {
+      return { error: `Sorry, "${p.name_en}" is currently out of stock.` }
+    }
+
+    const basePrice = chosen ? chosen.price : p.price
+    const sale = (p.bazaar_flash_sales ?? []).find(s =>
+      s.is_active && new Date(s.ends_at).getTime() > now && (s.quantity === null || s.quantity > 0)
+    ) ?? null
+    if (sale && sale.quantity !== null && sale.quantity < line.quantity) {
+      return { error: `Only ${sale.quantity} of "${p.name_en}" left at the flash-sale price.` }
+    }
+
+    if (stockVariant && stockVariant.stock_qty !== null) {
+      const demand = (demandByVariant.get(stockVariant.id) ?? 0) + line.quantity
+      if (demand > stockVariant.stock_qty) {
+        return { error: `Sorry, only ${stockVariant.stock_qty} unit(s) of "${p.name_en}" are available in stock.` }
+      }
+      demandByVariant.set(stockVariant.id, demand)
+    }
+
+    items.push({
+      productId: p.id,
+      shopId: p.shop_id,
+      name: chosen ? `${p.name_en} (${chosen.amount} ${chosen.unit})` : p.name_en,
+      unitPrice: sale ? Math.min(sale.sale_price, basePrice) : basePrice,
+      quantity: line.quantity,
+      stockVariantId: stockVariant?.id ?? null,
+      variantStock: stockVariant?.stock_qty ?? null,
+      saleId: sale?.id ?? null,
+      saleQty: sale?.quantity ?? null,
+    })
+  }
+  return { items }
+}
+
 export async function placeOrder(data: {
   items: CartItemInput[]
   deliveryAddress: string
@@ -39,50 +127,32 @@ export async function placeOrder(data: {
   const isPickup = data.fulfillmentType === 'pickup'
 
   if (!data.items.length) return { error: 'Cart is empty.' }
+  if (data.items.length > 100) return { error: 'Too many items in one order.' }
+  for (const item of data.items) {
+    if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99) {
+      return { error: 'Invalid item quantity.' }
+    }
+  }
+
+  // Resolve every item's price, shop, and name from the database. Server
+  // actions are public endpoints, so nothing price-related from the client
+  // can be trusted — only productId, variantId, and quantity are used.
+  const adminClient = createBazaarAdmin()
+  const resolved = await resolveOrderItems(adminClient, data.items)
+  if ('error' in resolved) return { error: resolved.error }
+  const items = resolved.items
+
   if (isPickup) {
-    const shopIds = new Set(data.items.map(i => i.shopId))
-    if (shopIds.size > 1) return { error: 'Pickup is only available for single-shop orders.' }
+    if (new Set(items.map(i => i.shopId)).size > 1) {
+      return { error: 'Pickup is only available for single-shop orders.' }
+    }
   } else if (!data.deliveryAddress.trim()) {
     return { error: 'Delivery address is required.' }
   }
 
-  // Pre-validate stock availability
-  const adminClient = createBazaarAdmin()
-  for (const item of data.items) {
-    let variant = null
-    if (item.variantId) {
-      const { data: v } = await adminClient
-        .from('bazaar_product_variants')
-        .select('id, stock_qty, in_stock')
-        .eq('id', item.variantId)
-        .maybeSingle()
-      variant = v
-    } else {
-      const effectivePrice = item.salePrice ?? item.price
-      const { data: v } = await adminClient
-        .from('bazaar_product_variants')
-        .select('id, stock_qty, in_stock')
-        .eq('product_id', item.productId)
-        .eq('price', effectivePrice)
-        .maybeSingle()
-      variant = v
-    }
-
-    if (variant) {
-      if (variant.stock_qty !== null && variant.stock_qty < item.quantity) {
-        return { error: `Sorry, only ${variant.stock_qty} unit(s) of "${item.name}" are available in stock.` }
-      }
-      if (!variant.in_stock && variant.stock_qty !== null && variant.stock_qty <= 0) {
-        return { error: `Sorry, "${item.name}" is currently out of stock.` }
-      }
-    }
-  }
-
   const supabase = await createBazaarServer()
 
-  const subtotal = data.items.reduce(
-    (sum, i) => sum + (i.salePrice ?? i.price) * i.quantity, 0
-  )
+  const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
 
   // Resolve the delivery fee server-side from the involved zones — never trust
   // a fee from the client. Rule: base = farthest zone fee among customer's zone
@@ -90,7 +160,7 @@ export async function placeOrder(data: {
   // Pickup orders have no delivery fee.
   let deliveryFee = isPickup ? 0 : 2500
   if (!isPickup) {
-    const shopIds = [...new Set(data.items.map(i => i.shopId))]
+    const shopIds = [...new Set(items.map(i => i.shopId))]
     const { data: shopRows } = await supabase
       .from('bazaar_shops')
       .select('zone_id')
@@ -128,7 +198,7 @@ export async function placeOrder(data: {
   let discount = 0
   let appliedCouponId: string | null = null
   if (data.couponCode?.trim()) {
-    const shopIds = [...new Set(data.items.map(i => i.shopId))]
+    const shopIds = [...new Set(items.map(i => i.shopId))]
     const result = await applyCoupon(data.couponCode, shopIds, subtotal)
     if ('success' in result && result.success) {
       discount = result.discount
@@ -138,7 +208,10 @@ export async function placeOrder(data: {
 
   const total = Math.max(0, subtotal - discount) + deliveryFee
 
-  const { data: order, error: orderError } = await supabase
+  // Written with the service-role client: customers have no direct INSERT
+  // rights on orders/items (phase 29), so every order passes this validation.
+  const admin = createBazaarAdmin()
+  const { data: order, error: orderError } = await admin
     .from('bazaar_orders')
     .insert({
       customer_id: user.id,
@@ -160,70 +233,40 @@ export async function placeOrder(data: {
 
   if (orderError) return { error: orderError.message }
 
-  const orderItems = data.items.map(item => ({
+  const orderItems = items.map(item => ({
     order_id: order.id,
     product_id: item.productId,
     shop_id: item.shopId,
     product_name: item.name,
     quantity: item.quantity,
-    unit_price: item.salePrice ?? item.price,
+    unit_price: item.unitPrice,
     pickup_status: 'pending' as const,
   }))
 
-  const { error: itemsError } = await supabase
+  const { error: itemsError } = await admin
     .from('bazaar_order_items')
     .insert(orderItems)
 
-  if (itemsError) return { error: itemsError.message }
+  if (itemsError) {
+    // Don't leave an order with no items behind.
+    await admin.from('bazaar_orders').delete().eq('id', order.id)
+    return { error: itemsError.message }
+  }
 
-  // Decrement stock_qty on product variants for each ordered item.
-  const admin = createBazaarAdmin()
-  for (const item of data.items) {
-    let variant = null
-    if (item.variantId) {
-      const { data: v } = await admin
-        .from('bazaar_product_variants')
-        .select('id, stock_qty')
-        .eq('id', item.variantId)
-        .maybeSingle()
-      variant = v
-    } else {
-      const effectivePrice = item.salePrice ?? item.price
-      const { data: v } = await admin
-        .from('bazaar_product_variants')
-        .select('id, stock_qty')
-        .eq('product_id', item.productId)
-        .eq('price', effectivePrice)
-        .maybeSingle()
-      variant = v
-    }
-    if (variant && variant.stock_qty !== null) {
-      const newQty = Math.max(0, variant.stock_qty - item.quantity)
+  for (const item of items) {
+    if (item.stockVariantId && item.variantStock !== null) {
+      const newQty = Math.max(0, item.variantStock - item.quantity)
       await admin
         .from('bazaar_product_variants')
         .update({ stock_qty: newQty, in_stock: newQty > 0 })
-        .eq('id', variant.id)
+        .eq('id', item.stockVariantId)
     }
-  }
-
-  // Decrement flash sale quantities for items purchased at a sale price.
-  for (const item of data.items) {
-    if (item.salePrice === null) continue
-    const { data: sale } = await admin
-      .from('bazaar_flash_sales')
-      .select('id, quantity')
-      .eq('product_id', item.productId)
-      .eq('sale_price', item.salePrice)
-      .eq('is_active', true)
-      .not('quantity', 'is', null)
-      .limit(1)
-      .maybeSingle()
-    if (sale && sale.quantity !== null) {
-      const newQty = Math.max(0, sale.quantity - item.quantity)
+    if (item.saleId && item.saleQty !== null) {
+      const newQty = Math.max(0, item.saleQty - item.quantity)
       await admin
         .from('bazaar_flash_sales')
         .update({ quantity: newQty, is_active: newQty > 0 })
-        .eq('id', sale.id)
+        .eq('id', item.saleId)
     }
   }
 
@@ -244,18 +287,19 @@ export async function placeOrder(data: {
 
   revalidatePath('/orders')
 
-  const shopIds = [...new Set(data.items.map(i => i.shopId))]
+  const shopIds = [...new Set(items.map(i => i.shopId))]
   const { data: shops } = await supabase
     .from('bazaar_shops')
-    .select('owner_id, name')
+    .select('id, owner_id, name')
     .in('id', shopIds)
 
   if (shops) {
     for (const shop of shops) {
+      const count = items.filter(i => i.shopId === shop.id).length
       sendPushToUser(shop.owner_id, {
         type: 'new_order',
         title: 'New order received',
-        body: `Order #${order.id.slice(0, 8)} — ${data.items.length} item(s) for ${shop.name}`,
+        body: `Order #${order.id.slice(0, 8)} — ${count} item(s) for ${shop.name}`,
         url: '/shop/orders',
       })
     }
@@ -372,13 +416,15 @@ export async function acceptShopOrder(orderId: string) {
     .single()
   if (!shop) return { error: 'No shop found' }
 
-  const { error: itemsError } = await supabase
+  const { data: accepted, error: itemsError } = await supabase
     .from('bazaar_order_items')
     .update({ pickup_status: 'accepted' })
     .eq('order_id', orderId)
     .eq('shop_id', shop.id)
     .eq('pickup_status', 'pending')
+    .select('id')
   if (itemsError) return { error: itemsError.message }
+  if (!accepted?.length) return { error: 'Nothing to accept on this order for your shop.' }
 
   // Move the order to 'confirmed' the first time any shop accepts. Guarded
   // by .eq('status','pending') so it's idempotent and safe for the 2nd shop.
@@ -418,14 +464,16 @@ export async function markShopOrderReady(orderId: string) {
   // Mark this shop's items as ready. Accept whichever prior state they were in
   // — 'accepted' is the normal path, but 'pending' also works if the shop
   // skipped the explicit Accept click.
-  const { error: itemsError } = await supabase
+  const { data: readied, error: itemsError } = await supabase
     .from('bazaar_order_items')
     .update({ pickup_status: 'ready' })
     .eq('order_id', orderId)
     .eq('shop_id', shop.id)
     .in('pickup_status', ['pending', 'accepted'])
+    .select('id')
 
   if (itemsError) return { error: itemsError.message }
+  if (!readied?.length) return { error: 'Nothing to mark ready on this order for your shop.' }
 
   // Check whether every item across every shop in this order is ready (or
   // already picked up). Only then does the order become available to drivers.
@@ -563,13 +611,16 @@ export async function acceptOrder(orderId: string) {
 
   // Atomic claim — the WHERE driver_id IS NULL ensures only one driver wins
   // even if two tap simultaneously.
-  const { error } = await supabase
+  const { data: claimed, error } = await supabase
     .from('bazaar_orders')
     .update({ driver_id: user.id, status: 'picking_up' })
     .eq('id', orderId)
     .is('driver_id', null)
+    .eq('status', 'ready')
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!claimed?.length) return { error: 'This order was already claimed by another driver.' }
 
   revalidatePath('/driver')
   return { success: true }
@@ -606,17 +657,27 @@ export async function markShopPickedUp(orderId: string, shopId: string) {
   return { success: true }
 }
 
+const DRIVER_SETTABLE_STATUSES = ['picking_up', 'delivering', 'delivered']
+
 export async function updateOrderStatus(orderId: string, status: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
+  if (!DRIVER_SETTABLE_STATUSES.includes(status)) return { error: 'Invalid status.' }
 
   const supabase = createBazaarAdmin()
 
   const { data: orderData } = await supabase
     .from('bazaar_orders')
-    .select('customer_id, order_number')
+    .select('customer_id, order_number, driver_id, status')
     .eq('id', orderId)
     .single()
+
+  if (!orderData || orderData.driver_id !== user.id) {
+    return { error: 'You are not the driver for this order.' }
+  }
+  if (orderData.status === 'delivered' || orderData.status === 'cancelled') {
+    return { error: 'This order is already closed.' }
+  }
 
   // Block transition to 'delivering' or 'delivered' until every shop has been
   // marked as picked up. Otherwise a driver could tap "Delivered" while some
@@ -703,12 +764,15 @@ export async function cancelOrder(orderId: string) {
   if (order.customer_id !== user.id) return { error: 'Unauthorized' }
   if (order.status !== 'pending') return { error: 'Order can only be cancelled before the shop accepts it.' }
 
-  const { error } = await supabase
+  const { data: cancelled, error } = await supabase
     .from('bazaar_orders')
     .update({ status: 'cancelled' })
     .eq('id', orderId)
+    .eq('status', 'pending')
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!cancelled?.length) return { error: 'A shop just accepted this order — it can no longer be cancelled.' }
   revalidatePath('/orders')
   return { success: true }
 }
