@@ -137,6 +137,7 @@ export function AddProductForm({ categories }: { categories: { id: string; name_
               onClick={() => fileRef.current?.click()}
             >
               {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- dashboard preview of the owner's own upload; optimizing it only spends image quota
                 <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
               ) : uploading ? (
                 <span className="font-[family-name:var(--font-dm-mono)] text-[9px]" style={{ color: c.stone }}>Uploading…</span>
@@ -196,7 +197,7 @@ export function AddProductForm({ categories }: { categories: { id: string; name_
           </div>
 
           <div className="flex flex-col gap-2">
-            {variants.map((v, i) => (
+            {variants.map((v) => (
               <div key={v.id} className="flex items-center gap-2 rounded-[8px] px-3 py-2.5" style={{ background: c.cream }}>
                 {/* Amount */}
                 <input

@@ -124,7 +124,7 @@ export function PhoneLogin() {
       {step === 'name' && (
         <>
           <label className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
-            Welcome! What's your name?
+            Welcome! What&apos;s your name?
           </label>
           <input
             value={name}

@@ -86,6 +86,7 @@ function ImageUploadSlot({
       >
         {preview ? (
           <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- dashboard preview of the owner's own upload; optimizing it only spends image quota */}
             <img src={preview} alt={label} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <span className="font-[family-name:var(--font-dm-sans)] text-[12px] text-white">Change</span>

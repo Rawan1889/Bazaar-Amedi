@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { KelaMark } from '@/app/components/kela-mark'
@@ -68,7 +69,7 @@ function Nav() {
       }}
     >
       <div className="max-w-[1200px] mx-auto px-6 md:px-10 flex items-center justify-between h-[64px]">
-        <a href="/" className="no-underline flex items-center gap-2">
+        <Link href="/" className="no-underline flex items-center gap-2">
           <KelaMark size={26} gateColor="#FAFAF7" />
           <span
             className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium"
@@ -76,7 +77,7 @@ function Nav() {
           >
             kela<span style={{ color: c.green }}>.</span>
           </span>
-        </a>
+        </Link>
 
         <div className="hidden md:flex items-center gap-8">
           {['How it works', 'Markets', 'Flash Sales', 'Deliver with us'].map(item => (
@@ -416,7 +417,7 @@ function HowItWorksSection() {
                 </svg>
               ),
             },
-          ].map(({ step, title, desc, color, bg, icon }) => (
+          ].map(({ step, title, desc, bg, icon }) => (
             <div
               key={step}
               className="rounded-[14px] p-8 transition-all duration-200 relative"

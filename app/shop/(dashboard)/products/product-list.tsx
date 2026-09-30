@@ -96,6 +96,7 @@ function ProductRow({ product }: { product: Product }) {
       >
         {imgUrl ? (
           <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- dashboard preview of the owner's own upload; optimizing it only spends image quota */}
             <img src={imgUrl} alt={product.name_en} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -218,6 +219,7 @@ function ProductRow({ product }: { product: Product }) {
       </span>
       {gallery.map(img => (
         <div key={img.id} className="relative w-9 h-9 rounded-[6px] overflow-hidden group" style={{ border: `1px solid ${c.cream2}` }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- dashboard preview of the owner's own upload; optimizing it only spends image quota */}
           <img src={img.url} alt="" className="w-full h-full object-cover" />
           <button
             onClick={() => startTransition(async () => { await deleteProductImage(img.id); router.refresh() })}

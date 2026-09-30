@@ -20,17 +20,18 @@ function formatIQD(n: number) {
   return new Intl.NumberFormat('en-IQ').format(n) + ' IQD'
 }
 
+function timeLeft(endsAt: string) {
+  const diff = Math.max(0, new Date(endsAt).getTime() - Date.now())
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  const s = Math.floor((diff % 60000) / 1000)
+  return { h, m, s, expired: diff === 0 }
+}
+
 function useCountdown(endsAt: string) {
-  const calc = () => {
-    const diff = Math.max(0, new Date(endsAt).getTime() - Date.now())
-    const h = Math.floor(diff / 3600000)
-    const m = Math.floor((diff % 3600000) / 60000)
-    const s = Math.floor((diff % 60000) / 1000)
-    return { h, m, s, expired: diff === 0 }
-  }
-  const [t, setT] = useState(calc)
+  const [t, setT] = useState(() => timeLeft(endsAt))
   useEffect(() => {
-    const id = setInterval(() => setT(calc()), 1000)
+    const id = setInterval(() => setT(timeLeft(endsAt)), 1000)
     return () => clearInterval(id)
   }, [endsAt])
   return t
@@ -57,10 +58,9 @@ type Sale = {
 }
 
 function SaleCard({ sale }: { sale: Sale }) {
-  const p = sale.bazaar_products
-  if (!p) return null
   const { h, m, s, expired } = useCountdown(sale.ends_at)
-  if (expired) return null
+  const p = sale.bazaar_products
+  if (!p || expired) return null
 
   const pad = (n: number) => String(n).padStart(2, '0')
 

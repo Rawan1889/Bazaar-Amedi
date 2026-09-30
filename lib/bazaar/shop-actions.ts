@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createBazaarServer, createBazaarAdmin } from './supabase-server'
+import { createBazaarServer } from './supabase-server'
 import { getBazaarUser } from './auth'
 
 function slugify(name: string): string {

@@ -2,19 +2,11 @@ export const dynamic = 'force-dynamic'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { getShopOrders } from '@/lib/bazaar/order-actions'
 import { redirect } from 'next/navigation'
-import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { ShopOrderList } from './shop-order-list'
 
 export default async function ShopOrdersPage() {
   const user = await getBazaarUser()
   if (!user) redirect('/login')
-
-  const supabase = await createBazaarServer()
-  const { data: shop } = await supabase
-    .from('bazaar_shops')
-    .select('id')
-    .eq('owner_id', user.id)
-    .maybeSingle()
 
   const orderItems = await getShopOrders()
 

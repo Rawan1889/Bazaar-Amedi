@@ -26,7 +26,7 @@ export default async function DriverDashboard() {
             Pending approval
           </h1>
           <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#716C66' }}>
-            Your driver account is under review. We'll notify you once an admin approves your account — usually within 24 hours.
+            Your driver account is under review. We&apos;ll notify you once an admin approves your account — usually within 24 hours.
           </p>
           <p className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: '#716C66' }}>
             Signed in as {user.full_name}

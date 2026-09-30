@@ -7,7 +7,6 @@ import { bazaarLogout } from '@/lib/bazaar/auth'
 import { LanguageSwitcher } from './language-switcher'
 import { NotificationBell } from './notification-bell'
 import { KelaMark } from './kela-mark'
-import { useCart } from '@/lib/bazaar/cart-context'
 
 const c = {
   green:    '#287A53',
@@ -25,7 +24,6 @@ export function CustomerNav() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const { itemCount } = useCart()
 
   useEffect(() => {
     const supabase = createBazaarClient()

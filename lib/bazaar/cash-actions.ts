@@ -69,7 +69,7 @@ export async function getMyCashToRemit(): Promise<CashSummary> {
     totalDiscounts += orderDiscount
 
     for (const item of orderItems) {
-      const shops = item.bazaar_shops as any
+      const shops = item.bazaar_shops as unknown as { name?: string } | { name?: string }[] | null
       const shopName = (Array.isArray(shops) ? shops[0]?.name : shops?.name) || 'Unknown Shop'
       const itemTotal = item.unit_price * item.quantity
       shopMap.set(shopName, (shopMap.get(shopName) || 0) + itemTotal)

@@ -91,7 +91,6 @@ export default async function OrderDetailPage({
     if (d) driver = d as DriverInfo
   }
 
-  const isPickupOrder = o.fulfillment_type === 'pickup'
   const scheduledLabel = o.scheduled_slot
     ? `${new Date(o.scheduled_date!).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}, ${o.scheduled_slot}`
     : null

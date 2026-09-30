@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { useState, useEffect, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
@@ -153,7 +154,7 @@ function SignupFormInner() {
   const params = useSearchParams()
   const roleParam = params.get('role') as Role | null
   const [activeRole, setActiveRole] = useState<Role>(roleParam && ['customer', 'market', 'driver'].includes(roleParam) ? roleParam : 'customer')
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [zones, setZones] = useState<DeliveryZone[]>([])
@@ -186,13 +187,13 @@ function SignupFormInner() {
           {activeRole === 'market' && "We'll reach out to set up your shop page before launch."}
           {activeRole === 'driver' && "We'll contact you with onboarding details before launch."}
         </p>
-        <a
+        <Link
           href="/"
           className="font-[family-name:var(--font-dm-sans)] text-[14px] no-underline transition-colors duration-200"
           style={{ color: c.green }}
         >
           Back to home
-        </a>
+        </Link>
       </div>
     )
   }
@@ -403,11 +404,11 @@ export default function BazaarSignupPage() {
       <div className="w-full max-w-[440px]">
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="inline-block no-underline">
+          <Link href="/" className="inline-block no-underline">
             <span className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium" style={{ color: c.charcoal }}>
               kela<span style={{ color: c.green }}>.</span>
             </span>
-          </a>
+          </Link>
           <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mt-1" style={{ color: c.stone }}>
             Join the Amedi marketplace
           </p>

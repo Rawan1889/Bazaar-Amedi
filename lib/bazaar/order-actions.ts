@@ -6,6 +6,7 @@ import { getBazaarUser } from './auth'
 import { sendPushToUser, sendPushToOnlineDrivers } from './push-notifications'
 import { applyCoupon } from './coupon-actions'
 import { computeDeliveryFee } from './zone-utils'
+import { PRODUCT_PRICING_SELECT, priceCartLines, validateCartLines, reserveStock, releaseCounters, type ProductRow } from './order-pricing'
 
 interface CartItemInput {
   productId: string
@@ -15,124 +16,6 @@ interface CartItemInput {
   price: number
   salePrice: number | null
   quantity: number
-}
-
-type ResolvedItem = {
-  productId: string
-  shopId: string
-  name: string
-  unitPrice: number
-  quantity: number
-  // Set only when that counter is actually tracked (non-null), i.e. needs reserving.
-  stockVariantId: string | null
-  limitedSaleId: string | null
-}
-
-type Counter = { table: 'bazaar_product_variants' | 'bazaar_flash_sales'; id: string; qty: number }
-
-// Atomically add `delta` to a stock counter using compare-and-swap: the UPDATE
-// only applies if the value is still what we just read, so two simultaneous
-// orders can't both take the last unit. Retries when another order wins the race.
-async function adjustCounter(
-  admin: ReturnType<typeof createBazaarAdmin>,
-  { table, id }: Omit<Counter, 'qty'>,
-  delta: number,
-): Promise<boolean> {
-  const col = table === 'bazaar_flash_sales' ? 'quantity' : 'stock_qty'
-  const flag = table === 'bazaar_flash_sales' ? 'is_active' : 'in_stock'
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const { data: row } = await admin.from(table).select(col).eq('id', id).single()
-    const current = (row as Record<string, number | null> | null)?.[col]
-    if (current === null || current === undefined) return true
-    const next = current + delta
-    if (next < 0) return false
-    const { data: updated } = await admin
-      .from(table)
-      .update({ [col]: next, [flag]: next > 0 })
-      .eq('id', id)
-      .eq(col, current)
-      .select('id')
-    if (updated?.length) return true
-  }
-  return false
-}
-
-async function releaseCounters(admin: ReturnType<typeof createBazaarAdmin>, counters: Counter[]) {
-  for (const ctr of counters) await adjustCounter(admin, ctr, ctr.qty)
-}
-
-type ProductRow = {
-  id: string
-  shop_id: string
-  name_en: string
-  price: number
-  in_stock: boolean | null
-  bazaar_shops: { is_approved: boolean | null } | null
-  bazaar_product_variants: { id: string; amount: number; unit: string; price: number; stock_qty: number | null; in_stock: boolean | null }[] | null
-  bazaar_flash_sales: { id: string; sale_price: number; ends_at: string; is_active: boolean | null; quantity: number | null }[] | null
-}
-
-async function resolveOrderItems(
-  admin: ReturnType<typeof createBazaarAdmin>,
-  input: CartItemInput[],
-): Promise<{ items: ResolvedItem[] } | { error: string }> {
-  const productIds = [...new Set(input.map(i => i.productId))]
-  const { data, error } = await admin
-    .from('bazaar_products')
-    .select('id, shop_id, name_en, price, in_stock, bazaar_shops(is_approved), bazaar_product_variants(id, amount, unit, price, stock_qty, in_stock), bazaar_flash_sales(id, sale_price, ends_at, is_active, quantity)')
-    .in('id', productIds)
-  if (error) return { error: 'Could not load products. Please try again.' }
-  const products = new Map((data as unknown as ProductRow[]).map(p => [p.id, p]))
-
-  const now = Date.now()
-  const items: ResolvedItem[] = []
-  const demandByVariant = new Map<string, number>()
-
-  for (const line of input) {
-    const p = products.get(line.productId)
-    if (!p || !p.bazaar_shops?.is_approved) {
-      return { error: 'An item in your cart is no longer available. Please remove it and try again.' }
-    }
-    const variants = p.bazaar_product_variants ?? []
-    let chosen: (typeof variants)[number] | null = null
-    if (line.variantId) {
-      chosen = variants.find(v => v.id === line.variantId) ?? null
-      if (!chosen) return { error: `"${p.name_en}" has changed. Please remove it and add it again.` }
-    }
-    // Stock is tracked on the chosen variant, or the product's default variant.
-    const stockVariant = chosen ?? variants.find(v => v.price === p.price) ?? variants[0] ?? null
-
-    if (p.in_stock === false || (stockVariant && stockVariant.in_stock === false && (stockVariant.stock_qty ?? 0) <= 0)) {
-      return { error: `Sorry, "${p.name_en}" is currently out of stock.` }
-    }
-
-    const basePrice = chosen ? chosen.price : p.price
-    const sale = (p.bazaar_flash_sales ?? []).find(s =>
-      s.is_active && new Date(s.ends_at).getTime() > now && (s.quantity === null || s.quantity > 0)
-    ) ?? null
-    if (sale && sale.quantity !== null && sale.quantity < line.quantity) {
-      return { error: `Only ${sale.quantity} of "${p.name_en}" left at the flash-sale price.` }
-    }
-
-    if (stockVariant && stockVariant.stock_qty !== null) {
-      const demand = (demandByVariant.get(stockVariant.id) ?? 0) + line.quantity
-      if (demand > stockVariant.stock_qty) {
-        return { error: `Sorry, only ${stockVariant.stock_qty} unit(s) of "${p.name_en}" are available in stock.` }
-      }
-      demandByVariant.set(stockVariant.id, demand)
-    }
-
-    items.push({
-      productId: p.id,
-      shopId: p.shop_id,
-      name: chosen ? `${p.name_en} (${chosen.amount} ${chosen.unit})` : p.name_en,
-      unitPrice: sale ? Math.min(sale.sale_price, basePrice) : basePrice,
-      quantity: line.quantity,
-      stockVariantId: stockVariant && stockVariant.stock_qty !== null ? stockVariant.id : null,
-      limitedSaleId: sale && sale.quantity !== null ? sale.id : null,
-    })
-  }
-  return { items }
 }
 
 export async function placeOrder(data: {
@@ -156,21 +39,22 @@ export async function placeOrder(data: {
 
   const isPickup = data.fulfillmentType === 'pickup'
 
-  if (!data.items.length) return { error: 'Cart is empty.' }
-  if (data.items.length > 100) return { error: 'Too many items in one order.' }
-  for (const item of data.items) {
-    if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99) {
-      return { error: 'Invalid item quantity.' }
-    }
-  }
+  const invalid = validateCartLines(data.items)
+  if (invalid) return { error: invalid }
 
   // Resolve every item's price, shop, and name from the database. Server
   // actions are public endpoints, so nothing price-related from the client
   // can be trusted — only productId, variantId, and quantity are used.
-  const adminClient = createBazaarAdmin()
-  const resolved = await resolveOrderItems(adminClient, data.items)
-  if ('error' in resolved) return { error: resolved.error }
-  const items = resolved.items
+  const admin = createBazaarAdmin()
+  const productIds = [...new Set(data.items.map(i => i.productId))]
+  const { data: productRows, error: productsError } = await admin
+    .from('bazaar_products')
+    .select(PRODUCT_PRICING_SELECT)
+    .in('id', productIds)
+  if (productsError) return { error: 'Could not load products. Please try again.' }
+  const priced = priceCartLines(productRows as unknown as ProductRow[], data.items, Date.now())
+  if ('error' in priced) return { error: priced.error }
+  const items = priced.items
 
   if (isPickup) {
     if (new Set(items.map(i => i.shopId)).size > 1) {
@@ -238,26 +122,14 @@ export async function placeOrder(data: {
 
   const total = Math.max(0, subtotal - discount) + deliveryFee
 
-  // Written with the service-role client: customers have no direct INSERT
-  // rights on orders/items (phase 29), so every order passes this validation.
-  const admin = createBazaarAdmin()
-
   // Reserve stock before creating the order so two customers can't both buy
   // the last unit. Everything reserved is released if any later step fails.
-  const reserved: Counter[] = []
-  for (const item of items) {
-    const wanted: Counter[] = [
-      ...(item.stockVariantId ? [{ table: 'bazaar_product_variants' as const, id: item.stockVariantId, qty: item.quantity }] : []),
-      ...(item.limitedSaleId ? [{ table: 'bazaar_flash_sales' as const, id: item.limitedSaleId, qty: item.quantity }] : []),
-    ]
-    for (const ctr of wanted) {
-      if (!(await adjustCounter(admin, ctr, -ctr.qty))) {
-        await releaseCounters(admin, reserved)
-        return { error: `Sorry, "${item.name}" just sold out. Please update your cart.` }
-      }
-      reserved.push(ctr)
-    }
-  }
+  const reservation = await reserveStock(admin, items)
+  if ('error' in reservation) return { error: reservation.error }
+  const reserved = reservation.reserved
+
+  // Written with the service-role client: customers have no direct INSERT
+  // rights on orders/items (phase 29), so every order passes this validation.
 
   const { data: order, error: orderError } = await admin
     .from('bazaar_orders')

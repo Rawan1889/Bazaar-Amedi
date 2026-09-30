@@ -109,7 +109,7 @@ function OfflineScreen({ isOnline }: { isOnline: boolean }) {
           </svg>
         </div>
         <h2 className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium mb-2" style={{ color: c.charcoal }}>
-          You're offline
+          You&apos;re offline
         </h2>
         <p className="font-[family-name:var(--font-dm-sans)] text-[13px] max-w-[280px] mx-auto" style={{ color: c.stone }}>
           Toggle online above to start receiving delivery requests and push notifications.
@@ -522,7 +522,7 @@ export function DriverOrderList({
             Being prepared
           </h2>
           <p className="font-[family-name:var(--font-dm-sans)] text-[13px] mb-4" style={{ color: c.stone }}>
-            Shop is packing these orders — they'll move to "Ready" when done.
+            Shop is packing these orders — they&apos;ll move to &quot;Ready&quot; when done.
           </p>
           <div className="flex flex-col gap-4">
             {preparing.map(order => <PreparingCard key={order.id} order={order} />)}

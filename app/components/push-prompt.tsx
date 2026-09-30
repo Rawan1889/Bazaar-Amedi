@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { saveSubscription, removeSubscription } from '@/lib/bazaar/push-notifications'
+import { saveSubscription } from '@/lib/bazaar/push-notifications'
 
 const c = {
   green:    '#287A53',

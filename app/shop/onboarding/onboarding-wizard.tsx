@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateShop, addProduct } from '@/lib/bazaar/shop-actions'
@@ -120,11 +121,11 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
     <div className="min-h-[100dvh] flex flex-col" style={{ background: c.bg }}>
       {/* Header */}
       <div className="px-6 pt-8 pb-6 text-center">
-        <a href="/" className="inline-block no-underline mb-4">
+        <Link href="/" className="inline-block no-underline mb-4">
           <span className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.charcoal }}>
             kela<span style={{ color: c.green }}>.</span>
           </span>
-        </a>
+        </Link>
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-1" style={{ color: c.charcoal }}>
           Set up your shop
         </h1>
@@ -324,6 +325,7 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
                       onClick={() => productImageInput.current?.click()}
                     >
                       {productImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- dashboard preview of the owner's own upload; optimizing it only spends image quota
                         <img src={productImage} alt="Product preview" className="w-full h-full object-cover" />
                       ) : uploadingImage ? (
                         <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>Uploading…</span>

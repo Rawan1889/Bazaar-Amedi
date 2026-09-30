@@ -1,6 +1,7 @@
 'use client'
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { bazaarLogin } from '@/lib/bazaar/auth'
 import { PhoneLogin } from '@/app/components/phone-login'
@@ -36,11 +37,11 @@ export default function BazaarLoginPage() {
 
       <div className="w-full max-w-[440px]">
         <div className="text-center mb-8">
-          <a href="/" className="inline-block no-underline">
+          <Link href="/" className="inline-block no-underline">
             <span className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium" style={{ color: c.charcoal }}>
               kela<span style={{ color: c.green }}>.</span>
             </span>
-          </a>
+          </Link>
           <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mt-1" style={{ color: c.stone }}>
             Sign in to your account
           </p>
