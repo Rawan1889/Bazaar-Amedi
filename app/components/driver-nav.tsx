@@ -123,18 +123,18 @@ export function DriverNav({ userName, exact = false }: Props) {
         className="fixed bottom-0 left-0 right-0 z-30 md:hidden"
         style={{ background: 'rgba(250,250,247,0.95)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${c.cream2}` }}
       >
-        <div className="flex items-center justify-around px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-stretch px-1 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {tabs.map(t => {
             const active = pathname === t.href || (t.href !== '/driver' && pathname.startsWith(t.href + '/'))
             return (
               <Link
                 key={t.href}
                 href={t.href}
-                className="flex flex-col items-center gap-0.5 px-4 py-1 no-underline"
+                className="flex-1 min-w-0 flex flex-col items-center gap-0.5 px-0.5 py-1 no-underline"
               >
                 {t.icon(active)}
                 <span
-                  className="font-[family-name:var(--font-dm-sans)] text-[10px]"
+                  className="font-[family-name:var(--font-dm-sans)] text-[10px] max-w-full truncate"
                   style={{ color: active ? c.green : c.stone, fontWeight: active ? 500 : 400 }}
                 >
                   {t.label}
@@ -142,7 +142,7 @@ export function DriverNav({ userName, exact = false }: Props) {
               </Link>
             )
           })}
-          <div className="flex flex-col items-center gap-0.5 px-1 py-1">
+          <div className="flex-1 min-w-0 flex items-center justify-center">
             <NotificationBell />
           </div>
         </div>

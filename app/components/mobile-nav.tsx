@@ -115,7 +115,7 @@ export function MobileNav() {
       className="fixed bottom-0 left-0 right-0 z-30 md:hidden"
       style={{ background: 'rgba(250,250,247,0.95)', backdropFilter: 'blur(12px)', borderTop: `1px solid ${c.cream2}` }}
     >
-      <div className="flex items-center justify-around px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <div className="flex items-stretch px-1 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
         {tabs.map(tab => {
           const active = pathname === tab.href || pathname.startsWith(tab.href + '/')
           const badgeCount = tab.badge === 'cart' ? itemCount : tab.badge === 'favorites' ? favoriteCount : 0
@@ -124,7 +124,7 @@ export function MobileNav() {
             <Link
               key={tab.href}
               href={tab.href as Route}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 no-underline relative"
+              className="flex-1 min-w-0 flex flex-col items-center gap-0.5 px-0.5 py-1 no-underline relative"
             >
               <div className="relative">
                 {tab.icon(active)}
@@ -138,7 +138,7 @@ export function MobileNav() {
                 )}
               </div>
               <span
-                className="font-[family-name:var(--font-dm-sans)] text-[10px]"
+                className="font-[family-name:var(--font-dm-sans)] text-[10px] max-w-full truncate"
                 style={{ color: active ? c.green : c.stone, fontWeight: active ? 500 : 400 }}
               >
                 {tab.label}
@@ -147,7 +147,7 @@ export function MobileNav() {
           )
         })}
         {role && (
-          <div className="flex flex-col items-center gap-0.5 px-1 py-1">
+          <div className="flex-1 min-w-0 flex items-center justify-center">
             <NotificationBell />
           </div>
         )}

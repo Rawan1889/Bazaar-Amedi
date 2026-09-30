@@ -59,13 +59,13 @@ export function CustomerNav() {
 
   return (
     <nav
-      className="sticky top-0 z-10 px-6 py-4"
+      className="sticky top-0 z-10 px-4 sm:px-6 py-4"
       style={{ background: 'rgba(250,250,247,0.9)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}
     >
       <div className="max-w-[1200px] mx-auto flex items-center justify-between">
         <Link href="/" className="no-underline flex items-center gap-2">
           <KelaMark size={22} gateColor="rgba(250,250,247,0.9)" />
-          <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
+          <span className="hidden min-[360px]:inline font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
             kela<span style={{ color: c.green }}>.</span>
           </span>
         </Link>
@@ -81,7 +81,7 @@ export function CustomerNav() {
           </div>
         )}
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <LanguageSwitcher />
           {profile && (
             <div className="hidden md:block">
@@ -227,12 +227,12 @@ export function CustomerNav() {
             </div>
           ) : (
             <>
-              <Link href="/login" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline" style={{ color: c.stone }}>
+              <Link href="/login" className="font-[family-name:var(--font-dm-sans)] text-[13px] no-underline whitespace-nowrap" style={{ color: c.stone }}>
                 Sign in
               </Link>
               <Link
                 href="/signup"
-                className="px-4 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium no-underline"
+                className="px-3 sm:px-4 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium no-underline whitespace-nowrap"
                 style={{ background: c.green, color: '#fff' }}
               >
                 Sign up

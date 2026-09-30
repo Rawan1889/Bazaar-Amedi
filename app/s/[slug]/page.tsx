@@ -98,9 +98,9 @@ export default async function ShopPublicPage({
 
       <div className="max-w-[1200px] mx-auto px-6 py-8">
         {/* Shop header */}
-        <div className="flex items-start gap-5 mb-8" style={{ marginTop: shop.cover_url ? '-3rem' : '0', position: 'relative', zIndex: 1 }}>
+        <div className="flex items-start gap-3 sm:gap-5 mb-8" style={{ marginTop: shop.cover_url ? '-3rem' : '0', position: 'relative', zIndex: 1 }}>
           <div
-            className="w-20 h-20 rounded-[16px] flex items-center justify-center flex-shrink-0 shadow-sm"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-[16px] flex items-center justify-center flex-shrink-0 shadow-sm"
             style={{ background: shop.logo_url ? 'transparent' : c.greenBg, border: `3px solid ${c.bg}` }}
           >
             {shop.logo_url ? (
@@ -111,13 +111,13 @@ export default async function ShopPublicPage({
               </span>
             )}
           </div>
-          <div className="flex-1">
-            <div className="flex items-start justify-between gap-3">
-              <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: c.charcoal }}>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+              <h1 className="font-[family-name:var(--font-dm-sans)] text-[22px] sm:text-[28px] leading-tight font-medium mb-1 min-w-0 break-words" style={{ color: c.charcoal }}>
                 {shop.name}
               </h1>
               {!isOwnerView && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <FollowButton shopId={shop.id} initialFollowing={following} followerCount={followerCount} />
                   <ShopFavoriteButton
                     shopId={shop.id}
