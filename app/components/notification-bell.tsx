@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getMyNotifications, markNotificationRead, markAllNotificationsRead, getUnreadCount } from '@/lib/bazaar/push-notifications'
+import { safeInternalPath } from '@/lib/bazaar/safe-url'
 
 const c = {
   green:    '#287A53',
@@ -152,7 +153,8 @@ export function NotificationBell({ dropdownSide = 'right' }: { dropdownSide?: 'l
                   key={n.id}
                   onClick={() => {
                     if (!n.is_read) handleMarkRead(n.id)
-                    if (n.data?.url) window.location.href = n.data.url
+                    const path = safeInternalPath(n.data?.url)
+                    if (path) window.location.href = path
                     setOpen(false)
                   }}
                   className="w-full text-left px-4 py-3 border-none cursor-pointer transition-colors duration-100 flex items-start gap-3"

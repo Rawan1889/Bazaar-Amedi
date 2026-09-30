@@ -82,7 +82,7 @@ export async function getMyPayouts(): Promise<Payout[]> {
 export async function requestPayout(amount: number) {
   const shop = await shopForOwner()
   if (!shop) return { error: 'Unauthorized' }
-  if (!amount || amount <= 0) return { error: 'Enter an amount to withdraw.' }
+  if (!Number.isInteger(amount) || amount <= 0) return { error: 'Enter an amount to withdraw.' }
 
   const earnings = await getShopEarnings()
   if (!earnings) return { error: 'Could not load earnings.' }
@@ -90,8 +90,9 @@ export async function requestPayout(amount: number) {
     return { error: `You can withdraw up to ${earnings.available.toLocaleString('en-IQ')} IQD.` }
   }
 
-  const supabase = await createBazaarServer()
-  const { error } = await supabase
+  // Service role: owners have no direct INSERT on payouts (phase 30), so the
+  // amount check above can't be bypassed.
+  const { error } = await createBazaarAdmin()
     .from('bazaar_payouts')
     .insert({ shop_id: shop.id, amount, status: 'pending' })
 

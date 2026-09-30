@@ -50,7 +50,7 @@ export default async function ShopPublicPage({
 
   const { data: shop } = await supabase
     .from('bazaar_shops')
-    .select('*, bazaar_categories(name_en), bazaar_profiles!bazaar_shops_owner_id_fkey(full_name)')
+    .select('*, bazaar_categories(name_en)')
     .eq('slug', slug)
     .single()
 

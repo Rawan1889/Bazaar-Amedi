@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { getBazaarUser } from '@/lib/bazaar/auth'
-import { createBazaarServer } from '@/lib/bazaar/supabase-server'
+import { createBazaarServer, createBazaarAdmin } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { OrderTrackingMap } from '@/app/components/order-tracking-map'
@@ -81,7 +81,9 @@ export default async function OrderDetailPage({
   type DriverInfo = { full_name: string; phone: string | null }
   let driver: DriverInfo | null = null
   if (o.driver_id) {
-    const { data: d } = await supabase
+    // Service role: customers can't read other users' profiles directly. Safe
+    // here because the order above was loaded with customer_id = this user.
+    const { data: d } = await createBazaarAdmin()
       .from('bazaar_profiles')
       .select('full_name, phone')
       .eq('id', o.driver_id)

@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createBazaarServer } from './supabase-server'
+import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
 
 export async function submitReview(formData: FormData) {
@@ -14,6 +14,19 @@ export async function submitReview(formData: FormData) {
 
   if (!shopId || !rating || rating < 1 || rating > 5) {
     return { error: 'Please select a rating between 1 and 5.' }
+  }
+  if (comment && comment.length > 1000) return { error: 'Review is too long.' }
+
+  // Only customers who actually received an order from this shop can review it.
+  const { data: bought } = await createBazaarAdmin()
+    .from('bazaar_order_items')
+    .select('id, bazaar_orders!inner(customer_id, status)')
+    .eq('shop_id', shopId)
+    .eq('bazaar_orders.customer_id', user.id)
+    .eq('bazaar_orders.status', 'delivered')
+    .limit(1)
+  if (!bought?.length) {
+    return { error: 'You can review a shop after an order from it has been delivered.' }
   }
 
   const supabase = await createBazaarServer()
@@ -50,7 +63,9 @@ export async function submitReview(formData: FormData) {
 }
 
 export async function getShopReviews(shopId: string) {
-  const supabase = await createBazaarServer()
+  // Service role: reviewer names live on bazaar_profiles, which users can only
+  // read for their own row. Only full_name is exposed here.
+  const supabase = createBazaarAdmin()
 
   const { data } = await supabase
     .from('bazaar_reviews')

@@ -72,7 +72,20 @@ export async function updateShopImages(logoUrl: string | null, coverUrl: string 
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
 
+  // Only accept images uploaded to our own bucket under this owner's folder,
+  // so a shop can't point its logo/cover (and link previews) at outside URLs.
+  const ownPrefix = `${process.env.NEXT_PUBLIC_BAZAAR_SUPABASE_URL}/storage/v1/object/public/bazaar-images/shops/${user.id}/`
   const supabase = await createBazaarServer()
+  const { data: current } = await supabase
+    .from('bazaar_shops')
+    .select('logo_url, cover_url')
+    .eq('owner_id', user.id)
+    .maybeSingle()
+  const changed = [
+    logoUrl !== current?.logo_url ? logoUrl : null,
+    coverUrl !== current?.cover_url ? coverUrl : null,
+  ]
+  if (changed.some(url => url && !url.startsWith(ownPrefix))) return { error: 'Invalid image.' }
 
   const update: Record<string, string | null> = {}
   if (logoUrl !== undefined) update.logo_url = logoUrl

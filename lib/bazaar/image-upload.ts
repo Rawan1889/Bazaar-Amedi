@@ -2,6 +2,7 @@
 
 import { createBazaarServer } from './supabase-server'
 import { getBazaarUser } from './auth'
+import { sniffImage } from './image-sniff'
 
 export async function uploadProductImage(formData: FormData) {
   const user = await getBazaarUser()
@@ -10,22 +11,21 @@ export async function uploadProductImage(formData: FormData) {
   const file = formData.get('file') as File
   if (!file || file.size === 0) return { error: 'No file selected' }
 
-  if (!file.type.startsWith('image/')) {
-    return { error: 'Only image files are allowed.' }
-  }
-
   if (file.size > 5 * 1024 * 1024) {
     return { error: 'Image must be under 5MB.' }
   }
 
+  const kind = await sniffImage(file)
+  if (!kind) return { error: 'Please upload a JPG, PNG, WebP or GIF photo.' }
+
   const supabase = await createBazaarServer()
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  const ext = kind.ext
   const path = `products/${user.id}/${Date.now()}.${ext}`
 
   const { error: uploadError } = await supabase.storage
     .from('bazaar-images')
-    .upload(path, file, { contentType: file.type, upsert: false })
+    .upload(path, file, { contentType: kind.mime, upsert: false })
 
   if (uploadError) return { error: uploadError.message }
 
@@ -39,26 +39,26 @@ export async function uploadProductImage(formData: FormData) {
 export async function uploadShopImage(formData: FormData, type: 'logo' | 'cover') {
   const user = await getBazaarUser()
   if (!user) return { error: 'Unauthorized' }
+  if (type !== 'logo' && type !== 'cover') return { error: 'Invalid image type.' }
 
   const file = formData.get('file') as File
   if (!file || file.size === 0) return { error: 'No file selected' }
-
-  if (!file.type.startsWith('image/')) {
-    return { error: 'Only image files are allowed.' }
-  }
 
   if (file.size > 5 * 1024 * 1024) {
     return { error: 'Image must be under 5MB.' }
   }
 
+  const kind = await sniffImage(file)
+  if (!kind) return { error: 'Please upload a JPG, PNG, WebP or GIF photo.' }
+
   const supabase = await createBazaarServer()
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  const ext = kind.ext
   const path = `shops/${user.id}/${type}-${Date.now()}.${ext}`
 
   const { error: uploadError } = await supabase.storage
     .from('bazaar-images')
-    .upload(path, file, { contentType: file.type, upsert: false })
+    .upload(path, file, { contentType: kind.mime, upsert: false })
 
   if (uploadError) return { error: uploadError.message }
 
