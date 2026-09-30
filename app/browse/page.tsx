@@ -170,7 +170,7 @@ export default async function BrowsePage({
                     )}
                     {activeSale && (
                       <div
-                        className="absolute top-2 left-2 px-2 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
+                        className="absolute top-2 left-2 rtl:left-auto rtl:right-2 px-2 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
                         style={{ background: c.terra, color: '#fff' }}
                       >
                         SALE
@@ -178,13 +178,13 @@ export default async function BrowsePage({
                     )}
                     {!activeSale && showLowStock && (
                       <div
-                        className="absolute top-2 left-2 px-2 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
+                        className="absolute top-2 left-2 rtl:left-auto rtl:right-2 px-2 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
                         style={{ background: 'rgba(196,101,74,0.92)', color: '#fff' }}
                       >
                         {lowStock} LEFT
                       </div>
                     )}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2">
                       <FavoriteButton
                         item={{
                           id: p.id,

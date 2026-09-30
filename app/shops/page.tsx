@@ -89,13 +89,13 @@ export default async function ShopsPage() {
                     )}
                     {/* Open/closed badge */}
                     <div
-                      className="absolute top-3 left-3 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
+                      className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2 py-0.5 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
                       style={{ background: shop.is_open ? c.green : c.stone, color: '#fff' }}
                     >
                       {shop.is_open ? 'Open' : 'Closed'}
                     </div>
                     {/* Favorite button */}
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-3 right-3 rtl:right-auto rtl:left-3">
                       <FavoriteButton
                         item={{
                           id: shop.id,

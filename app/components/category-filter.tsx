@@ -25,7 +25,7 @@ export function CategoryFilter({
           const v = e.target.value
           window.location.href = v ? `/browse?category=${v}` : '/browse'
         }}
-        className="appearance-none pl-4 pr-9 py-3 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] cursor-pointer outline-none"
+        className="appearance-none pl-4 pr-9 rtl:pl-9 rtl:pr-4 py-3 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] cursor-pointer outline-none"
         style={{
           background: activeCategory ? c.green : c.white,
           color: activeCategory ? '#fff' : c.stone,
@@ -39,7 +39,7 @@ export function CategoryFilter({
         ))}
       </select>
       <svg
-        className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+        className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 pointer-events-none"
         width="12" height="12" viewBox="0 0 12 12" fill="none"
       >
         <path d="M2 4l4 4 4-4" stroke={activeCategory ? '#fff' : c.stone} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

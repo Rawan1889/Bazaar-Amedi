@@ -130,7 +130,7 @@ export function MobileNav() {
                 {tab.icon(active)}
                 {badgeCount > 0 && (
                   <div
-                    className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[8px] font-bold"
+                    className="absolute -top-1 -right-1.5 rtl:right-auto rtl:-left-1.5 min-w-[14px] h-[14px] rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[8px] font-bold"
                     style={{ background: c.green, color: '#fff' }}
                   >
                     {badgeCount}

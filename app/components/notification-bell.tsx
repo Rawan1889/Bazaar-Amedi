@@ -100,7 +100,7 @@ export function NotificationBell({ dropdownSide = 'right' }: { dropdownSide?: 'l
         </svg>
         {unread > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[10px] font-medium px-1"
+            className="absolute -top-0.5 -right-0.5 rtl:right-auto rtl:-left-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center font-[family-name:var(--font-dm-mono)] text-[10px] font-medium px-1"
             style={{ background: c.terra, color: '#fff' }}
           >
             {unread > 9 ? '9+' : unread}

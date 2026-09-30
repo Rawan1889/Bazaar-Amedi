@@ -63,7 +63,7 @@ export function SearchBar() {
     <div ref={containerRef} className="relative w-full max-w-[480px]">
       <div className="relative">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 pointer-events-none"
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke={c.stone} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
         >
@@ -76,13 +76,13 @@ export function SearchBar() {
           onChange={e => handleSearch(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           placeholder="Search products across all shops..."
-          className="w-full pl-9 pr-4 py-2.5 rounded-[10px] text-[13px] font-[family-name:var(--font-dm-sans)] outline-none transition-all duration-150"
+          className="w-full pl-9 pr-4 rtl:pl-4 rtl:pr-9 py-2.5 rounded-[10px] text-[13px] font-[family-name:var(--font-dm-sans)] outline-none transition-all duration-150"
           style={{ background: c.cream, color: c.charcoal, border: `1px solid transparent` }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = c.cream2)}
           onMouseLeave={e => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = 'transparent' }}
         />
         {isPending && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          <div className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2">
             <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${c.cream2}`, borderTopColor: 'transparent' }} />
           </div>
         )}

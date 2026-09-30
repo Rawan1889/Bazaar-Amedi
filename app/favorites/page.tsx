@@ -142,7 +142,7 @@ export default function FavoritesPage() {
                             </span>
                           </div>
                         )}
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-2 right-2 rtl:right-auto rtl:left-2">
                           <FavoriteButton item={product} />
                         </div>
                       </div>
