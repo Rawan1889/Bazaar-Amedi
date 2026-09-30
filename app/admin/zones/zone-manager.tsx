@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createZone, updateZone, toggleZone, deleteZone } from '@/lib/bazaar/zone-actions'
@@ -19,6 +20,7 @@ const c = {
 const fmt = (n: number) => new Intl.NumberFormat('en-IQ').format(n) + ' IQD'
 
 function ZoneRow({ zone }: { zone: DeliveryZone }) {
+  const dialog = useDialog()
   const [editing, setEditing] = useState(false)
   const [, startTransition] = useTransition()
   const router = useRouter()
@@ -54,7 +56,7 @@ function ZoneRow({ zone }: { zone: DeliveryZone }) {
           {zone.is_active ? 'Hide' : 'Show'}
         </button>
         <button
-          onClick={() => { if (confirm(`Delete zone "${zone.name}"?`)) startTransition(async () => { await deleteZone(zone.id); router.refresh() }) }}
+          onClick={async () => { if (await dialog.confirm({ title: 'Delete zone?', message: zone.name, confirmLabel: 'Delete', tone: 'danger' })) startTransition(async () => { await deleteZone(zone.id); router.refresh() }) }}
           className="p-1.5 rounded-[6px] border-none cursor-pointer" style={{ background: 'transparent', color: c.stone }} aria-label="Delete zone"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { settleDriverCash, type DriverCash } from '@/lib/bazaar/cash-actions'
@@ -17,6 +18,7 @@ const c = {
 const fmt = (n: number) => new Intl.NumberFormat('en-IQ').format(n) + ' IQD'
 
 export function CashList({ drivers }: { drivers: DriverCash[] }) {
+  const dialog = useDialog()
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -44,7 +46,7 @@ export function CashList({ drivers }: { drivers: DriverCash[] }) {
             {fmt(d.amount)}
           </div>
           <button
-            onClick={() => { if (confirm(`Mark ${fmt(d.amount)} from ${d.full_name} as remitted?`)) startTransition(async () => { await settleDriverCash(d.driver_id); router.refresh() }) }}
+            onClick={async () => { if (await dialog.confirm({ title: 'Mark cash as remitted?', message: `${fmt(d.amount)} from ${d.full_name}`, confirmLabel: 'Mark remitted' })) startTransition(async () => { await settleDriverCash(d.driver_id); router.refresh() }) }}
             disabled={isPending}
             className="px-3 py-2 rounded-[8px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[12px] font-medium flex-shrink-0"
             style={{ background: c.greenBg, color: c.green, opacity: isPending ? 0.6 : 1 }}

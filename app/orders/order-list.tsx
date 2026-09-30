@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { useTransition } from 'react'
@@ -44,6 +45,7 @@ type Order = {
 }
 
 function OrderCard({ o }: { o: Order }) {
+  const dialog = useDialog()
   const [isPending, startTransition] = useTransition()
   const st = statusColors[o.status] || statusColors.pending
   const shopNames = [...new Set(o.bazaar_order_items?.map(i => i.bazaar_shops?.name))]
@@ -88,10 +90,12 @@ function OrderCard({ o }: { o: Order }) {
         <div className="flex items-center gap-2">
           {o.status === 'pending' && (
             <button
-              onClick={() => {
-                if (confirm('Cancel this order?')) {
-                  startTransition(() => { cancelOrder(o.id) })
-                }
+              onClick={async () => {
+                if (!(await dialog.confirm({ title: 'Cancel this order?', confirmLabel: 'Cancel order', cancelLabel: 'Keep order', tone: 'danger' }))) return
+                startTransition(async () => {
+                  const res = await cancelOrder(o.id)
+                  if (res?.error) dialog.alert({ title: 'Could not cancel', message: res.error })
+                })
               }}
               disabled={isPending}
               className="font-[family-name:var(--font-dm-sans)] text-[11px] border-none bg-transparent cursor-pointer px-0"

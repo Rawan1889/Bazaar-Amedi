@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useState, useTransition } from 'react'
 import { addCategory, deleteCategory } from '@/lib/bazaar/admin-actions'
 
@@ -25,6 +26,7 @@ interface Category {
 }
 
 function CategoryRow({ cat }: { cat: Category }) {
+  const dialog = useDialog()
   const [isPending, startTransition] = useTransition()
 
   return (
@@ -53,8 +55,8 @@ function CategoryRow({ cat }: { cat: Category }) {
         </div>
       </div>
       <button
-        onClick={() => {
-          if (confirm(`Delete category "${cat.name_en}"?`)) {
+        onClick={async () => {
+          if (await dialog.confirm({ title: 'Delete category?', message: cat.name_en, confirmLabel: 'Delete', tone: 'danger' })) {
             startTransition(() => { deleteCategory(cat.id) })
           }
         }}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useTransition, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteProduct, toggleProductStock, updateProductImage, addProductImage, deleteProductImage } from '@/lib/bazaar/shop-actions'
@@ -44,6 +45,7 @@ function formatIQD(amount: number) {
 }
 
 function ProductRow({ product }: { product: Product }) {
+  const dialog = useDialog()
   const [isPending, startTransition] = useTransition()
   const [imgUrl, setImgUrl] = useState(product.image_url)
   const [uploading, setUploading] = useState(false)
@@ -189,8 +191,8 @@ function ProductRow({ product }: { product: Product }) {
           </button>
         </form>
 
-        <form action={(fd: FormData) => {
-          if (confirm('Delete this product?')) {
+        <form action={async (fd: FormData) => {
+          if (await dialog.confirm({ title: 'Delete this product?', message: 'This cannot be undone.', confirmLabel: 'Delete', tone: 'danger' })) {
             startTransition(() => { deleteProduct(fd) })
           }
         }}>

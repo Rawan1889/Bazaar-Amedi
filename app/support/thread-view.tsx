@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { sendSupportMessage, closeSupportThread } from '@/lib/bazaar/support-actions'
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function ThreadView({ thread, initialMessages, currentUserId, viewerIsAdmin }: Props) {
+  const dialog = useDialog()
   const [messages, setMessages] = useState(initialMessages)
   const [body, setBody] = useState('')
   const [pending, startTransition] = useTransition()
@@ -60,7 +62,7 @@ export function ThreadView({ thread, initialMessages, currentUserId, viewerIsAdm
       const res = await sendSupportMessage(thread.id, text)
       if (res?.error) {
         setBody(text)
-        alert(res.error)
+        dialog.alert({ title: 'Message not sent', message: res.error })
       }
     })
   }
@@ -85,7 +87,7 @@ export function ThreadView({ thread, initialMessages, currentUserId, viewerIsAdm
             disabled={closing}
             onClick={() => startClose(async () => {
               const res = await closeSupportThread(thread.id)
-              if (res?.error) alert(res.error)
+              if (res?.error) dialog.alert({ title: 'Could not close ticket', message: res.error })
               else setStatus('closed')
             })}
             className="px-3 py-1.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px] font-medium border-none cursor-pointer"

@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useTransition } from 'react'
 import { adminCancelOrder, adminSetOrderStatus } from '@/lib/bazaar/admin-actions'
 
@@ -16,6 +17,7 @@ const c = {
 const STATUSES = ['pending','confirmed','picking_up','delivering','delivered','cancelled']
 
 export function OrderActions({ orderId, currentStatus }: { orderId: string; currentStatus: string }) {
+  const dialog = useDialog()
   const [pending, startTransition] = useTransition()
 
   if (currentStatus === 'cancelled' || currentStatus === 'delivered') {
@@ -37,8 +39,8 @@ export function OrderActions({ orderId, currentStatus }: { orderId: string; curr
       </select>
       <button
         disabled={pending}
-        onClick={() => {
-          const reason = window.prompt('Reason for cancelling this order? (shown to customer, driver, and shops)')
+        onClick={async () => {
+          const reason = await dialog.prompt({ title: 'Cancel this order?', message: 'Add a reason. It is shown to the customer, driver, and shops.', placeholder: 'Reason (optional)', confirmLabel: 'Cancel order', cancelLabel: 'Keep order', tone: 'danger' })
           if (reason === null) return
           startTransition(() => adminCancelOrder(orderId, reason.trim() || undefined))
         }}

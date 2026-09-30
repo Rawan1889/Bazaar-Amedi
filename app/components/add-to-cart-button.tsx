@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useCart } from '@/lib/bazaar/cart-context'
 
 const c = {
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function AddToCartButton(props: Props) {
+  const dialog = useDialog()
   const { items, addItem, updateQuantity } = useCart()
   const existing = items.find(i => i.productId === props.productId && i.variantId === props.variantId)
 
@@ -56,7 +58,7 @@ export function AddToCartButton(props: Props) {
             e.preventDefault();
             e.stopPropagation();
             if (props.stockQty !== undefined && props.stockQty !== null && existing.quantity >= props.stockQty) {
-              alert(`Sorry, only ${props.stockQty} unit(s) are available in stock.`)
+              dialog.alert({ title: 'Not enough stock', message: `Only ${props.stockQty} unit(s) are available.` })
               return
             }
             updateQuantity(props.productId, existing.quantity + 1, props.variantId)

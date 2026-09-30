@@ -10,6 +10,7 @@ import { PWARegister } from '@/app/components/pwa-register'
 import { AuthNotifications } from '@/app/components/auth-notifications'
 import { AutoTranslator } from '@/app/components/auto-translator'
 import { SITE_URL } from '@/lib/bazaar/site'
+import { DialogProvider } from '@/app/components/dialog-provider'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -81,11 +82,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AutoTranslator />
           <FavoritesProvider>
             <CartProvider>
-              <RealtimeWrapper />
-              <PWARegister />
-              <AuthNotifications />
-              {children}
-              <MobileNav />
+              <DialogProvider>
+                <RealtimeWrapper />
+                <PWARegister />
+                <AuthNotifications />
+                {children}
+                <MobileNav />
+              </DialogProvider>
             </CartProvider>
           </FavoritesProvider>
         </LocaleProvider>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { acceptShopOrder, markShopOrderReady, markPickupCollected, cancelShopOrder } from '@/lib/bazaar/order-actions'
@@ -41,6 +42,7 @@ interface OrderGroup {
 }
 
 function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
+  const dialog = useDialog()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -219,8 +221,8 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
       {/* Shop Owner Cancellation Button */}
       {['pending', 'confirmed', 'ready'].includes(order.status) && (
         <button
-          onClick={() => {
-            if (confirm('Cancel this order? This action cannot be undone.')) {
+          onClick={async () => {
+            if (await dialog.confirm({ title: 'Cancel this order?', message: 'This action cannot be undone.', confirmLabel: 'Cancel order', cancelLabel: 'Keep order', tone: 'danger' })) {
               startTransition(async () => {
                 setError(null)
                 const r = await cancelShopOrder(order.id)

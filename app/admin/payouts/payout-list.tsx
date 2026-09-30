@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { markPayoutPaid, type AdminPayout } from '@/lib/bazaar/payout-actions'
@@ -16,6 +17,7 @@ const c = {
 const fmt = (n: number) => new Intl.NumberFormat('en-IQ').format(n) + ' IQD'
 
 export function PayoutList({ payouts }: { payouts: AdminPayout[] }) {
+  const dialog = useDialog()
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -43,7 +45,7 @@ export function PayoutList({ payouts }: { payouts: AdminPayout[] }) {
             {fmt(p.amount)}
           </div>
           <button
-            onClick={() => { if (confirm(`Mark ${fmt(p.amount)} to ${p.shop_name} as paid?`)) startTransition(async () => { await markPayoutPaid(p.id); router.refresh() }) }}
+            onClick={async () => { if (await dialog.confirm({ title: 'Mark payout as paid?', message: `${fmt(p.amount)} to ${p.shop_name}`, confirmLabel: 'Mark paid' })) startTransition(async () => { await markPayoutPaid(p.id); router.refresh() }) }}
             disabled={isPending}
             className="px-3 py-2 rounded-[8px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[12px] font-medium flex-shrink-0"
             style={{ background: c.greenBg, color: c.green, opacity: isPending ? 0.6 : 1 }}

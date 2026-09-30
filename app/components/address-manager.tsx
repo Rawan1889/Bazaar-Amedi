@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { type Address, deleteAddress, setDefaultAddress } from '@/lib/bazaar/address-actions'
@@ -17,6 +18,7 @@ const c = {
 } as const
 
 export function AddressManager({ addresses }: { addresses: Address[] }) {
+  const dialog = useDialog()
   const [adding, setAdding] = useState(false)
   const [, startTransition] = useTransition()
   const router = useRouter()
@@ -85,7 +87,7 @@ export function AddressManager({ addresses }: { addresses: Address[] }) {
                 </button>
               )}
               <button
-                onClick={() => { if (confirm('Delete this address?')) startTransition(async () => { await deleteAddress(a.id); router.refresh() }) }}
+                onClick={async () => { if (await dialog.confirm({ title: 'Delete this address?', confirmLabel: 'Delete', tone: 'danger' })) startTransition(async () => { await deleteAddress(a.id); router.refresh() }) }}
                 className="p-1.5 rounded-[6px] border-none cursor-pointer"
                 style={{ background: 'transparent', color: c.stone }}
                 aria-label="Delete address"

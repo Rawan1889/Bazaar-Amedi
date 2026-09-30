@@ -1,5 +1,6 @@
 'use client'
 
+import { useDialog } from '@/app/components/dialog-provider'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBanner, toggleBanner, deleteBanner, type PromoBanner } from '@/lib/bazaar/banner-actions'
@@ -21,6 +22,7 @@ function isLive(b: PromoBanner): boolean {
 }
 
 export function BannerManager({ banners }: { banners: PromoBanner[] }) {
+  const dialog = useDialog()
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -65,7 +67,7 @@ export function BannerManager({ banners }: { banners: PromoBanner[] }) {
                 {b.is_active ? 'Disable' : 'Enable'}
               </button>
               <button
-                onClick={() => { if (confirm('Delete this banner?')) startTransition(async () => { await deleteBanner(b.id); router.refresh() }) }}
+                onClick={async () => { if (await dialog.confirm({ title: 'Delete this banner?', confirmLabel: 'Delete', tone: 'danger' })) startTransition(async () => { await deleteBanner(b.id); router.refresh() }) }}
                 className="p-1.5 rounded-[6px] border-none cursor-pointer" style={{ background: 'transparent', color: c.stone }} aria-label="Delete banner"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
