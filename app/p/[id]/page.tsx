@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { cache } from 'react'
 import type { Metadata } from 'next'
-import { DEFAULT_OG_IMAGE } from '@/lib/bazaar/site'
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/lib/bazaar/site'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -11,6 +11,7 @@ import { CartBar } from '@/app/components/cart-bar'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { LocalizedName } from '@/app/components/localized-name'
 import { RecordView } from '@/app/components/record-view'
+import { JsonLd } from '@/app/components/json-ld'
 
 const c = {
   green:    '#287A53',
@@ -101,6 +102,22 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <CustomerNav />
       <main>
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: p.name_en,
+        ...(p.description ? { description: p.description } : {}),
+        ...(gallery.length ? { image: gallery } : {}),
+        url: `${SITE_URL}/p/${p.id}`,
+        offers: {
+          '@type': 'Offer',
+          price: activeSale?.sale_price ?? basePrice,
+          priceCurrency: 'IQD',
+          availability: p.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          url: `${SITE_URL}/p/${p.id}`,
+          seller: { '@type': 'Organization', name: p.bazaar_shops.name },
+        },
+      }} />
       <RecordView product={{
         id: p.id, name_en: p.name_en, image_url: p.image_url, price: basePrice, unit: p.unit,
         shopId: p.shop_id, shopName: p.bazaar_shops.name, shopSlug: p.bazaar_shops.slug,

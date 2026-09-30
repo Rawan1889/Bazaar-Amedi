@@ -13,6 +13,8 @@ import { ReviewSection } from '@/app/components/review-section'
 import { isFollowing, getFollowerCount } from '@/lib/bazaar/follower-actions'
 import { FollowButton } from '@/app/components/follow-button'
 import { LocalizedName } from '@/app/components/localized-name'
+import { SITE_URL } from '@/lib/bazaar/site'
+import { JsonLd } from '@/app/components/json-ld'
 
 const c = {
   green:    '#287A53',
@@ -87,6 +89,23 @@ export default async function ShopPublicPage({
       {/* Shared nav — includes the profile-circle dropdown with role-aware links */}
       <CustomerNav />
       <main>
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name: shop.name,
+        url: `${SITE_URL}/s/${shop.slug}`,
+        ...(shop.description ? { description: shop.description } : {}),
+        ...(shop.cover_url || shop.logo_url ? { image: shop.cover_url || shop.logo_url } : {}),
+        ...(shop.phone ? { telephone: shop.phone } : {}),
+        address: {
+          '@type': 'PostalAddress',
+          ...(shop.address ? { streetAddress: shop.address } : {}),
+          addressLocality: 'Amedi',
+          addressRegion: 'Duhok',
+          addressCountry: 'IQ',
+        },
+        ...(reviewCount > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: averageRating, reviewCount } } : {}),
+      }} />
 
       {/* Cover image */}
       {shop.cover_url && (
