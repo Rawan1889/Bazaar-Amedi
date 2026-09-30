@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   white:    '#FFFFFF',
 } as const
 

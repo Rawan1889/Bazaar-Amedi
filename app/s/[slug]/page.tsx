@@ -16,11 +16,11 @@ import { FollowButton } from '@/app/components/follow-button'
 import { LocalizedName } from '@/app/components/localized-name'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -87,6 +87,7 @@ export default async function ShopPublicPage({
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       {/* Shared nav — includes the profile-circle dropdown with role-aware links */}
       <CustomerNav />
+      <main>
 
       {/* Cover image */}
       {shop.cover_url && (
@@ -310,6 +311,7 @@ export default async function ShopPublicPage({
         />
       </div>
 
+      </main>
       {!isOwnerView && <CartBar />}
     </div>
   )

@@ -5,9 +5,9 @@ import { getSupportThread } from '@/lib/bazaar/support-actions'
 import { ThreadView } from '../thread-view'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
 } as const
@@ -21,7 +21,7 @@ export default async function SupportThreadPage({ params }: { params: Promise<{ 
   if (!data) notFound()
 
   return (
-    <div className="min-h-[100dvh] px-4 md:px-8 py-6 pb-24 md:pb-8" style={{ background: '#FAFAF7' }}>
+    <main className="min-h-[100dvh] px-4 md:px-8 py-6 pb-24 md:pb-8" style={{ background: '#FAFAF7' }}>
       <div className="max-w-[720px] mx-auto">
         <Link href="/support" className="font-[family-name:var(--font-dm-mono)] text-[11px] no-underline" style={{ color: c.stone }}>
           ← Back to tickets
@@ -35,6 +35,6 @@ export default async function SupportThreadPage({ params }: { params: Promise<{ 
           />
         </div>
       </div>
-    </div>
+    </main>
   )
 }

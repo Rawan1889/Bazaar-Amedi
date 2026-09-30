@@ -3,8 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
 
 const c = {
-  green:    '#2D8A5E',
-  terra:    '#C4654A',
+  green:    '#287A53',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
   stone:    '#6B665F',
   cream:    '#F2EFEA',
@@ -139,7 +139,7 @@ function DialogView({ req, onDone }: { req: Request; onDone: () => void }) {
             placeholder={req.opts.placeholder}
             aria-label={opts.title}
             rows={3}
-            className="w-full mt-4 px-3 py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[14px] resize-none outline-none focus:ring-2 focus:ring-[#2D8A5E]"
+            className="w-full mt-4 px-3 py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[14px] resize-none outline-none focus:ring-2 focus:ring-[#287A53]"
             style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
           />
         )}

@@ -13,7 +13,7 @@ export default async function ShopEarningsPage() {
       <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: '#1E1C19' }}>
         Earnings
       </h1>
-      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#7A756E' }}>
+      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#716C66' }}>
         From delivered orders. The platform commission is {earnings.commissionRate}%.
       </p>
       <EarningsPanel earnings={earnings} payouts={payouts} />

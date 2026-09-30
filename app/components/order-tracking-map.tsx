@@ -5,10 +5,10 @@ import { createBazaarClient } from '@/lib/bazaar/supabase-client'
 import { AMEDI, loadLeaflet, pinIcon, dotIcon, type LeafletMap, type LeafletMarker } from '@/lib/bazaar/leaflet'
 
 const c = {
-  green:    '#2D8A5E',
-  terra:    '#C4654A',
+  green:    '#287A53',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
 } as const

@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { openSupportThread } from '@/lib/bazaar/support-actions'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
   error:    '#C94A3A',

@@ -9,16 +9,16 @@ import { getActiveZones } from '@/lib/bazaar/zone-actions'
 import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 
 const c = {
-  green:      '#2D8A5E',
+  green:      '#287A53',
   greenHover: '#247A51',
   greenBg:    'rgba(45,138,94,0.08)',
   greenBord:  'rgba(45,138,94,0.2)',
-  terra:      '#C4654A',
+  terra:      '#A8563F',
   terraBg:    'rgba(196,101,74,0.08)',
   terraBord:  'rgba(196,101,74,0.2)',
   charcoal:   '#1E1C19',
-  stone:      '#7A756E',
-  stoneLight: '#9A958E',
+  stone:      '#716C66',
+  stoneLight: '#716C66',
   cream:      '#F2EFEA',
   cream2:     '#E8E4DE',
   bg:         '#FAFAF7',
@@ -390,7 +390,7 @@ function SignupFormInner() {
 
 export default function BazaarSignupPage() {
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center py-12 px-6" style={{ background: c.bg }}>
+    <main className="min-h-[100dvh] flex items-center justify-center py-12 px-6" style={{ background: c.bg }}>
       {/* Subtle green glow */}
       <div
         className="fixed top-0 right-0 pointer-events-none"
@@ -423,6 +423,6 @@ export default function BazaarSignupPage() {
           </Suspense>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

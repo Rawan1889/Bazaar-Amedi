@@ -7,9 +7,9 @@ import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 import { LocationPicker } from './location-picker'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
@@ -103,6 +103,7 @@ export function AddressForm({ onSaved, onCancel }: Props) {
             Delivery area
           </label>
           <select
+            aria-label="Delivery area"
             value={zoneId}
             onChange={e => setZoneId(e.target.value)}
             className="w-full px-3 py-2.5 rounded-[10px] text-[13px] font-[family-name:var(--font-dm-sans)] outline-none mb-3"

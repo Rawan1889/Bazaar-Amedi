@@ -5,11 +5,11 @@ import { useState, useTransition } from 'react'
 import { addCategory, deleteCategory } from '@/lib/bazaar/admin-actions'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
   error:    '#C94A3A',

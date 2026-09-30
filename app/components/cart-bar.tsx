@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useCart } from '@/lib/bazaar/cart-context'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   charcoal: '#1E1C19',
   white:    '#FFFFFF',
 } as const

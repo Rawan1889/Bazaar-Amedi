@@ -1,8 +1,8 @@
 'use client'
 
 const c = {
-  green:  '#2D8A5E',
-  stone:  '#7A756E',
+  green:  '#287A53',
+  stone:  '#716C66',
   cream2: '#E8E4DE',
   white:  '#FFFFFF',
 } as const
@@ -19,6 +19,7 @@ export function CategoryFilter({
   return (
     <div className="relative flex-shrink-0">
       <select
+        aria-label="Filter by category"
         value={activeCategory ?? ''}
         onChange={(e) => {
           const v = e.target.value

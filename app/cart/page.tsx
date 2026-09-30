@@ -14,12 +14,12 @@ import { getShopZones } from '@/lib/bazaar/zone-actions'
 import { RedirectNonCustomers } from '@/app/components/redirect-non-customers'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   saffron:  '#E8A838',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -126,7 +126,7 @@ export default function CartPage() {
             </Link>
           </div>
         </nav>
-        <div className="max-w-[800px] mx-auto px-6 py-16 text-center">
+        <main className="max-w-[800px] mx-auto px-6 py-16 text-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: c.greenBg }}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
               <path d="M7 14l5 5L21 9" stroke={c.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -156,7 +156,7 @@ export default function CartPage() {
               Continue shopping
             </Link>
           </div>
-        </div>
+        </main>
       </div>
     )
   }
@@ -180,6 +180,7 @@ export default function CartPage() {
           </Link>
         </div>
       </nav>
+      <main>
 
       <div className="max-w-[800px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-2" style={{ color: c.charcoal }}>
@@ -261,7 +262,8 @@ export default function CartPage() {
 
                       <button
                         onClick={() => removeItem(item.productId, item.variantId)}
-                        className="p-1 border-none bg-transparent cursor-pointer"
+                        aria-label={`Remove ${item.name}`}
+                        className="p-2 -m-1 border-none bg-transparent cursor-pointer"
                         style={{ color: c.stone }}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -424,6 +426,7 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      </main>
     </div>
   )
 }

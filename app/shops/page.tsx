@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 }
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -43,7 +43,7 @@ export default async function ShopsPage() {
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <CustomerNav />
 
-      <div className="max-w-[1200px] mx-auto px-6 py-8">
+      <main className="max-w-[1200px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: c.charcoal }}>
           Markets in Amedi
         </h1>
@@ -151,7 +151,7 @@ export default async function ShopsPage() {
             })}
           </div>
         )}
-      </div>
+      </main>
 
       <CartBar />
     </div>

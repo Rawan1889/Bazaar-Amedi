@@ -5,12 +5,12 @@ import { approveShop, rejectShop } from '@/lib/bazaar/admin-actions'
 import { updateCommissionRate } from '@/lib/bazaar/payout-actions'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
 } as const

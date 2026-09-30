@@ -11,12 +11,12 @@ import { LanguageSwitcher } from '@/app/components/language-switcher'
 import { KelaMark } from '@/app/components/kela-mark'
 
 const c = {
-  green:     '#2D8A5E',
+  green:     '#287A53',
   greenBg:   'rgba(45,138,94,0.08)',
   saffron:   '#E8A838',
   saffronBg: 'rgba(232,168,56,0.12)',
   charcoal:  '#1E1C19',
-  stone:     '#7A756E',
+  stone:     '#716C66',
   cream:     '#F2EFEA',
   cream2:    '#E8E4DE',
   white:     '#FFFFFF',

@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-green:      #2D8A5E;
+  --color-green:      #287A53;
   --color-green-bg:   rgba(45,138,94,0.08);
-  --color-terra:      #C4654A;
+  --color-terra:      #A8563F;
   --color-saffron:    #E8A838;
   --color-charcoal:   #1E1C19;
-  --color-stone:      #7A756E;
+  --color-stone:      #716C66;
   --color-cream:      #F2EFEA;
   --color-cream-2:    #E8E4DE;
   --color-bg:         #FAFAF7;

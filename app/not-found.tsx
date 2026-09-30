@@ -9,7 +9,7 @@ export default function NotFound() {
     <main className="min-h-[100dvh] flex items-center justify-center px-6 pb-20 md:pb-0" style={{ background: '#FAFAF7' }}>
       <div className="max-w-[420px] w-full text-center">
         <div className="flex justify-center mb-6">
-          <KelaMark size={40} color="#2D8A5E" />
+          <KelaMark size={40} color="#287A53" />
         </div>
         <p className="font-[family-name:var(--font-dm-mono)] text-[12px] tracking-[0.1em] mb-2" style={{ color: '#6B665F' }}>
           404
@@ -24,7 +24,7 @@ export default function NotFound() {
           <Link
             href="/browse"
             className="min-h-[44px] px-5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[14px] font-medium no-underline inline-flex items-center"
-            style={{ background: '#2D8A5E', color: '#fff' }}
+            style={{ background: '#287A53', color: '#fff' }}
           >
             Browse products
           </Link>

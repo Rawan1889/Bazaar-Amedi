@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
       >
         Users
       </h1>
-      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#7A756E' }}>
+      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#716C66' }}>
         {users.length} total — manage customers, drivers, and market owners
       </p>
       <UserList users={users} />

@@ -7,10 +7,10 @@ import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 import { AddressForm } from './address-form'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',

@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 
 const c = {
-  green:  '#2D8A5E',
+  green:  '#287A53',
   cream:  '#F2EFEA',
   cream2: '#E8E4DE',
 } as const

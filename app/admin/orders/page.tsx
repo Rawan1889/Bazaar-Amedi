@@ -4,7 +4,7 @@ import { OrderList } from './order-list'
 
 const c = {
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
 } as const
 
 export default async function AdminOrdersPage() {

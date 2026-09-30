@@ -14,7 +14,10 @@ interface Props {
 
 export function StarRating({ rating, size = 14, interactive = false, onChange }: Props) {
   return (
-    <div className="flex items-center gap-0.5">
+    <div
+      className="flex items-center gap-0.5"
+      {...(interactive ? { role: 'radiogroup', 'aria-label': 'Your rating' } : { role: 'img', 'aria-label': `Rated ${Math.round(rating)} out of 5` })}
+    >
       {[1, 2, 3, 4, 5].map(star => {
         const filled = star <= Math.round(rating)
         return (
@@ -23,6 +26,9 @@ export function StarRating({ rating, size = 14, interactive = false, onChange }:
             type="button"
             onClick={() => interactive && onChange?.(star)}
             disabled={!interactive}
+            aria-hidden={!interactive || undefined}
+            tabIndex={interactive ? undefined : -1}
+            {...(interactive ? { role: 'radio', 'aria-checked': star === Math.round(rating), 'aria-label': `${star} star${star > 1 ? 's' : ''}` } : {})}
             className="border-none bg-transparent p-0 transition-transform duration-100"
             style={{ cursor: interactive ? 'pointer' : 'default' }}
             onMouseEnter={e => interactive && (e.currentTarget.style.transform = 'scale(1.2)')}

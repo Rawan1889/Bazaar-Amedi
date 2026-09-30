@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { updateDriverLocation } from '@/lib/bazaar/order-actions'
 
 const c = {
-  green:   '#2D8A5E',
+  green:   '#287A53',
   greenBg: 'rgba(45,138,94,0.08)',
-  stone:   '#7A756E',
+  stone:   '#716C66',
   amber:   '#E8A838',
   amberBg: 'rgba(232,168,56,0.1)',
 } as const

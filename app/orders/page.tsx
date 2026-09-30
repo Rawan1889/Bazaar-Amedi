@@ -8,9 +8,9 @@ import { MobileNav } from '@/app/components/mobile-nav'
 import { OrderList } from './order-list'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   bg:       '#FAFAF7',
 } as const
 
@@ -25,12 +25,12 @@ export default async function OrdersPage() {
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <CustomerNav />
 
-      <div className="max-w-[800px] mx-auto px-6 py-8">
+      <main className="max-w-[800px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-6" style={{ color: c.charcoal }}>
           My Orders
         </h1>
         <OrderList orders={orders} />
-      </div>
+      </main>
 
       <MobileNav />
     </div>

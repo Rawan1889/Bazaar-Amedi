@@ -12,11 +12,11 @@ import { LocalizedName } from '@/app/components/localized-name'
 import { RecordView } from '@/app/components/record-view'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -99,6 +99,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <CustomerNav />
+      <main>
       <RecordView product={{
         id: p.id, name_en: p.name_en, image_url: p.image_url, price: basePrice, unit: p.unit,
         shopId: p.shop_id, shopName: p.bazaar_shops.name, shopSlug: p.bazaar_shops.slug,
@@ -154,6 +155,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
+      </main>
       <CartBar />
     </div>
   )

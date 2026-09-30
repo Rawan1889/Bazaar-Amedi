@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 import { requestPayout, type ShopEarnings, type Payout } from '@/lib/bazaar/payout-actions'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
   saffronBg:'rgba(232,168,56,0.1)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',

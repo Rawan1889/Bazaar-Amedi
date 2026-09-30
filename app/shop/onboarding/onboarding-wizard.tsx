@@ -7,16 +7,16 @@ import { updateOnboardingStep, completeOnboarding } from '@/lib/bazaar/onboardin
 import { uploadProductImage } from '@/lib/bazaar/image-upload'
 
 const c = {
-  green:      '#2D8A5E',
+  green:      '#287A53',
   greenHover: '#247A51',
   greenBg:    'rgba(45,138,94,0.08)',
   greenBord:  'rgba(45,138,94,0.2)',
-  terra:      '#C4654A',
+  terra:      '#A8563F',
   saffron:    '#E8A838',
   saffronBg:  'rgba(232,168,56,0.08)',
   charcoal:   '#1E1C19',
-  stone:      '#7A756E',
-  stoneLight: '#9A958E',
+  stone:      '#716C66',
+  stoneLight: '#716C66',
   cream:      '#F2EFEA',
   cream2:     '#E8E4DE',
   bg:         '#FAFAF7',

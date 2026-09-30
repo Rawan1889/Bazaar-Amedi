@@ -6,11 +6,11 @@ import { bazaarLogin } from '@/lib/bazaar/auth'
 import { PhoneLogin } from '@/app/components/phone-login'
 
 const c = {
-  green:      '#2D8A5E',
+  green:      '#287A53',
   greenBg:    'rgba(45,138,94,0.08)',
   charcoal:   '#1E1C19',
-  stone:      '#7A756E',
-  stoneLight: '#9A958E',
+  stone:      '#716C66',
+  stoneLight: '#716C66',
   cream:      '#F2EFEA',
   cream2:     '#E8E4DE',
   bg:         '#FAFAF7',
@@ -25,7 +25,7 @@ export default function BazaarLoginPage() {
   const [isPending, startTransition] = useTransition()
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center py-12 px-6" style={{ background: c.bg }}>
+    <main className="min-h-[100dvh] flex items-center justify-center py-12 px-6" style={{ background: c.bg }}>
       <div
         className="fixed top-0 right-0 pointer-events-none"
         style={{
@@ -157,6 +157,6 @@ export default function BazaarLoginPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

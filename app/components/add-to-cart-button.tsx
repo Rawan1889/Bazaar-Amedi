@@ -4,7 +4,7 @@ import { useDialog } from '@/app/components/dialog-provider'
 import { useCart } from '@/lib/bazaar/cart-context'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   white:    '#FFFFFF',
 } as const
@@ -45,12 +45,13 @@ export function AddToCartButton(props: Props) {
       <div className={wrapper}>
         <button
           onClick={e => { e.preventDefault(); e.stopPropagation(); updateQuantity(props.productId, existing.quantity - 1, props.variantId) }}
+          aria-label="Decrease quantity"
           className={stepBtn}
           style={{ background: c.greenBg, color: c.green }}
         >
           −
         </button>
-        <span className={qtyLabel} style={{ color: c.green }}>
+        <span className={qtyLabel} style={{ color: c.green }} aria-live="polite">
           {existing.quantity}
         </span>
         <button
@@ -63,6 +64,7 @@ export function AddToCartButton(props: Props) {
             }
             updateQuantity(props.productId, existing.quantity + 1, props.variantId)
           }}
+          aria-label="Increase quantity"
           className={stepBtn}
           style={{ background: c.green, color: c.white }}
         >

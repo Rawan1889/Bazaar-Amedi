@@ -7,16 +7,16 @@ import { OrderTrackingMap } from '@/app/components/order-tracking-map'
 import { OrderChat } from '@/app/components/order-chat'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   saffron:  '#E8A838',
   saffronBg:'rgba(232,168,56,0.08)',
   indigo:   '#6366F1',
   indigoBg: 'rgba(99,102,241,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -122,6 +122,7 @@ export default async function OrderDetailPage({
           </div>
         </div>
       </nav>
+      <main>
 
       <div className="max-w-[600px] mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
@@ -329,6 +330,7 @@ export default async function OrderDetailPage({
           </div>
         </div>
       </div>
+      </main>
     </div>
   )
 }

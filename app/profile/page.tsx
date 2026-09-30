@@ -7,10 +7,10 @@ import { ProfileForm } from './profile-form'
 import { AddressManager } from '@/app/components/address-manager'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -50,6 +50,7 @@ export default async function ProfilePage() {
           </Link>
         </div>
       </nav>
+      <main>
 
       <div className="max-w-[600px] mx-auto px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
@@ -112,6 +113,7 @@ export default async function ProfilePage() {
           </div>
         </div>
       </div>
+      </main>
     </div>
   )
 }

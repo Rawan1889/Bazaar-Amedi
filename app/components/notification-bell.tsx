@@ -4,11 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import { getMyNotifications, markNotificationRead, markAllNotificationsRead, getUnreadCount } from '@/lib/bazaar/push-notifications'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
@@ -88,6 +88,9 @@ export function NotificationBell({ dropdownSide = 'right' }: { dropdownSide?: 'l
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
+        aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         className="relative w-10 h-10 rounded-[10px] flex items-center justify-center border-none cursor-pointer transition-colors duration-150"
         style={{ background: open ? c.greenBg : 'transparent' }}
       >

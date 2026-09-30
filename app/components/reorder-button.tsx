@@ -4,7 +4,7 @@ import { useCart } from '@/lib/bazaar/cart-context'
 import { useRouter } from 'next/navigation'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
 } as const
 

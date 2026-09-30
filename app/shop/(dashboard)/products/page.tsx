@@ -24,13 +24,13 @@ export default async function ProductsPage() {
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-2" style={{ color: '#1E1C19' }}>
           Products
         </h1>
-        <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-4" style={{ color: '#7A756E' }}>
+        <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-4" style={{ color: '#716C66' }}>
           You need to set up your shop first before adding products.
         </p>
         <a
           href="/shop/settings"
           className="inline-block px-4 py-2 rounded-[8px] no-underline font-[family-name:var(--font-dm-sans)] text-[13px] font-medium"
-          style={{ background: '#2D8A5E', color: '#fff' }}
+          style={{ background: '#287A53', color: '#fff' }}
         >
           Set up shop
         </a>
@@ -56,7 +56,7 @@ export default async function ProductsPage() {
           <h1 className="font-[family-name:var(--font-dm-sans)] text-[22px] md:text-[28px] font-medium mb-1 truncate" style={{ color: '#1E1C19' }}>
             Products
           </h1>
-          <p className="font-[family-name:var(--font-dm-sans)] text-[13px] md:text-[14px]" style={{ color: '#7A756E' }}>
+          <p className="font-[family-name:var(--font-dm-sans)] text-[13px] md:text-[14px]" style={{ color: '#716C66' }}>
             {products?.length ?? 0} products in your catalog
           </p>
         </div>

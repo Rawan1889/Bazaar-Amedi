@@ -7,12 +7,12 @@ import { deleteProduct, toggleProductStock, updateProductImage, addProductImage,
 import { uploadProductImage } from '@/lib/bazaar/image-upload'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
-  terra:    '#C4654A',
+  terra:    '#A8563F',
   terraBg:  'rgba(196,101,74,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
 } as const
@@ -199,6 +199,7 @@ function ProductRow({ product }: { product: Product }) {
           <input type="hidden" name="product_id" value={product.id} />
           <button
             type="submit"
+            aria-label="Delete product"
             className="px-2 py-1.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[10px] border-none cursor-pointer bg-transparent"
             style={{ color: c.stone }}
           >

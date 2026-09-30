@@ -5,10 +5,10 @@ import { getMySupportThreads } from '@/lib/bazaar/support-actions'
 import { NewThreadForm } from './new-thread-form'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
@@ -22,7 +22,7 @@ export default async function SupportPage() {
   const threads = await getMySupportThreads()
 
   return (
-    <div className="min-h-[100dvh] px-4 md:px-8 py-8 pb-24 md:pb-8" style={{ background: '#FAFAF7' }}>
+    <main className="min-h-[100dvh] px-4 md:px-8 py-8 pb-24 md:pb-8" style={{ background: '#FAFAF7' }}>
       <div className="max-w-[720px] mx-auto">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-2" style={{ color: c.charcoal }}>
           Support
@@ -74,6 +74,6 @@ export default async function SupportPage() {
           </>
         )}
       </div>
-    </div>
+    </main>
   )
 }

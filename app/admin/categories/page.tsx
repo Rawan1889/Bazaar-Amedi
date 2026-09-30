@@ -10,7 +10,7 @@ export default async function AdminCategoriesPage() {
       <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: '#1E1C19' }}>
         Categories
       </h1>
-      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-8" style={{ color: '#7A756E' }}>
+      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-8" style={{ color: '#716C66' }}>
         Manage product categories for the marketplace.
       </p>
 

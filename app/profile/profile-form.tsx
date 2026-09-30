@@ -4,10 +4,10 @@ import { useState, useTransition } from 'react'
 import { updateProfile } from '@/lib/bazaar/profile-actions'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   error:    '#C94A3A',
   errorBg:  'rgba(201,74,58,0.08)',

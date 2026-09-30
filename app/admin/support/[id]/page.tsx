@@ -6,7 +6,7 @@ import { ThreadView } from '@/app/support/thread-view'
 
 const c = {
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',
 } as const

@@ -25,10 +25,10 @@ export default async function DriverDashboard() {
           <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-3" style={{ color: '#1E1C19' }}>
             Pending approval
           </h1>
-          <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#7A756E' }}>
+          <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#716C66' }}>
             Your driver account is under review. We'll notify you once an admin approves your account — usually within 24 hours.
           </p>
-          <p className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: '#9A958E' }}>
+          <p className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: '#716C66' }}>
             Signed in as {user.full_name}
           </p>
         </div>
@@ -48,11 +48,11 @@ export default async function DriverDashboard() {
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: '#FAFAF7' }}>
       <DriverNav userName={user.full_name} exact />
 
-      <div className="max-w-[800px] mx-auto px-6 py-8">
+      <main className="max-w-[800px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-1" style={{ color: '#1E1C19' }}>
           Deliveries
         </h1>
-        <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-8" style={{ color: '#7A756E' }}>
+        <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-8" style={{ color: '#716C66' }}>
           {isOnline
             ? `${active.length} active · ${available.length} available`
             : 'Go online to start receiving orders'}
@@ -67,7 +67,7 @@ export default async function DriverDashboard() {
           userId={user.id}
           isOnline={isOnline}
         />
-      </div>
+      </main>
     </div>
   )
 }

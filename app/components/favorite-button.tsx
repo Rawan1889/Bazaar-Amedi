@@ -3,8 +3,8 @@
 import { useFavorites, type FavoriteItem } from '@/lib/bazaar/favorites-context'
 
 const c = {
-  terra: '#C4654A',
-  stone: '#7A756E',
+  terra: '#A8563F',
+  stone: '#716C66',
   cream: '#F2EFEA',
 } as const
 
@@ -20,8 +20,11 @@ export function FavoriteButton({ item, size = 'sm' }: Props) {
 
   return (
     <button
+      type="button"
       onClick={e => { e.preventDefault(); e.stopPropagation(); toggleFavorite(item) }}
-      className="flex items-center justify-center border-none cursor-pointer transition-all duration-150 rounded-[6px]"
+      aria-label={active ? 'Remove from saved' : 'Save'}
+      aria-pressed={active}
+      className="flex items-center justify-center border-none cursor-pointer transition-all duration-150 rounded-[6px] min-w-[32px] min-h-[32px] focus-visible:outline-2 focus-visible:outline-[#287A53]"
       style={{
         background: active ? 'rgba(196,101,74,0.08)' : c.cream,
         padding: size === 'sm' ? '4px' : '6px',

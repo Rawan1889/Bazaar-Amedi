@@ -5,10 +5,10 @@ import { useRealtimeOrders } from '@/lib/bazaar/use-realtime-orders'
 import { useRouter } from 'next/navigation'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   white:    '#FFFFFF',
 } as const
 
@@ -68,6 +68,7 @@ export function OrderNotifications({ userId, role }: { userId: string; role: str
             </div>
             <button
               onClick={e => { e.stopPropagation(); dismiss(n.id) }}
+              aria-label="Dismiss"
               className="p-1 border-none bg-transparent cursor-pointer"
               style={{ color: c.stone }}
             >

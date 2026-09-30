@@ -11,7 +11,7 @@ export default async function AdminPayoutsPage() {
       <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-1" style={{ color: '#1E1C19' }}>
         Payout requests
       </h1>
-      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#7A756E' }}>
+      <p className="font-[family-name:var(--font-dm-sans)] text-[14px] mb-6" style={{ color: '#716C66' }}>
         Pending withdrawal requests from shops.
         {total > 0 && ` Outstanding: ${new Intl.NumberFormat('en-IQ').format(total)} IQD.`}
       </p>

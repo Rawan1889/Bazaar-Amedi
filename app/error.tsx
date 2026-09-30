@@ -13,7 +13,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
     <main className="min-h-[100dvh] flex items-center justify-center px-6 pb-20 md:pb-0" style={{ background: '#FAFAF7' }}>
       <div className="max-w-[420px] w-full text-center">
         <div className="flex justify-center mb-6">
-          <KelaMark size={40} color="#2D8A5E" />
+          <KelaMark size={40} color="#287A53" />
         </div>
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium mb-2" style={{ color: '#1E1C19' }}>
           Something went wrong
@@ -26,7 +26,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
             type="button"
             onClick={reset}
             className="min-h-[44px] px-5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[14px] font-medium border-none cursor-pointer"
-            style={{ background: '#2D8A5E', color: '#fff' }}
+            style={{ background: '#287A53', color: '#fff' }}
           >
             Try again
           </button>

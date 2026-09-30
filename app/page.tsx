@@ -7,19 +7,19 @@ import { KelaMark } from '@/app/components/kela-mark'
 import { LanguageSwitcher } from '@/app/components/language-switcher'
 
 const c = {
-  green:      '#2D8A5E',
+  green:      '#287A53',
   greenHover: '#247A51',
   greenBg:    'rgba(45,138,94,0.08)',
   greenBord:  'rgba(45,138,94,0.2)',
-  terra:      '#C4654A',
+  terra:      '#A8563F',
   terraBg:    'rgba(196,101,74,0.08)',
   terraBord:  'rgba(196,101,74,0.2)',
   saffron:    '#E8A838',
   saffronBg:  'rgba(232,168,56,0.1)',
   saffronBord:'rgba(232,168,56,0.25)',
   charcoal:   '#1E1C19',
-  stone:      '#7A756E',
-  stoneLight: '#9A958E',
+  stone:      '#716C66',
+  stoneLight: '#716C66',
   cream:      '#F2EFEA',
   cream2:     '#E8E4DE',
   bg:         '#FAFAF7',
@@ -270,7 +270,7 @@ function HeroSection() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-full" style={{ background: c.saffronBg }}>
-                  <span className="font-[family-name:var(--font-dm-mono)] text-[10px] font-medium" style={{ color: '#B8841A' }}>Flash Sale</span>
+                  <span className="font-[family-name:var(--font-dm-mono)] text-[10px] font-medium" style={{ color: '#8D6514' }}>Flash Sale</span>
                 </div>
               </div>
 
@@ -293,7 +293,7 @@ function HeroSection() {
                         {item.sale ? (
                           <>
                             <span className="font-[family-name:var(--font-dm-mono)] text-[12px] line-through" style={{ color: c.stoneLight }}>IQD {item.price}</span>
-                            <span className="font-[family-name:var(--font-dm-mono)] text-[12px] font-medium" style={{ color: '#B8841A' }}>IQD {item.sale}</span>
+                            <span className="font-[family-name:var(--font-dm-mono)] text-[12px] font-medium" style={{ color: '#8D6514' }}>IQD {item.sale}</span>
                           </>
                         ) : (
                           <span className="font-[family-name:var(--font-dm-mono)] text-[12px]" style={{ color: c.stone }}>IQD {item.price}</span>
@@ -394,9 +394,9 @@ function HowItWorksSection() {
               bg: c.saffronBg,
               icon: (
                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <path d="M4 4h3l2.5 14h12L25 8H9" stroke="#B8841A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="11" cy="22" r="2" stroke="#B8841A" strokeWidth="1.5"/>
-                  <circle cx="20" cy="22" r="2" stroke="#B8841A" strokeWidth="1.5"/>
+                  <path d="M4 4h3l2.5 14h12L25 8H9" stroke="#8D6514" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="11" cy="22" r="2" stroke="#8D6514" strokeWidth="1.5"/>
+                  <circle cx="20" cy="22" r="2" stroke="#8D6514" strokeWidth="1.5"/>
                 </svg>
               ),
             },
@@ -507,7 +507,7 @@ function FlashSaleSection() {
               ].map(point => (
                 <div key={point} className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: c.saffronBg }}>
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#B8841A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#8D6514" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                   <span className="font-[family-name:var(--font-dm-sans)] text-[14px]" style={{ color: c.stone }}>{point}</span>
                 </div>
@@ -689,7 +689,7 @@ function Footer() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium flex items-center gap-2" style={{ color: c.stoneLight }}>
-            <KelaMark size={20} color="#9A958E" gateColor="rgba(250,250,247,0)" />
+            <KelaMark size={20} color="#716C66" gateColor="rgba(250,250,247,0)" />
             kela<span style={{ color: 'rgba(45,138,94,0.4)' }}>.</span>
           </span>
           <div className="flex gap-6 flex-wrap justify-center">
@@ -723,11 +723,13 @@ export default function BazaarLandingPage() {
   return (
     <>
       <Nav />
-      <HeroSection />
-      <HowItWorksSection />
-      <FlashSaleSection />
-      <DeliverSection />
-      <RoleSection />
+      <main>
+        <HeroSection />
+        <HowItWorksSection />
+        <FlashSaleSection />
+        <DeliverSection />
+        <RoleSection />
+      </main>
       <Footer />
     </>
   )

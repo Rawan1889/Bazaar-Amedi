@@ -7,9 +7,9 @@ import { getRecentlyViewed, keepOnlyIds, type ViewedProduct } from '@/lib/bazaar
 import { existingProductIds } from '@/lib/bazaar/search-actions'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   white:    '#FFFFFF',

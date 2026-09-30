@@ -6,12 +6,12 @@ import { getMyCashToRemit } from '@/lib/bazaar/cash-actions'
 import { DriverNav } from '@/app/components/driver-nav'
 
 const c = {
-  green:    '#2D8A5E',
+  green:    '#287A53',
   greenBg:  'rgba(45,138,94,0.08)',
   saffron:  '#E8A838',
   saffronBg:'rgba(232,168,56,0.08)',
   charcoal: '#1E1C19',
-  stone:    '#7A756E',
+  stone:    '#716C66',
   cream:    '#F2EFEA',
   cream2:   '#E8E4DE',
   bg:       '#FAFAF7',
@@ -52,7 +52,7 @@ export default async function DriverEarningsPage() {
     <div className="min-h-[100dvh] pb-20 md:pb-0" style={{ background: c.bg }}>
       <DriverNav userName={user.full_name} />
 
-      <div className="max-w-[800px] mx-auto px-6 py-8">
+      <main className="max-w-[800px] mx-auto px-6 py-8">
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[24px] font-medium mb-6" style={{ color: c.charcoal }}>
           Earnings
         </h1>
@@ -192,7 +192,7 @@ export default async function DriverEarningsPage() {
             })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }
