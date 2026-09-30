@@ -8,7 +8,7 @@
 // Guardrails to stop the observer from looping on its own edits:
 //  * disconnect/reconnect around every mutation we make
 //  * skip writes when the new value already equals the current value
-//  * debounce mutation-driven rescans through requestAnimationFrame
+//  * debounce mutation-driven rescans through a short timer
 
 import { useEffect } from 'react'
 import { useLocale } from '@/lib/bazaar/locale-context'
@@ -33,6 +33,21 @@ export function AutoTranslator() {
 
     let observer: MutationObserver | null = null
     let scanQueued = false
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+    let retries = 0
+    let pending = false
+
+    // React tags every DOM node it owns with a `__reactFiber$<id>` key once the
+    // node is hydrated. Server HTML inside a boundary that hasn't hydrated yet
+    // has no such key — changing its text now would make hydration fail and
+    // force React to re-render the page. Those nodes are retried shortly after.
+    let fiberKey: string | null = null
+    function isHydrated(el: Element): boolean {
+      if (fiberKey) return fiberKey in el
+      const k = Object.keys(el).find(key => key.startsWith('__reactFiber$'))
+      if (k) fiberKey = k
+      return !!k
+    }
 
     function translateTextNode(node: Text) {
       const meta = node as unknown as WithOriginal
@@ -89,6 +104,7 @@ export function AutoTranslator() {
           const tag = parent.tagName
           if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') return NodeFilter.FILTER_REJECT
           if (parent.isContentEditable) return NodeFilter.FILTER_REJECT
+          if (!isHydrated(parent)) { pending = true; return NodeFilter.FILTER_REJECT }
           return NodeFilter.FILTER_ACCEPT
         },
       })
@@ -98,16 +114,21 @@ export function AutoTranslator() {
         cur = walker.nextNode()
       }
       if (root instanceof Element) {
-        translateElement(root)
-        root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => translateElement(el))
+        const els = [root, ...root.querySelectorAll('[placeholder],[title],[aria-label],[alt]')]
+        for (const el of els) {
+          if (isHydrated(el)) translateElement(el)
+          else pending = true
+        }
       }
     }
 
     function safeWalk(root: Node) {
-      if (!observer) { walk(root); return }
+      pending = false
+      if (!observer) { walk(root); scheduleRetry(); return }
       observer.disconnect()
       try {
         walk(root)
+        scheduleRetry()
       } finally {
         observer.observe(document.body, {
           subtree: true,
@@ -119,13 +140,23 @@ export function AutoTranslator() {
       }
     }
 
+    // Nodes skipped because React hadn't hydrated them yet produce no DOM
+    // mutation when they do hydrate, so poll briefly (max ~6s) until done.
+    function scheduleRetry() {
+      if (!pending || retryTimer || retries >= 60) return
+      retries++
+      retryTimer = setTimeout(() => { retryTimer = null; queueScan() }, 100)
+    }
+
     function queueScan(target: Node = document.body) {
       if (scanQueued) return
       scanQueued = true
-      requestAnimationFrame(() => {
+      // setTimeout, not requestAnimationFrame: rAF is paused in background
+      // tabs, which left pages opened in a new tab untranslated.
+      setTimeout(() => {
         scanQueued = false
         safeWalk(target)
-      })
+      }, 16)
     }
 
     observer = new MutationObserver(() => queueScan())
@@ -134,6 +165,7 @@ export function AutoTranslator() {
     return () => {
       observer?.disconnect()
       observer = null
+      if (retryTimer) clearTimeout(retryTimer)
     }
   }, [locale])
 

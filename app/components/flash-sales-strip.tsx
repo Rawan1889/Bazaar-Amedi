@@ -84,6 +84,7 @@ function SaleCard({ sale }: { sale: Sale }) {
           <div
             className="absolute top-2 right-2 rtl:right-auto rtl:left-2 px-2 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
             style={{ background: c.terra, color: '#fff' }}
+            suppressHydrationWarning
           >
             {h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`}
           </div>

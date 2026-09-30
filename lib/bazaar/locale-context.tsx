@@ -1,7 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { type BazaarLocale, type TranslationKey, t as translate, isRtl } from './i18n'
+import { LOCALE_COOKIE, isBazaarLocale } from './locale-cookie'
 
 interface LocaleState {
   locale: BazaarLocale
@@ -14,18 +15,30 @@ const LocaleContext = createContext<LocaleState | null>(null)
 
 const STORAGE_KEY = 'bazaar-locale'
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<BazaarLocale>(() => {
-    if (typeof window === 'undefined') return 'en'
-    return (localStorage.getItem(STORAGE_KEY) as BazaarLocale) || 'en'
-  })
+function persist(l: BazaarLocale) {
+  document.cookie = `${LOCALE_COOKIE}=${l}; path=/; max-age=31536000; samesite=lax`
+  try { localStorage.setItem(STORAGE_KEY, l) } catch {}
+}
+
+// `initialLocale` comes from the cookie on the server, so the first client
+// render matches the server HTML (no hydration mismatch) and RTL is correct
+// from the first paint.
+export function LocaleProvider({ children, initialLocale }: { children: ReactNode; initialLocale: BazaarLocale }) {
+  const [locale, setLocaleState] = useState<BazaarLocale>(initialLocale)
 
   const setLocale = useCallback((l: BazaarLocale) => {
     setLocaleState(l)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, l)
-    }
+    persist(l)
   }, [])
+
+  // One-time migration for people who chose a language before the cookie existed.
+  useEffect(() => {
+    if (document.cookie.includes(`${LOCALE_COOKIE}=`)) return
+    let stored: string | null = null
+    try { stored = localStorage.getItem(STORAGE_KEY) } catch {}
+    if (isBazaarLocale(stored) && stored !== initialLocale) setLocale(stored)
+    else persist(initialLocale)
+  }, [initialLocale, setLocale])
 
   const t = useCallback((key: TranslationKey) => translate(key, locale), [locale])
   const rtl = isRtl(locale)

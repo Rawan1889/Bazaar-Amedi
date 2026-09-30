@@ -10,6 +10,9 @@ import { PWARegister } from '@/app/components/pwa-register'
 import { AuthNotifications } from '@/app/components/auth-notifications'
 import { AutoTranslator } from '@/app/components/auto-translator'
 import { SITE_URL } from '@/lib/bazaar/site'
+import { cookies } from 'next/headers'
+import { LOCALE_COOKIE, isBazaarLocale } from '@/lib/bazaar/locale-cookie'
+import { isRtl } from '@/lib/bazaar/i18n'
 import { DialogProvider } from '@/app/components/dialog-provider'
 
 const dmSans = DM_Sans({
@@ -74,11 +77,13 @@ export const viewport: Viewport = {
   themeColor: '#2D8A5E',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const saved = (await cookies()).get(LOCALE_COOKIE)?.value
+  const locale = isBazaarLocale(saved) ? saved : 'en'
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
+    <html lang={locale} dir={isRtl(locale) ? 'rtl' : 'ltr'} className={`${dmSans.variable} ${dmMono.variable}`}>
       <body>
-        <LocaleProvider>
+        <LocaleProvider initialLocale={locale}>
           <AutoTranslator />
           <FavoritesProvider>
             <CartProvider>
