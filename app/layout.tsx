@@ -9,6 +9,7 @@ import { MobileNav } from '@/app/components/mobile-nav'
 import { PWARegister } from '@/app/components/pwa-register'
 import { AuthNotifications } from '@/app/components/auth-notifications'
 import { AutoTranslator } from '@/app/components/auto-translator'
+import { SITE_URL } from '@/lib/bazaar/site'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -25,14 +26,22 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'kela. — Shop Every Market in Amedi',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'kela. — Shop Every Market in Amedi',
+    template: '%s · kela.',
+  },
   description:
     'Compare prices across local shops, catch flash sales, and get everything delivered in one trip. The marketplace built for Amedi.',
   openGraph: {
+    siteName: 'kela.',
     title: 'kela. — Shop Every Market in Amedi',
     description: 'Compare prices, catch flash sales, one delivery from multiple shops.',
     type: 'website',
+    locale: 'en',
+    alternateLocale: ['ku', 'ar'],
   },
+  twitter: { card: 'summary_large_image' },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -42,9 +51,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
-    apple: '/icon-192.svg',
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
   },
   other: {
     'mobile-web-app-capable': 'yes',

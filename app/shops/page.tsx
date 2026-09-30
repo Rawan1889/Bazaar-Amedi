@@ -1,10 +1,17 @@
 export const dynamic = 'force-dynamic'
+import type { Metadata } from 'next'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
 import Link from 'next/link'
 import { CartBar } from '@/app/components/cart-bar'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { FavoriteButton } from '@/app/components/favorite-button'
+
+export const metadata: Metadata = {
+  title: 'Shops in Amedi',
+  description: 'Bakeries, butchers, groceries and more — every local shop in Amedi on one app. Order from several shops, get one delivery.',
+  alternates: { canonical: '/shops' },
+}
 
 const c = {
   green:    '#2D8A5E',

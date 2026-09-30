@@ -1,4 +1,6 @@
 export const dynamic = 'force-dynamic'
+import { cache } from 'react'
+import type { Metadata } from 'next'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -25,15 +27,45 @@ function formatIQD(amount: number) {
   return new Intl.NumberFormat('en-IQ').format(amount) + ' IQD'
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+const loadProduct = cache(async (id: string) => {
   const supabase = await createBazaarServer()
-
-  const { data: product } = await supabase
+  const { data } = await supabase
     .from('bazaar_products')
     .select('*, bazaar_shops!inner(id, name, slug, is_approved), bazaar_product_variants(id, amount, unit, price, in_stock, stock_qty), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active)')
     .eq('id', id)
     .single()
+  return data
+})
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const product = await loadProduct(id)
+  if (!product || !product.bazaar_shops?.is_approved) return { title: 'Product not found' }
+
+  const sale = (product.bazaar_flash_sales as { sale_price: number; ends_at: string; is_active: boolean }[] | null)
+    ?.find(s => s.is_active && new Date(s.ends_at) > new Date())
+  const price = formatIQD(sale?.sale_price ?? product.price)
+  const title = `${product.name_en} — ${price}`
+  const description = product.description
+    || `${product.name_en} from ${product.bazaar_shops.name}, Amedi. ${price}. Order on kela. for delivery.`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/p/${id}` },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `/p/${id}`,
+      ...(product.image_url ? { images: [{ url: product.image_url, alt: product.name_en }] } : {}),
+    },
+  }
+}
+
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const product = await loadProduct(id)
 
   if (!product) notFound()
 

@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+import type { Metadata } from 'next'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { redirectNonCustomers } from '@/lib/bazaar/require-customer'
 import Link from 'next/link'
@@ -12,6 +13,12 @@ import { CategoryFilter } from '@/app/components/category-filter'
 import { RecentlyViewed } from '@/app/components/recently-viewed'
 import { PromoBanner } from '@/app/components/promo-banner'
 import { FavoriteButton } from '@/app/components/favorite-button'
+
+export const metadata: Metadata = {
+  title: 'Browse products',
+  description: 'Every product from every shop in Amedi in one place. Filter by category, compare prices side by side, and order for delivery.',
+  alternates: { canonical: '/browse' },
+}
 
 const c = {
   green:    '#2D8A5E',
