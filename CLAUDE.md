@@ -2,7 +2,7 @@
 
 Hyperlocal multi-vendor marketplace for Amedi, Kurdistan. Customers browse products across many local shops, drivers deliver, shop owners fulfill.
 
-Deployed at https://bazaar-amedi.vercel.app.
+Deployed at https://kela.live.
 
 ## Stack
 
