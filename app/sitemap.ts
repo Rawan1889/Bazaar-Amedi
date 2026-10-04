@@ -9,6 +9,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, changeFrequency: 'weekly', priority: 1 },
     { url: `${SITE_URL}/browse`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE_URL}/shops`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${SITE_URL}/terms`, changeFrequency: 'yearly', priority: 0.2 },
+    { url: `${SITE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.2 },
   ]
 
   const url = process.env.NEXT_PUBLIC_BAZAAR_SUPABASE_URL

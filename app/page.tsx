@@ -699,6 +699,8 @@ function Footer() {
               { label: 'Shop', href: '/signup?role=customer' },
               { label: 'List your market', href: '/signup?role=market' },
               { label: 'Drive', href: '/signup?role=driver' },
+              { label: 'Terms', href: '/terms' },
+              { label: 'Privacy', href: '/privacy' },
             ].map(link => (
               <a
                 key={link.label}

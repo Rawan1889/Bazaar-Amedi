@@ -8,6 +8,8 @@ import { Suspense } from 'react'
 import { bazaarSignup } from '@/lib/bazaar/auth'
 import { getActiveZones } from '@/lib/bazaar/zone-actions'
 import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
+import { useLocale } from '@/lib/bazaar/locale-context'
+import { LEGAL } from '@/lib/bazaar/legal-content'
 
 const c = {
   green:      '#287A53',
@@ -353,6 +355,8 @@ function SignupFormInner() {
         {/* Password */}
         <Field name="password" label="Password" type="password" placeholder="At least 8 characters" autoComplete="new-password" />
 
+        <TermsCheckbox />
+
         <button
           type="submit"
           disabled={isPending}
@@ -374,9 +378,6 @@ function SignupFormInner() {
           )}
         </button>
 
-        <p className="text-center text-[11px] font-[family-name:var(--font-dm-sans)]" style={{ color: c.stoneLight }}>
-          By signing up you agree to our Terms and Privacy Policy.
-        </p>
       </form>
 
       <p className="text-center text-[13px] mt-5 font-[family-name:var(--font-dm-sans)]" style={{ color: c.stone }}>
@@ -386,6 +387,28 @@ function SignupFormInner() {
         </a>
       </p>
     </>
+  )
+}
+
+const AGREE = {
+  en: ['I agree to the', 'and the'],
+  ar: ['أوافق على', 'و'],
+  ku: ['ئەز ڕازیمە ب', 'و'],
+} as const
+
+function TermsCheckbox() {
+  const { locale } = useLocale()
+  const [before, mid] = AGREE[locale]
+  return (
+    <label className="flex items-start gap-2.5 text-[13px] leading-snug font-[family-name:var(--font-dm-sans)] cursor-pointer" style={{ color: c.stone }}>
+      <input type="checkbox" name="acceptTerms" required className="mt-0.5 w-4 h-4 shrink-0 accent-[#2D8A5E]" />
+      <span>
+        {before}{' '}
+        <a href="/terms" target="_blank" className="font-medium" style={{ color: c.green }}>{LEGAL.terms[locale].title}</a>
+        {' '}{mid}{' '}
+        <a href="/privacy" target="_blank" className="font-medium" style={{ color: c.green }}>{LEGAL.privacy[locale].title}</a>
+      </span>
+    </label>
   )
 }
 

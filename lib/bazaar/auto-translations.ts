@@ -2,6 +2,9 @@
 // Run `node scripts/build-auto-translations.mjs` after updating the CSV.
 
 export const AUTO_AR: Record<string, string> = {
+  "Terms": "الشروط",
+  "Privacy": "الخصوصية",
+  "Please accept the Terms of Use and Privacy Policy.": "يرجى الموافقة على شروط الاستخدام وسياسة الخصوصية.",
   "!s.is_active || new Date(s.ends_at)": "SKIP",
   "(optional)": "(اختياري)",
   "(required), then optional": "(إلزامي)، ثم اختياري",
@@ -644,6 +647,9 @@ export const AUTO_AR: Record<string, string> = {
 } as const
 
 export const AUTO_KU: Record<string, string> = {
+  "Terms": "مەرج",
+  "Privacy": "تایبەتمەندی",
+  "Please accept the Terms of Use and Privacy Policy.": "تکایە مەرجێت بکارئینانێ و سیاسەتا تایبەتمەندیێ قەبوول بکە.",
   "!s.is_active || new Date(s.ends_at)": "SKIP",
   "(optional)": "ئیختیاری",
   "(required), then optional": "(پێتڤیە) ، پاشان هەلنژارتی یە",

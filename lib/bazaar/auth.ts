@@ -34,6 +34,10 @@ export async function bazaarSignup(formData: FormData) {
     return { error: 'All fields are required, including email.' }
   }
 
+  if (formData.get('acceptTerms') !== 'on') {
+    return { error: 'Please accept the Terms of Use and Privacy Policy.' }
+  }
+
   if (password.length < 8) {
     return { error: 'Password must be at least 8 characters.' }
   }
