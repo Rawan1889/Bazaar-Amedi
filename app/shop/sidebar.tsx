@@ -66,7 +66,7 @@ export function ShopSidebar({ user }: { user: BazaarProfile }) {
       )}
 
       <aside
-        className={`fixed start-0 top-0 bottom-0 w-[min(240px,85vw)] flex flex-col py-6 px-4 z-40 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'} md:translate-x-0`}
+        className={`fixed start-0 top-0 bottom-0 w-[min(240px,85vw)] flex flex-col py-6 px-4 z-40 transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'} md:translate-x-0 md:rtl:translate-x-0`}
         style={{ background: c.white, borderInlineEnd: `1px solid ${c.cream2}` }}
       >
       <div className="flex items-center justify-between mb-8 px-3">
