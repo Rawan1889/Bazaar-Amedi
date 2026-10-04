@@ -193,10 +193,25 @@ export async function unsuspendUser(userId: string) {
   revalidatePath('/admin/users')
 }
 
-export async function approveDriver(userId: string) {
+export async function approveUser(userId: string) {
   await requireAdmin()
   const supabase = createBazaarAdmin()
-  await supabase.from('bazaar_profiles').update({ is_approved: true }).eq('id', userId)
+  const { data: profile } = await supabase
+    .from('bazaar_profiles')
+    .update({ is_approved: true })
+    .eq('id', userId)
+    .select('role')
+    .single()
+  if (profile) {
+    sendPushToUser(userId, {
+      type: 'account_approved',
+      title: 'Your account is approved!',
+      body: profile.role === 'driver'
+        ? 'You can now go online and take deliveries.'
+        : 'You can now place orders on kela.',
+      url: profile.role === 'driver' ? '/driver' : '/browse',
+    })
+  }
   revalidatePath('/admin/users')
 }
 

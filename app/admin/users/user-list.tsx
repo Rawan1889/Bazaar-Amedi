@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { suspendUser, unsuspendUser, approveDriver, changeUserRole } from '@/lib/bazaar/admin-actions'
+import { suspendUser, unsuspendUser, approveUser, changeUserRole } from '@/lib/bazaar/admin-actions'
 import { ClientDate } from '@/app/components/client-date'
 
 const c = {
@@ -85,7 +85,7 @@ function UserRow({ user }: { user: User }) {
       <td className="py-3 px-4">
         {user.is_suspended ? (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.terra }}>Suspended</span>
-        ) : user.role === 'driver' && !user.is_approved ? (
+        ) : (user.role === 'driver' || user.role === 'customer') && !user.is_approved ? (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffronText }}>Pending approval</span>
         ) : (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.green }}>Active</span>
@@ -94,10 +94,10 @@ function UserRow({ user }: { user: User }) {
 
       <td className="py-3 px-4">
         <div className="flex items-center gap-2 flex-wrap">
-          {user.role === 'driver' && !user.is_approved && !user.is_suspended && (
+          {(user.role === 'driver' || user.role === 'customer') && !user.is_approved && !user.is_suspended && (
             <button
               disabled={pending}
-              onClick={() => startTransition(() => approveDriver(user.id))}
+              onClick={() => startTransition(() => approveUser(user.id))}
               className="px-3 py-1.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px] font-medium border-none cursor-pointer"
               style={{ background: c.green, color: '#fff', opacity: pending ? 0.6 : 1 }}
             >

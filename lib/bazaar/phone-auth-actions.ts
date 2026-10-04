@@ -38,7 +38,7 @@ export async function ensureBazaarProfile(fullName?: string): Promise<
     role: 'customer',
     full_name: fullName.trim(),
     phone: phone || 'unknown',
-    is_approved: true,
+    is_approved: false,
   })
 
   if (error) return { error: error.message }

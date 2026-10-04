@@ -36,6 +36,9 @@ export async function placeOrder(data: {
   if (user.role !== 'customer' && user.role !== 'super_admin') {
     return { error: 'Only customers can place orders.' }
   }
+  if (user.role === 'customer' && !user.is_approved) {
+    return { error: 'Your account is waiting for approval. You can order once the Kela team approves it.' }
+  }
 
   const isPickup = data.fulfillmentType === 'pickup'
 
