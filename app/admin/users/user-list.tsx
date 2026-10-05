@@ -23,6 +23,7 @@ const ROLE_META: Record<string, { label: string; color: string; bg: string }> = 
   customer:     { label: 'Customer',     color: c.green,    bg: c.greenBg },
   driver:       { label: 'Driver',       color: c.saffronText,  bg: c.saffBg  },
   market_admin: { label: 'Market Owner', color: c.terra,    bg: c.terraBg },
+  fleet_manager: { label: 'Delivery Company', color: c.terra, bg: c.terraBg },
   super_admin:  { label: 'Super Admin',  color: c.charcoal, bg: c.cream   },
 }
 
@@ -85,7 +86,7 @@ function UserRow({ user }: { user: User }) {
       <td className="py-3 px-4">
         {user.is_suspended ? (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.terra }}>Suspended</span>
-        ) : (user.role === 'driver' || user.role === 'customer') && !user.is_approved ? (
+        ) : (user.role === 'driver' || user.role === 'customer' || user.role === 'fleet_manager') && !user.is_approved ? (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.saffronText }}>Pending approval</span>
         ) : (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.green }}>Active</span>
@@ -94,7 +95,7 @@ function UserRow({ user }: { user: User }) {
 
       <td className="py-3 px-4">
         <div className="flex items-center gap-2 flex-wrap">
-          {(user.role === 'driver' || user.role === 'customer') && !user.is_approved && !user.is_suspended && (
+          {(user.role === 'driver' || user.role === 'customer' || user.role === 'fleet_manager') && !user.is_approved && !user.is_suspended && (
             <button
               disabled={pending}
               onClick={() => startTransition(() => approveUser(user.id))}
@@ -154,6 +155,7 @@ const FILTERS = [
   { key: 'all',          label: 'All' },
   { key: 'customer',     label: 'Customers' },
   { key: 'driver',       label: 'Drivers' },
+  { key: 'fleet_manager', label: 'Companies' },
   { key: 'market_admin', label: 'Market Owners' },
 ]
 

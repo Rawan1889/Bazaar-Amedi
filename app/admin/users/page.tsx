@@ -7,7 +7,7 @@ export default async function AdminUsersPage() {
   const users = await getAllUsers()
   const pendingCount = users.filter(
     (u: { role: string; is_approved: boolean; is_suspended: boolean }) =>
-      (u.role === 'customer' || u.role === 'driver') && !u.is_approved && !u.is_suspended,
+      (u.role === 'customer' || u.role === 'driver' || u.role === 'fleet_manager') && !u.is_approved && !u.is_suspended,
   ).length
   return (
     <div>

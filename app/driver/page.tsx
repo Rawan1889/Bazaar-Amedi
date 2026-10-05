@@ -6,6 +6,7 @@ import { DriverOrderList } from './driver-orders'
 import { DriverLocationBroadcaster } from '@/app/components/driver-location-broadcaster'
 import { DriverNav } from '@/app/components/driver-nav'
 import { DriverRefresher } from '@/app/components/driver-refresher'
+import { createBazaarAdmin } from '@/lib/bazaar/supabase-server'
 
 export default async function DriverDashboard() {
   const user = await getBazaarUser()
@@ -39,6 +40,11 @@ export default async function DriverDashboard() {
   // Only fetch orders when driver is online — saves unnecessary DB queries
   // and avoids showing stale data when they go offline then refresh.
   const isOnline = user.is_online ?? false
+  let fleetName: string | null = null
+  if (user.fleet_id) {
+    const { data: fleet } = await createBazaarAdmin().from('bazaar_fleets').select('name').eq('id', user.fleet_id).maybeSingle()
+    fleetName = fleet?.name ?? 'Your company'
+  }
   const [available, active] = await Promise.all([
     isOnline ? getAvailableOrders() : Promise.resolve([]),
     isOnline ? getMyDeliveries()    : Promise.resolve([]),
@@ -66,6 +72,7 @@ export default async function DriverDashboard() {
           available={available}
           userId={user.id}
           isOnline={isOnline}
+          fleetName={fleetName}
         />
       </main>
     </div>

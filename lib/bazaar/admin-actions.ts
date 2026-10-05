@@ -208,8 +208,10 @@ export async function approveUser(userId: string) {
       title: 'Your account is approved!',
       body: profile.role === 'driver'
         ? 'You can now go online and take deliveries.'
-        : 'You can now place orders on kela.',
-      url: profile.role === 'driver' ? '/driver' : '/browse',
+        : profile.role === 'fleet_manager'
+          ? 'Your delivery company is live. Approve your drivers and start assigning orders.'
+          : 'You can now place orders on kela.',
+      url: profile.role === 'driver' ? '/driver' : profile.role === 'fleet_manager' ? '/fleet' : '/browse',
     })
   }
   revalidatePath('/admin/users')

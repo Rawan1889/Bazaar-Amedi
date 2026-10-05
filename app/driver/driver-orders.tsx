@@ -207,7 +207,7 @@ function PreparingCard({ order }: { order: Order }) {
 // ──────────────────────────────────────────────
 // AvailableOrderCard — ready for driver to claim
 // ──────────────────────────────────────────────
-function AvailableOrderCard({ order, onError }: { order: Order; onError: (msg: string) => void }) {
+function AvailableOrderCard({ order, onError, canAccept }: { order: Order; onError: (msg: string) => void; canAccept: boolean }) {
   const [isPending, startTransition] = useTransition()
   const shopNames = [...new Set(order.bazaar_order_items.map(i => i.bazaar_shops.name))]
 
@@ -243,6 +243,11 @@ function AvailableOrderCard({ order, onError }: { order: Order; onError: (msg: s
         {order.bazaar_order_items.length} items <span className="inline-block rtl:-scale-x-100" aria-hidden="true">→</span> {order.delivery_address}
       </div>
 
+      {!canAccept ? (
+        <div className="w-full py-2.5 rounded-[10px] text-center font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ background: c.cream, color: c.stone }}>
+          Your company assigns orders
+        </div>
+      ) : (
       <button
         onClick={handleAccept}
         disabled={isPending}
@@ -251,6 +256,7 @@ function AvailableOrderCard({ order, onError }: { order: Order; onError: (msg: s
       >
         {isPending ? 'Accepting...' : 'Accept & pick up'}
       </button>
+      )}
     </div>
   )
 }
@@ -456,11 +462,13 @@ export function DriverOrderList({
   available,
   userId,
   isOnline,
+  fleetName = null,
 }: {
   active: Order[]
   available: Order[]
   userId: string
   isOnline: boolean
+  fleetName?: string | null
 }) {
   const [toastError, setToastError] = useState<string | null>(null)
 
@@ -505,11 +513,11 @@ export function DriverOrderList({
             Ready for pickup
           </h2>
           <p className="font-[family-name:var(--font-dm-sans)] text-[13px] mb-4" style={{ color: c.stone }}>
-            Shop has finished packing — accept to pick up.
+            {fleetName ? `${fleetName} assigns these orders to its drivers.` : 'Shop has finished packing — accept to pick up.'}
           </p>
           <div className="flex flex-col gap-4">
             {ready.map(order => (
-              <AvailableOrderCard key={order.id} order={order} onError={setToastError} />
+              <AvailableOrderCard key={order.id} order={order} onError={setToastError} canAccept={!fleetName} />
             ))}
           </div>
         </div>

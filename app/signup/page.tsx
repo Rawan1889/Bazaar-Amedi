@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { bazaarSignup } from '@/lib/bazaar/auth'
 import { getActiveZones } from '@/lib/bazaar/zone-actions'
+import { getApprovedFleets } from '@/lib/bazaar/fleet-actions'
 import type { DeliveryZone } from '@/lib/bazaar/zone-utils'
 import { useLocale } from '@/lib/bazaar/locale-context'
 import { LEGAL } from '@/lib/bazaar/legal-content'
@@ -161,8 +162,12 @@ function SignupFormInner() {
   const [isPending, startTransition] = useTransition()
   const [zones, setZones] = useState<DeliveryZone[]>([])
 
+  const [fleets, setFleets] = useState<{ id: string; name: string }[]>([])
+  const [driverType, setDriverType] = useState('independent')
+
   useEffect(() => {
     getActiveZones().then(setZones)
+    getApprovedFleets().then(setFleets)
   }, [])
 
   useEffect(() => {
@@ -328,6 +333,39 @@ function SignupFormInner() {
 
         {/* Driver fields */}
         {activeRole === 'driver' && (
+          <>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="driverType" className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase" style={{ color: c.stone }}>
+                I work as
+              </label>
+              <select
+                id="driverType"
+                name="driverType"
+                value={driverType}
+                onChange={e => setDriverType(e.target.value)}
+                className="w-full rounded-[10px] px-4 py-3 text-[14px] font-[family-name:var(--font-dm-sans)] outline-none cursor-pointer"
+                style={{ background: c.white, border: `1px solid ${c.cream2}`, color: c.charcoal }}
+              >
+                <option value="independent">Independent driver</option>
+                {fleets.map(f => (
+                  <option key={f.id} value={`fleet:${f.id}`}>{f.name}</option>
+                ))}
+                <option value="company">I own a delivery company</option>
+              </select>
+              {driverType.startsWith('fleet:') && (
+                <p className="text-[12px] font-[family-name:var(--font-dm-sans)]" style={{ color: c.stone }}>
+                  Your company assigns orders to you. You can&apos;t accept orders yourself.
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeRole === 'driver' && driverType === 'company' && (
+          <Field name="companyName" label="Company name" placeholder="Your delivery company" />
+        )}
+
+        {activeRole === 'driver' && driverType !== 'company' && (
           <>
             <SelectField
               name="vehicleType"

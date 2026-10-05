@@ -7,6 +7,7 @@ import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 function dashboardFor(role: string): string {
   if (role === 'market_admin' || role === 'market') return '/shop'
   if (role === 'driver') return '/driver'
+  if (role === 'fleet_manager') return '/fleet'
   if (role === 'super_admin') return '/admin'
   return '/browse'
 }
@@ -64,7 +65,16 @@ export async function bazaarSignup(formData: FormData) {
     return { error: 'Could not create account.' }
   }
 
-  const bazaarRole = role === 'market' ? 'market_admin' : role === 'driver' ? 'driver' : 'customer'
+  // Driver tab: "independent", "fleet:<id>" (works for a company) or
+  // "company" (registers a new delivery company as its fleet manager).
+  const driverType = (formData.get('driverType') as string | null) ?? 'independent'
+  const isCompany = role === 'driver' && driverType === 'company'
+  const bazaarRole = role === 'market' ? 'market_admin' : isCompany ? 'fleet_manager' : role === 'driver' ? 'driver' : 'customer'
+  let fleetId: string | null = null
+  if (role === 'driver' && driverType.startsWith('fleet:')) {
+    const { data: fleet } = await admin.from('bazaar_fleets').select('id').eq('id', driverType.slice(6)).maybeSingle()
+    fleetId = fleet?.id ?? null
+  }
   const neighborhood = formData.get('neighborhood') as string | null
   const zoneId = formData.get('zoneId') as string | null
 
@@ -77,6 +87,8 @@ export async function bazaarSignup(formData: FormData) {
       phone: `+964${phone.replace(/\s+/g, '')}`,
       neighborhood: neighborhood || null,
       zone_id: zoneId || null,
+      // Only sent when set, so signup keeps working before the phase-31 SQL runs.
+      ...(fleetId ? { fleet_id: fleetId } : {}),
       // Customers and drivers wait for admin approval (customers before they
       // can order, drivers before deliveries). Shops have their own approval.
       is_approved: bazaarRole === 'market_admin',
@@ -84,6 +96,15 @@ export async function bazaarSignup(formData: FormData) {
 
   if (profileError) {
     console.error('Bazaar profile creation error:', profileError)
+  }
+
+  if (bazaarRole === 'fleet_manager') {
+    const companyName = (formData.get('companyName') as string)?.trim()
+    await admin.from('bazaar_fleets').insert({
+      owner_id: userId,
+      name: companyName || fullName,
+      phone: `+964${phone.replace(/\s+/g, '')}`,
+    })
   }
 
   if (bazaarRole === 'market_admin') {

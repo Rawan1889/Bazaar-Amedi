@@ -50,6 +50,7 @@ export const LEGAL: Record<LegalDoc, Record<BazaarLocale, LegalText>> = {
         { heading: '5. Drivers', body: [
           'Drivers must handle orders with care, collect the exact amount shown, and hand the cash over as agreed with Kela.',
           'Drivers must follow traffic laws. Kela may charge drivers a service fee, agreed in advance.',
+          'Drivers who work for a delivery company receive orders from that company and cannot accept orders themselves. The company is responsible for its drivers and settles fees with Kela.',
         ] },
         { heading: '6. Not allowed', body: [
           'Fake accounts or fake orders, abusive messages, selling illegal or dangerous goods, or trying to break or misuse the website.',
@@ -94,6 +95,7 @@ export const LEGAL: Record<LegalDoc, Record<BazaarLocale, LegalText>> = {
         { heading: '٥. السائقون', body: [
           'يجب على السائقين التعامل مع الطلبات بعناية، واستلام المبلغ الظاهر بالضبط، وتسليم النقود حسب الاتفاق مع كيلا.',
           'يجب على السائقين الالتزام بقوانين المرور. قد تفرض كيلا رسوم خدمة على السائقين يُتفق عليها مسبقاً.',
+          'السائقون الذين يعملون لدى شركة توصيل يستلمون الطلبات من الشركة ولا يمكنهم قبول الطلبات بأنفسهم. الشركة مسؤولة عن سائقيها وتسوّي الرسوم مع كيلا.',
         ] },
         { heading: '٦. الممنوعات', body: [
           'الحسابات أو الطلبات الوهمية، الرسائل المسيئة، بيع البضائع غير القانونية أو الخطرة، أو محاولة تخريب الموقع أو إساءة استخدامه.',
@@ -138,6 +140,7 @@ export const LEGAL: Record<LegalDoc, Record<BazaarLocale, LegalText>> = {
         { heading: '٥. شوفێر', body: [
           'دڤێت شوفێر ب هشیاری داخوازان بگەهینن، هەمان بڕێ پارەی یێ دیار وەربگرن، و پارەی وەکی ڕێککەفتنا دگەل کێلا ڕادەست بکەن.',
           'دڤێت شوفێر یاسایێت هاتووچوونێ بپارێزن. دبیت کێلا کرێیا خزمەتێ ل سەر شوفێران دانیت، بەری هینگێ دهێتە ڕێککەفتن.',
+          'ئەو شوفێرێت بۆ کۆمپانیەکا گەهاندنێ کار دکەن، داخوازان ژ کۆمپانیێ وەردگرن و نەشێن ب خۆ داخوازان قەبوول بکەن. کۆمپانی بەرپرسیارە ژ شوفێرێت خۆ و کرێیان دگەل کێلا ڕێک دئێخیت.',
         ] },
         { heading: '٦. تشتێت قەدەغە', body: [
           'هژمار یان داخوازێت درەو، نامەیێت خراب، فرۆتنا کەلوپەلێت نەیاسایی یان مەترسیدار، یان هەولدان بۆ تێکدان یان خراب بکارئینانا مالپەڕی.',

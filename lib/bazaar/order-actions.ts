@@ -500,6 +500,7 @@ export async function acceptOrder(orderId: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Only drivers can accept orders.' }
   if (!user.is_approved) return { error: 'Your driver account is not yet approved.' }
+  if (user.fleet_id) return { error: 'Your delivery company assigns your orders. You cannot accept orders yourself.' }
 
   const supabase = createBazaarAdmin()
 

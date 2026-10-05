@@ -1,4 +1,4 @@
-export type BazaarRole = 'customer' | 'market_admin' | 'driver' | 'super_admin'
+export type BazaarRole = 'customer' | 'market_admin' | 'driver' | 'super_admin' | 'fleet_manager'
 
 export interface BazaarProfile {
   id: string
