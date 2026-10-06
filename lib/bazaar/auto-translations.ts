@@ -2,6 +2,9 @@
 // Run `node scripts/build-auto-translations.mjs` after updating the CSV.
 
 export const AUTO_AR: Record<string, string> = {
+  'Add logo': 'إضافة شعار',
+  'Change': 'تغيير',
+  'Uploading...': 'جارٍ الرفع...',
   "I work as": "أعمل كـ",
   "Independent driver": "سائق مستقل",
   "I own a delivery company": "أملك شركة توصيل",
@@ -673,6 +676,9 @@ export const AUTO_AR: Record<string, string> = {
 } as const
 
 export const AUTO_KU: Record<string, string> = {
+  'Add logo': 'لۆگۆ زێدە بکە',
+  'Change': 'گوهۆڕین',
+  'Uploading...': 'بلندکرن...',
   "I work as": "ئەز کار دکەم وەکی",
   "Independent driver": "شوفێرێ سەربخۆ",
   "I own a delivery company": "من کۆمپانیا گەهاندنێ هەیە",

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { getBazaarUser } from './auth'
 import { createBazaarAdmin } from './supabase-server'
 import { sendPushToUser } from './push-notifications'
+import { sniffImage } from './image-sniff'
 
 // Approved delivery companies, for the driver signup picker. Names only.
 export async function getApprovedFleets(): Promise<{ id: string; name: string }[]> {
@@ -26,11 +27,11 @@ async function requireFleetManager() {
   const supabase = createBazaarAdmin()
   const { data: fleet } = await supabase
     .from('bazaar_fleets')
-    .select('id, name')
+    .select('*')
     .eq('owner_id', user.id)
     .maybeSingle()
   if (!fleet) return null
-  return { user, fleet, supabase }
+  return { user, fleet: fleet as { id: string; name: string; logo_url?: string | null }, supabase }
 }
 
 export async function getFleetDashboard() {
@@ -150,4 +151,31 @@ export async function removeFleetDriver(driverId: string) {
   if (error) return { error: error.message }
   revalidatePath('/fleet')
   return { success: true }
+}
+
+// Fleet manager uploads or replaces the company logo.
+export async function uploadFleetLogo(formData: FormData) {
+  const ctx = await requireFleetManager()
+  if (!ctx) return { error: 'Unauthorized' }
+  const { user, fleet, supabase } = ctx
+
+  const file = formData.get('file') as File
+  if (!file || file.size === 0) return { error: 'No file selected' }
+  if (file.size > 5 * 1024 * 1024) return { error: 'Image must be under 5MB.' }
+  const kind = await sniffImage(file)
+  if (!kind) return { error: 'Please upload a JPG, PNG, WebP or GIF photo.' }
+
+  const path = `fleets/${user.id}/logo-${Date.now()}.${kind.ext}`
+  const { error: uploadError } = await supabase.storage
+    .from('bazaar-images')
+    .upload(path, file, { contentType: kind.mime, upsert: false })
+  if (uploadError) return { error: uploadError.message }
+
+  const url = supabase.storage.from('bazaar-images').getPublicUrl(path).data.publicUrl
+  const { error } = await supabase.from('bazaar_fleets').update({ logo_url: url }).eq('id', fleet.id)
+  if (error) return { error: 'Could not save the logo. Ask the Kela team to run the phase 32 update.' }
+
+  revalidatePath('/fleet')
+  revalidatePath('/driver')
+  return { url }
 }

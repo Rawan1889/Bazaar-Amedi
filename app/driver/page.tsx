@@ -42,7 +42,7 @@ export default async function DriverDashboard() {
   const isOnline = user.is_online ?? false
   let fleetName: string | null = null
   if (user.fleet_id) {
-    const { data: fleet } = await createBazaarAdmin().from('bazaar_fleets').select('name').eq('id', user.fleet_id).maybeSingle()
+    const { data: fleet } = await createBazaarAdmin().from('bazaar_fleets').select('*').eq('id', user.fleet_id).maybeSingle()
     fleetName = fleet?.name ?? 'Your company'
   }
   const [available, active] = await Promise.all([

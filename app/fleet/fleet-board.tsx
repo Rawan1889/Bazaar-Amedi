@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { assignOrderToDriver, approveFleetDriver, removeFleetDriver } from '@/lib/bazaar/fleet-actions'
+import { assignOrderToDriver, approveFleetDriver, removeFleetDriver, uploadFleetLogo } from '@/lib/bazaar/fleet-actions'
+import { uploadImageFile } from '@/lib/bazaar/upload-client'
 import { useRealtimeAvailableOrders } from '@/lib/bazaar/use-realtime-orders'
 
 interface Driver { id: string; full_name: string; phone: string; is_online: boolean; is_approved: boolean; is_suspended: boolean }
@@ -15,7 +16,7 @@ interface Order {
 const iqd = (n: number) => `${Number(n).toLocaleString('en-US')} IQD`
 
 export function FleetBoard({ fleet, drivers, available, active }: {
-  fleet: { id: string; name: string }; drivers: Driver[]; available: Order[]; active: Order[]
+  fleet: { id: string; name: string; logo_url?: string | null }; drivers: Driver[]; available: Order[]; active: Order[]
 }) {
   const [error, setError] = useState<string | null>(null)
   useRealtimeAvailableOrders(true)
@@ -28,11 +29,14 @@ export function FleetBoard({ fleet, drivers, available, active }: {
 
   return (
     <div className="flex flex-col gap-10">
-      <div>
+      <div className="flex items-center gap-4">
+        <FleetLogo name={fleet.name} url={fleet.logo_url ?? null} onError={setError} />
+        <div className="min-w-0">
         <h1 className="text-[28px] font-medium tracking-tight">{fleet.name}</h1>
         <p className="text-[14px] text-[#716C66] mt-1">
           {ready.length} ready to assign · {active.length} on the road · {team.filter(d => d.is_online).length}/{team.length} drivers online
         </p>
+        </div>
       </div>
 
       {error && (
@@ -83,6 +87,35 @@ export function FleetBoard({ fleet, drivers, available, active }: {
         )}
       </Section>
     </div>
+  )
+}
+
+function FleetLogo({ name, url, onError }: { name: string; url: string | null; onError: (m: string) => void }) {
+  const [src, setSrc] = useState(url)
+  const [uploading, setUploading] = useState(false)
+  const router = useRouter()
+
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploading(true)
+    const r = await uploadImageFile(file, uploadFleetLogo)
+    setUploading(false)
+    if (r.error) onError(r.error)
+    else if (r.url) { setSrc(r.url); router.refresh() }
+  }
+
+  return (
+    <label className="relative shrink-0 w-16 h-16 rounded-[16px] overflow-hidden border border-[#E8E4DE] bg-white cursor-pointer flex items-center justify-center group" title="Change logo">
+      {src
+        ? <img src={src} alt={name} className="w-full h-full object-cover" />
+        : <span className="text-[22px] font-medium text-[#287A53]">{name.charAt(0).toUpperCase()}</span>}
+      <span className={`absolute inset-0 flex items-center justify-center bg-[#1E1C19]/55 text-white text-[11px] transition-opacity ${uploading || !src ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        {uploading ? 'Uploading...' : src ? 'Change' : 'Add logo'}
+      </span>
+      <input type="file" accept="image/*" className="hidden" onChange={onPick} disabled={uploading} />
+    </label>
   )
 }
 
