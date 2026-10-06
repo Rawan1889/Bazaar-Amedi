@@ -5,6 +5,7 @@ import { useTransition, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteProduct, toggleProductStock, updateProductImage, addProductImage, deleteProductImage } from '@/lib/bazaar/shop-actions'
 import { uploadProductImage } from '@/lib/bazaar/image-upload'
+import { uploadImageFile } from '@/lib/bazaar/upload-client'
 
 const c = {
   green:    '#287A53',
@@ -60,9 +61,7 @@ function ProductRow({ product }: { product: Product }) {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    const result = await uploadProductImage(fd)
+    const result = await uploadImageFile(file, uploadProductImage)
     setUploading(false)
     if (result.url) {
       setImgUrl(result.url)
@@ -74,10 +73,8 @@ function ProductRow({ product }: { product: Product }) {
     const file = e.target.files?.[0]
     if (!file) return
     setGalleryUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    const result = await uploadProductImage(fd)
-    if (result.url) await addProductImage(product.id, result.url)
+    const result = await uploadImageFile(file, uploadProductImage)
+    if (result.url) await addProductImage(product.id, result.url).catch(() => {})
     setGalleryUploading(false)
     router.refresh()
   }

@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from 'react'
 import { updateShop, updateShopImages } from '@/lib/bazaar/shop-actions'
 import { uploadShopImage } from '@/lib/bazaar/image-upload'
+import { uploadImageFile } from '@/lib/bazaar/upload-client'
 
 const c = {
   green:    '#287A53',
@@ -68,9 +69,7 @@ function ImageUploadSlot({
     if (!file) return
     setUploading(true)
     setImgError(null)
-    const fd = new FormData()
-    fd.append('file', file)
-    const result = await uploadShopImage(fd, type)
+    const result = await uploadImageFile(file, fd => uploadShopImage(fd, type))
     setUploading(false)
     if (result.error) { setImgError(result.error); return }
     if (result.url) { setPreview(result.url); onUploaded(result.url) }

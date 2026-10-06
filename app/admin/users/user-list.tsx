@@ -45,7 +45,7 @@ function UserRow({ user }: { user: User }) {
 
   return (
     <>
-      <td className="py-3 px-4">
+      <td className="block md:table-cell pt-4 pb-1 md:py-3 px-4">
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center font-[family-name:var(--font-dm-sans)] text-[12px] font-medium flex-shrink-0"
@@ -54,8 +54,8 @@ function UserRow({ user }: { user: User }) {
             {user.full_name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium" style={{ color: c.charcoal }}>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-[family-name:var(--font-dm-sans)] text-[13px] font-medium break-words" style={{ color: c.charcoal }}>
                 {user.full_name}
               </span>
               {/* Online dot — only shown for drivers */}
@@ -74,7 +74,7 @@ function UserRow({ user }: { user: User }) {
         </div>
       </td>
 
-      <td className="py-3 px-4">
+      <td className="inline-block md:table-cell py-1 md:py-3 ps-4 md:px-4">
         <span
           className="px-2.5 py-1 rounded-[6px] font-[family-name:var(--font-dm-mono)] text-[10px] font-medium"
           style={{ background: role.bg, color: role.color }}
@@ -83,7 +83,7 @@ function UserRow({ user }: { user: User }) {
         </span>
       </td>
 
-      <td className="py-3 px-4">
+      <td className="inline-block md:table-cell py-1 md:py-3 px-3 md:px-4">
         {user.is_suspended ? (
           <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.terra }}>Suspended</span>
         ) : (user.role === 'driver' || user.role === 'customer' || user.role === 'fleet_manager') && !user.is_approved ? (
@@ -93,7 +93,7 @@ function UserRow({ user }: { user: User }) {
         )}
       </td>
 
-      <td className="py-3 px-4">
+      <td className="block md:table-cell pt-2 pb-4 md:py-3 px-4">
         <div className="flex items-center gap-2 flex-wrap">
           {(user.role === 'driver' || user.role === 'customer' || user.role === 'fleet_manager') && !user.is_approved && !user.is_suspended && (
             <button
@@ -144,7 +144,7 @@ function UserRow({ user }: { user: User }) {
         </div>
       </td>
 
-      <td className="py-3 px-4 font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
+      <td className="hidden md:table-cell py-3 px-4 font-[family-name:var(--font-dm-mono)] text-[10px] whitespace-nowrap" style={{ color: c.stone }}>
         <ClientDate date={user.created_at} format="long-date" />
       </td>
     </>
@@ -166,7 +166,7 @@ export function UserList({ users }: { users: User[] }) {
   return (
     <div>
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
         {FILTERS.map(f => {
           const count = f.key === 'all' ? users.length : users.filter(u => u.role === f.key).length
           const active = filter === f.key
@@ -174,7 +174,7 @@ export function UserList({ users }: { users: User[] }) {
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className="px-4 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[13px] border-none cursor-pointer transition-all duration-150"
+              className="px-4 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[13px] border-none cursor-pointer transition-all duration-150 whitespace-nowrap shrink-0"
               style={{
                 background: active ? c.green : c.cream,
                 color: active ? '#fff' : c.stone,
@@ -188,19 +188,19 @@ export function UserList({ users }: { users: User[] }) {
       </div>
 
     <div className="rounded-[14px] overflow-hidden" style={{ border: `1px solid ${c.cream2}`, background: c.white }}>
-      <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-        <thead>
+      <table className="block md:table w-full" style={{ borderCollapse: 'collapse' }}>
+        <thead className="hidden md:table-header-group">
           <tr style={{ borderBottom: `1px solid ${c.cream2}`, background: c.cream }}>
             {['Name', 'Role', 'Status', 'Actions', 'Joined'].map(h => (
-              <th key={h} className="py-2.5 px-4 text-left font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.08em] uppercase" style={{ color: c.stone }}>
+              <th key={h} className="py-2.5 px-4 text-start font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.08em] uppercase" style={{ color: c.stone }}>
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="block md:table-row-group">
           {visible.map(u => (
-            <tr key={u.id} style={{ borderBottom: `1px solid ${c.cream2}` }}>
+            <tr key={u.id} className="block md:table-row" style={{ borderBottom: `1px solid ${c.cream2}` }}>
               <UserRow user={u} />
             </tr>
           ))}

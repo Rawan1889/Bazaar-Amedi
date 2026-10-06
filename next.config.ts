@@ -13,6 +13,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Image uploads go through server actions; the 1 MB default rejected most
+  // phone photos. Files are also shrunk in the browser before upload.
+  experimental: {
+    serverActions: { bodySizeLimit: '6mb' },
+  },
   // Put <title>/<meta>/Open Graph in <head> for every client, not just the
   // bots on Next's built-in list — Viber and Telegram (big in Kurdistan)
   // aren't on it, so their link previews could miss titles and images.

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { updateShop, addProduct } from '@/lib/bazaar/shop-actions'
 import { updateOnboardingStep, completeOnboarding } from '@/lib/bazaar/onboarding-actions'
 import { uploadProductImage } from '@/lib/bazaar/image-upload'
+import { uploadImageFile } from '@/lib/bazaar/upload-client'
 
 const c = {
   green:      '#287A53',
@@ -102,9 +103,7 @@ export function OnboardingWizard({ shop, categories, products, zones, currentSte
     if (!file) return
     setUploadingImage(true)
     setProductError(null)
-    const fd = new FormData()
-    fd.append('file', file)
-    const result = await uploadProductImage(fd)
+    const result = await uploadImageFile(file, uploadProductImage)
     setUploadingImage(false)
     if (result.error) setProductError(result.error)
     else if (result.url) setProductImage(result.url)

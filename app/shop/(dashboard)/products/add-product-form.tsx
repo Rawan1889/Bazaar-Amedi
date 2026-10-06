@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from 'react'
 import { addProduct } from '@/lib/bazaar/shop-actions'
 import { uploadProductImage } from '@/lib/bazaar/image-upload'
+import { uploadImageFile } from '@/lib/bazaar/upload-client'
 
 const c = {
   green:    '#287A53',
@@ -72,9 +73,7 @@ export function AddProductForm({ categories }: { categories: { id: string; name_
     if (!file) return
     setUploading(true)
     setError(null)
-    const fd = new FormData()
-    fd.append('file', file)
-    const result = await uploadProductImage(fd)
+    const result = await uploadImageFile(file, uploadProductImage)
     setUploading(false)
     if (result.error) setError(result.error)
     else if (result.url) setImageUrl(result.url)
