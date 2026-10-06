@@ -3,7 +3,6 @@
 
 export const AUTO_AR: Record<string, string> = {
   'Add logo': 'إضافة شعار',
-  'Change': 'تغيير',
   'Uploading...': 'جارٍ الرفع...',
   "I work as": "أعمل كـ",
   "Independent driver": "سائق مستقل",
@@ -677,7 +676,6 @@ export const AUTO_AR: Record<string, string> = {
 
 export const AUTO_KU: Record<string, string> = {
   'Add logo': 'لۆگۆ زێدە بکە',
-  'Change': 'گوهۆڕین',
   'Uploading...': 'بلندکرن...',
   "I work as": "ئەز کار دکەم وەکی",
   "Independent driver": "شوفێرێ سەربخۆ",
