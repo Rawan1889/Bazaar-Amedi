@@ -1,17 +1,34 @@
 import { describe, expect, it } from 'vitest'
-import { computeDeliveryFee, feeForZone, EXTRA_SHOP_SURCHARGE } from '@/lib/bazaar/zone-utils'
+import { computeDeliveryFee, feeForZone } from '@/lib/bazaar/zone-utils'
 import { safeInternalPath } from '@/lib/bazaar/safe-url'
 import { sniffImage } from '@/lib/bazaar/image-sniff'
 
 describe('delivery fee', () => {
-  it('uses the most expensive zone involved and adds a surcharge per extra shop', () => {
-    const fee = computeDeliveryFee({
+  it('charges the farthest zone once for 1–2 shops', () => {
+    expect(computeDeliveryFee({
+      customerZone: { fee: 2000, free_delivery_threshold: null },
+      shopZones: [{ fee: 1500 }, { fee: 3000 }],
+      subtotal: 10000,
+      shopCount: 2,
+    })).toBe(3000)
+  })
+
+  it('adds the two farthest zone fees for 3+ shops', () => {
+    expect(computeDeliveryFee({
       customerZone: { fee: 2000, free_delivery_threshold: null },
       shopZones: [{ fee: 1500 }, { fee: 3000 }],
       subtotal: 10000,
       shopCount: 3,
-    })
-    expect(fee).toBe(3000 + 2 * EXTRA_SHOP_SURCHARGE)
+    })).toBe(3000 + 2000)
+  })
+
+  it('charges the same zone twice when 3+ shops share one zone', () => {
+    expect(computeDeliveryFee({
+      customerZone: { fee: 2500, free_delivery_threshold: null },
+      shopZones: [{ fee: 2500 }],
+      subtotal: 10000,
+      shopCount: 3,
+    })).toBe(5000)
   })
 
   it('is free above the customer zone threshold', () => {

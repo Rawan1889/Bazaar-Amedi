@@ -9,7 +9,7 @@ import { placeOrder } from '@/lib/bazaar/order-actions'
 import { CouponInput } from '@/app/components/coupon-input'
 import { CheckoutAddress, type SelectedAddress } from '@/app/components/checkout-address'
 import { DeliverySlotPicker, type SelectedSlot } from '@/app/components/delivery-slot-picker'
-import { computeDeliveryFee, EXTRA_SHOP_SURCHARGE } from '@/lib/bazaar/zone-utils'
+import { computeDeliveryFee, TWO_FEE_SHOP_COUNT } from '@/lib/bazaar/zone-utils'
 import { getShopZones } from '@/lib/bazaar/zone-actions'
 import { RedirectNonCustomers } from '@/app/components/redirect-non-customers'
 
@@ -52,7 +52,7 @@ export default function CartPage() {
   const zone = selectedAddress?.zone ?? null
 
   // Fetch each shop's zone once per shopId set so we can preview the multi-shop
-  // fee (farthest zone + surcharge per extra shop) client-side. Server still
+  // fee (farthest zone; two fees for 3+ shops) client-side. Server still
   // recomputes on placeOrder.
   const [shopZones, setShopZones] = useState<{ fee: number }[]>([])
   const shopIdsKey = shopGroups.map(g => g.shopId).sort().join(',')
@@ -304,7 +304,7 @@ export default function CartPage() {
                     <span style={{ color: c.stone }}>
                       {isPickup
                         ? 'Pickup'
-                        : `Delivery fee${zone ? ` · ${zone.name}` : ''}${!isPickup && shopCount > 1 ? ` · +${formatIQD(EXTRA_SHOP_SURCHARGE)} × ${shopCount - 1} extra shop${shopCount - 1 > 1 ? 's' : ''}` : ''}`}
+                        : `Delivery fee${zone ? ` · ${zone.name}` : ''}${shopCount >= TWO_FEE_SHOP_COUNT ? ` · ${shopCount} shops, 2 trips` : ''}`}
                     </span>
                     <span style={{ color: (freeDelivery || isPickup) ? c.green : c.charcoal }}>
                       {(freeDelivery || isPickup) ? 'Free' : formatIQD(deliveryFee)}

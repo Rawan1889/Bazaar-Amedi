@@ -72,8 +72,8 @@ export async function placeOrder(data: {
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0)
 
   // Resolve the delivery fee server-side from the involved zones — never trust
-  // a fee from the client. Rule: base = farthest zone fee among customer's zone
-  // and each shop's zone; +500 IQD per additional shop beyond the first.
+  // a fee from the client. Rule: 1–2 shops pay the farthest zone fee; 3+ shops
+  // pay the two farthest zone fees added together (see computeDeliveryFee).
   // Pickup orders have no delivery fee.
   let deliveryFee = isPickup ? 0 : 2500
   if (!isPickup) {

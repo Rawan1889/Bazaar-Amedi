@@ -22,15 +22,15 @@ export function feeForZone(
   return zone.fee
 }
 
-// Per-extra-shop surcharge on multi-shop orders (in IQD).
-// The first shop is included in the base zone fee; each additional shop adds this.
-export const EXTRA_SHOP_SURCHARGE = 500
+// Orders from 3 or more shops need two pickup runs, so they pay two
+// delivery fees; 1–2 shops pay one.
+export const TWO_FEE_SHOP_COUNT = 3
 
 // Compute the delivery fee for a multi-shop order.
-// Base = the highest zone fee among the customer's zone and each shop's zone
-// (whichever is farthest / most expensive to reach). Free-delivery threshold on
-// the customer's zone still waives everything. Then add EXTRA_SHOP_SURCHARGE per
-// shop beyond the first.
+// 1–2 shops: the highest zone fee among the customer's zone and the shops'
+// zones (the farthest area). 3+ shops: the two highest fees added together
+// (the farthest fee twice if only one zone is involved). The free-delivery
+// threshold on the customer's zone still waives everything.
 export function computeDeliveryFee(args: {
   customerZone: Pick<DeliveryZone, 'fee' | 'free_delivery_threshold'> | null | undefined
   shopZones: Pick<DeliveryZone, 'fee'>[]
@@ -41,8 +41,9 @@ export function computeDeliveryFee(args: {
   if (customerZone?.free_delivery_threshold != null && subtotal >= customerZone.free_delivery_threshold) {
     return 0
   }
-  const zoneFees = [customerZone?.fee ?? 0, ...shopZones.map(z => z.fee)]
-  const base = Math.max(...zoneFees, 0)
-  const extra = Math.max(0, shopCount - 1) * EXTRA_SHOP_SURCHARGE
-  return base + extra
+  const fees = [customerZone?.fee ?? 0, ...shopZones.map(z => z.fee)].sort((a, b) => b - a)
+  const farthest = Math.max(fees[0] ?? 0, 0)
+  if (shopCount < TWO_FEE_SHOP_COUNT) return farthest
+  const second = fees[1] && fees[1] > 0 ? fees[1] : farthest
+  return farthest + second
 }
