@@ -75,8 +75,8 @@ export function DriverNav({ userName, exact = false }: Props) {
         className="sticky top-0 z-20 px-6 py-4"
         style={{ background: 'rgba(250,250,247,0.95)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.cream2}` }}
       >
-        <div className="max-w-[800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-[800px] mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <KelaMark size={22} gateColor="rgba(250,250,247,0.95)" />
             <span className="font-[family-name:var(--font-dm-sans)] text-[20px] font-medium" style={{ color: c.charcoal }}>
               kela<span style={{ color: c.green }}>.</span>
@@ -100,15 +100,15 @@ export function DriverNav({ userName, exact = false }: Props) {
               )
             })}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <LanguageSwitcher />
-            <span className="font-[family-name:var(--font-dm-sans)] text-[13px]" style={{ color: c.stone }}>
+            <span className="hidden sm:inline font-[family-name:var(--font-dm-sans)] text-[13px] max-w-[140px] truncate" style={{ color: c.stone }}>
               {userName}
             </span>
             <form action={bazaarLogout}>
               <button
                 type="submit"
-                className="font-[family-name:var(--font-dm-sans)] text-[12px] border-none bg-transparent cursor-pointer px-0"
+                className="font-[family-name:var(--font-dm-sans)] text-[12px] border-none bg-transparent cursor-pointer px-0 whitespace-nowrap"
                 style={{ color: c.error }}
               >
                 Sign out

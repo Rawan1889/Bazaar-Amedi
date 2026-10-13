@@ -20,7 +20,7 @@ export default async function FleetPage() {
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
             <form action={bazaarLogout}>
-              <button className="text-[13px] text-[#716C66] bg-transparent border-none cursor-pointer">Sign out</button>
+              <button className="text-[13px] text-[#C94A3A] bg-transparent border-none cursor-pointer whitespace-nowrap">Sign out</button>
             </form>
           </div>
         </div>

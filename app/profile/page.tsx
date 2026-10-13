@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { getProfile } from '@/lib/bazaar/profile-actions'
 import { getAddresses } from '@/lib/bazaar/address-actions'
 import { redirect } from 'next/navigation'
+import { bazaarLogout } from '@/lib/bazaar/auth'
 import Link from 'next/link'
 import { ProfileForm } from './profile-form'
 import { AddressManager } from '@/app/components/address-manager'
@@ -30,6 +31,7 @@ export default async function ProfilePage() {
     market_admin: 'Shop Owner',
     driver: 'Driver',
     super_admin: 'Admin',
+    fleet_manager: 'Delivery Company',
   }
 
   return (
@@ -112,6 +114,16 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <form action={bazaarLogout} className="mt-6">
+          <button
+            type="submit"
+            className="w-full rounded-[14px] py-3.5 font-[family-name:var(--font-dm-sans)] text-[14px] font-medium cursor-pointer"
+            style={{ background: c.white, border: '1px solid rgba(201,74,58,0.25)', color: '#C94A3A' }}
+          >
+            Sign out
+          </button>
+        </form>
       </div>
       </main>
     </div>
