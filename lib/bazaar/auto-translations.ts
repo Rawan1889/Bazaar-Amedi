@@ -2,6 +2,9 @@
 // Run `node scripts/build-auto-translations.mjs` after updating the CSV.
 
 export const AUTO_AR: Record<string, string> = {
+  'kela. was just updated': 'تم تحديث kela. للتو',
+  'Reloading the page. Please do that last step again.': 'جارٍ إعادة تحميل الصفحة. يرجى تكرار الخطوة الأخيرة.',
+  'Reload now': 'إعادة التحميل الآن',
   'Add logo': 'إضافة شعار',
   'Uploading...': 'جارٍ الرفع...',
   "I work as": "أعمل كـ",
@@ -675,6 +678,9 @@ export const AUTO_AR: Record<string, string> = {
 } as const
 
 export const AUTO_KU: Record<string, string> = {
+  'kela. was just updated': 'kela. نوکە هاتە نووکرن',
+  'Reloading the page. Please do that last step again.': 'پەڕە دیسا دهێتە بارکرن. هیڤییە دوماهیک هەنگاڤێ دووبارە بکە.',
+  'Reload now': 'نوکە دیسا باربکە',
   'Add logo': 'لۆگۆ زێدە بکە',
   'Uploading...': 'بلندکرن...',
   "I work as": "ئەز کار دکەم وەکی",

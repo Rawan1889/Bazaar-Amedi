@@ -7,6 +7,7 @@ import { FavoritesProvider } from '@/lib/bazaar/favorites-context'
 import { RealtimeWrapper } from '@/app/components/realtime-wrapper'
 import { MobileNav } from '@/app/components/mobile-nav'
 import { PWARegister } from '@/app/components/pwa-register'
+import { StaleDeployGuard } from '@/app/components/stale-deploy-guard'
 import { AuthNotifications } from '@/app/components/auth-notifications'
 import { AutoTranslator } from '@/app/components/auto-translator'
 import { SITE_URL } from '@/lib/bazaar/site'
@@ -90,6 +91,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <DialogProvider>
                 <RealtimeWrapper />
                 <PWARegister />
+                <StaleDeployGuard />
                 <AuthNotifications />
                 {children}
                 <MobileNav />
