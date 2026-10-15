@@ -12,6 +12,7 @@ import { CustomerNav } from '@/app/components/customer-nav'
 import { LocalizedName } from '@/app/components/localized-name'
 import { RecordView } from '@/app/components/record-view'
 import { JsonLd } from '@/app/components/json-ld'
+import { saleForOption, flashSalePrice, defaultVariant, type FlashSaleLike } from '@/lib/bazaar/flash-sale-price'
 
 const c = {
   green:    '#287A53',
@@ -33,7 +34,7 @@ const loadProduct = cache(async (id: string) => {
   const supabase = await createBazaarServer()
   const { data } = await supabase
     .from('bazaar_products')
-    .select('*, bazaar_shops!inner(id, name, slug, is_approved), bazaar_product_variants(id, amount, unit, price, in_stock, stock_qty), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active)')
+    .select('*, bazaar_shops!inner(id, name, slug, is_approved), bazaar_product_variants(id, amount, unit, price, in_stock, stock_qty), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active, quantity, variant_id)')
     .eq('id', id)
     .single()
   return data
@@ -44,9 +45,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const product = await loadProduct(id)
   if (!product || !product.bazaar_shops?.is_approved) return { title: 'Product not found' }
 
-  const sale = (product.bazaar_flash_sales as { sale_price: number; ends_at: string; is_active: boolean }[] | null)
-    ?.find(s => s.is_active && new Date(s.ends_at) > new Date())
-  const price = formatIQD(sale?.sale_price ?? product.price)
+  const variant = defaultVariant(product.price, product.bazaar_product_variants as { id: string; price: number }[] | null)
+  const sale = saleForOption(product.bazaar_flash_sales as FlashSaleLike[] | null, variant?.id ?? null, Date.now())
+  const price = formatIQD(sale ? flashSalePrice(sale, product.price, product.price) : product.price)
   const title = `${product.name_en} — ${price}`
   const description = product.description
     || `${product.name_en} from ${product.bazaar_shops.name}, Amedi. ${price}. Order on kela. for delivery.`
@@ -77,7 +78,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     bazaar_shops: { id: string; name: string; slug: string; is_approved: boolean }
     bazaar_product_variants: { id: string; amount: number; unit: string; price: number; in_stock: boolean; stock_qty: number | null }[]
     bazaar_product_images: { url: string; sort_order: number }[]
-    bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
+    bazaar_flash_sales: FlashSaleLike[] | null
   }
 
   if (!p.bazaar_shops.is_approved) notFound()
@@ -87,9 +88,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ...(p.bazaar_product_images || []).sort((a, b) => a.sort_order - b.sort_order).map(i => i.url),
   ]
 
-  const activeSale = p.bazaar_flash_sales?.find(s => s.is_active && new Date(s.ends_at) > new Date())
   const variants = (p.bazaar_product_variants || []).sort((a, b) => a.price - b.price)
   const basePrice = variants[0]?.price ?? p.price
+
+  // Sale price per option, worked out here so the page shows exactly what
+  // checkout will charge for whichever option the customer picks.
+  const now = Date.now()
+  const salePriceFor = (variantId: string | null, optionPrice: number) => {
+    const sale = saleForOption(p.bazaar_flash_sales, variantId, now)
+    return sale ? flashSalePrice(sale, p.price, optionPrice) : null
+  }
+  const variantSalePrices = Object.fromEntries(variants.map(v => [v.id, salePriceFor(v.id, v.price)]))
+  const activeSalePrice = variants.length ? variantSalePrices[variants[0].id] : salePriceFor(null, p.price)
 
   // Low-stock: lowest tracked stock across variants (only show when genuinely low).
   const stocks = (p.bazaar_product_variants || [])
@@ -111,7 +121,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         url: `${SITE_URL}/p/${p.id}`,
         offers: {
           '@type': 'Offer',
-          price: activeSale?.sale_price ?? basePrice,
+          price: activeSalePrice ?? basePrice,
           priceCurrency: 'IQD',
           availability: p.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
           url: `${SITE_URL}/p/${p.id}`,
@@ -150,7 +160,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               basePrice={basePrice}
               unit={p.unit}
               imageUrl={p.image_url}
-              activeSalePrice={activeSale?.sale_price ?? null}
+              activeSalePrice={activeSalePrice}
+              variantSalePrices={variantSalePrices}
               variants={variants}
               inStock={p.in_stock}
             />

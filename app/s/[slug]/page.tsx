@@ -4,6 +4,7 @@ import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { notFound, redirect } from 'next/navigation'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { AddToCartButton } from '@/app/components/add-to-cart-button'
+import { saleForOption, flashSalePrice, type FlashSaleLike } from '@/lib/bazaar/flash-sale-price'
 import { CartBar } from '@/app/components/cart-bar'
 import { CustomerNav } from '@/app/components/customer-nav'
 import { ShopFavoriteButton } from './shop-favorite-button'
@@ -69,7 +70,7 @@ export default async function ShopPublicPage({
 
   const { data: products } = await supabase
     .from('bazaar_products')
-    .select('*, bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active), bazaar_product_variants(id, stock_qty, price, in_stock)')
+    .select('*, bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active, quantity, variant_id), bazaar_product_variants(id, stock_qty, price, in_stock)')
     .eq('shop_id', shop.id)
     .eq('in_stock', true)
     .order('sort_order')
@@ -222,11 +223,13 @@ export default async function ShopPublicPage({
               const p = product as {
                 id: string; name_en: string; name_ku: string | null; name_ar: string | null; price: number; unit: string; image_url: string | null; description: string | null
                 bazaar_categories: { name_en: string; name_ku: string | null; name_ar: string | null } | null
-                bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
+                bazaar_flash_sales: FlashSaleLike[] | null
                 bazaar_product_variants: { id: string; stock_qty: number | null; price: number; in_stock: boolean }[] | null
               }
-              const activeSale = p.bazaar_flash_sales?.find(s => s.is_active && new Date(s.ends_at) > new Date())
               const defaultVariant = p.bazaar_product_variants?.find(v => v.price === p.price) || p.bazaar_product_variants?.[0]
+              // Only show a sale that covers the option this card adds to the cart.
+              const liveSale = saleForOption(p.bazaar_flash_sales, defaultVariant?.id ?? null, Date.now())
+              const activeSale = liveSale && { sale_price: flashSalePrice(liveSale, p.price, p.price) }
 
               return (
                 <div

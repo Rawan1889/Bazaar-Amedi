@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { searchProducts } from '@/lib/bazaar/search-actions'
 import { AddToCartButton } from './add-to-cart-button'
+import { saleForOption, flashSalePrice, type FlashSaleLike } from '@/lib/bazaar/flash-sale-price'
 
 const c = {
   green:    '#287A53',
@@ -102,11 +103,13 @@ export function SearchBar() {
             const p = r as {
               id: string; name_en: string; price: number; unit: string; image_url: string | null; shop_id: string
               bazaar_shops: { name: string; slug: string }
-              bazaar_flash_sales: { sale_price: number; ends_at: string; is_active: boolean }[] | null
+              bazaar_flash_sales: FlashSaleLike[] | null
               bazaar_product_variants: { id: string; stock_qty: number | null; price: number; in_stock: boolean }[] | null
             }
-            const activeSale = p.bazaar_flash_sales?.find(s => s.is_active && new Date(s.ends_at) > new Date())
             const defaultVariant = p.bazaar_product_variants?.find(v => v.price === p.price) || p.bazaar_product_variants?.[0]
+            // Only show a sale that covers the option this card adds to the cart.
+            const liveSale = saleForOption(p.bazaar_flash_sales, defaultVariant?.id ?? null, Date.now())
+            const activeSale = liveSale && { sale_price: flashSalePrice(liveSale, p.price, p.price) }
 
             return (
               <div

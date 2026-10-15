@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { adjustCounter, reserveStock, type PricedItem } from '@/lib/bazaar/order-pricing'
+import { adjustCounter, adjustCouponUses, reserveStock, type PricedItem } from '@/lib/bazaar/order-pricing'
 import { fakeSupabase } from './fake-supabase'
 
 const item = (over: Partial<PricedItem> = {}): PricedItem => ({
   productId: 'p', shopId: 's', name: 'Croissant', unitPrice: 750, quantity: 1,
-  stockVariantId: 'v1', limitedSaleId: null, ...over,
+  variantId: 'v1', flashSaleId: null, stockVariantId: 'v1', limitedSaleId: null, ...over,
 })
 
 describe('stock reservation', () => {
@@ -42,8 +42,27 @@ describe('stock reservation', () => {
     expect(row('bazaar_flash_sales', 's1')).toMatchObject({ quantity: 0, is_active: false })
   })
 
+  it('hands cancelled units back without switching on an option the shop turned off', async () => {
+    const { client, row } = fakeSupabase({
+      bazaar_product_variants: [{ id: 'off', stock_qty: 5, in_stock: false }, { id: 'sold-out', stock_qty: 0, in_stock: false }],
+    })
+    await adjustCounter(client, { table: 'bazaar_product_variants', id: 'off' }, 2)
+    await adjustCounter(client, { table: 'bazaar_product_variants', id: 'sold-out' }, 2)
+    expect(row('bazaar_product_variants', 'off')).toMatchObject({ stock_qty: 7, in_stock: false })
+    expect(row('bazaar_product_variants', 'sold-out')).toMatchObject({ stock_qty: 2, in_stock: true })
+  })
+
   it('treats untracked stock (null) as unlimited', async () => {
     const { client } = fakeSupabase({ bazaar_product_variants: [{ id: 'v1', stock_qty: null, in_stock: true }] })
     expect(await adjustCounter(client, { table: 'bazaar_product_variants', id: 'v1' }, -50)).toBe(true)
+  })
+
+  it('lets only one of two simultaneous orders take a coupon\'s last use, and gives it back on cancel', async () => {
+    const { client, row } = fakeSupabase({ bazaar_coupons: [{ id: 'c1', uses_count: 4, max_uses: 5 }] })
+    const results = await Promise.all([adjustCouponUses(client, 'c1', 1), adjustCouponUses(client, 'c1', 1)])
+    expect(results.filter(Boolean)).toHaveLength(1)
+    expect(row('bazaar_coupons', 'c1').uses_count).toBe(5)
+    expect(await adjustCouponUses(client, 'c1', -1)).toBe(true)
+    expect(row('bazaar_coupons', 'c1').uses_count).toBe(4)
   })
 })

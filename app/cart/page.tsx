@@ -43,7 +43,7 @@ export default function CartPage() {
   const [savedShopCount, setSavedShopCount] = useState(0)
   const [savedPickup, setSavedPickup] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string } | null>(null)
+  const [coupon, setCoupon] = useState<{ discount: number; description: string; code: string; forCart: string } | null>(null)
 
   const canPickup = shopCount === 1
   // If the cart grows to multiple shops, fall back to delivery automatically so
@@ -55,25 +55,39 @@ export default function CartPage() {
   // fee (farthest zone; two fees for 3+ shops) client-side. Server still
   // recomputes on placeOrder.
   const [shopZones, setShopZones] = useState<{ fee: number }[]>([])
+  const [zonesFor, setZonesFor] = useState('')
   const shopIdsKey = shopGroups.map(g => g.shopId).sort().join(',')
   useEffect(() => {
     if (!shopIdsKey) { setShopZones([]); return }
     let cancelled = false
-    getShopZones(shopIdsKey.split(',')).then(z => { if (!cancelled) setShopZones(z) })
+    getShopZones(shopIdsKey.split(',')).then(z => {
+      if (!cancelled) { setShopZones(z); setZonesFor(shopIdsKey) }
+    })
     return () => { cancelled = true }
   }, [shopIdsKey])
 
   const deliveryFee = isPickup
     ? 0
     : computeDeliveryFee({ customerZone: zone, shopZones, subtotal, shopCount })
-  const discount = coupon?.discount || 0
+  const shopSubtotals: Record<string, number> = {}
+  for (const g of shopGroups) {
+    shopSubtotals[g.shopId] = g.items.reduce((sum, i) => sum + (i.salePrice ?? i.price) * i.quantity, 0)
+  }
+  // A coupon is priced against the cart it was applied to; once the cart
+  // changes it has to be applied again so the total shown stays honest.
+  const cartKey = JSON.stringify(shopSubtotals)
+  const activeCoupon = coupon && coupon.forCart === cartKey ? coupon : null
+  const discount = activeCoupon?.discount || 0
   const total = Math.max(0, subtotal - discount) + deliveryFee
+  // Until the address and the shops' zones have loaded the fee isn't known —
+  // show a dash rather than a 0 that jumps up a moment later.
+  const feeKnown = isPickup || (!!selectedAddress && zonesFor === shopIdsKey)
   const freeDelivery = !isPickup && zone?.free_delivery_threshold != null && subtotal >= zone.free_delivery_threshold
   const belowMin = !isPickup && !!zone && zone.min_order > 0 && subtotal < zone.min_order
 
   function handleCheckout() {
     if (!isPickup && !selectedAddress) {
-      setError('Please choose or add a delivery address.')
+      setError('Tap “Save address” first so the driver knows where to come.')
       return
     }
     if (belowMin && zone) {
@@ -94,7 +108,7 @@ export default function CartPage() {
         })),
         deliveryAddress: isPickup ? `Pickup from ${shopGroups[0]?.shopName ?? 'shop'}` : (selectedAddress?.text ?? ''),
         note: note || null,
-        couponCode: coupon?.code ?? null,
+        couponCode: activeCoupon?.code ?? null,
         addressId: isPickup ? null : (selectedAddress?.id ?? null),
         deliveryLat: isPickup ? null : (selectedAddress?.lat ?? null),
         deliveryLng: isPickup ? null : (selectedAddress?.lng ?? null),
@@ -283,12 +297,6 @@ export default function CartPage() {
                   Order summary
                 </h3>
 
-                {error && (
-                  <div className="rounded-[8px] px-3 py-2 mb-4 font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ background: c.errorBg, color: c.error }}>
-                    {error}
-                  </div>
-                )}
-
                 <div className="flex flex-col gap-2 mb-4 pb-4" style={{ borderBottom: `1px solid ${c.cream}` }}>
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
                     <span style={{ color: c.stone }}>Subtotal ({itemCount} items)</span>
@@ -296,20 +304,24 @@ export default function CartPage() {
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
-                      <span style={{ color: c.green }}>Coupon ({coupon?.description})</span>
+                      <span style={{ color: c.green }}>Coupon ({activeCoupon?.description})</span>
                       <span style={{ color: c.green }}>-{formatIQD(discount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
                     <span style={{ color: c.stone }}>
-                      {isPickup
-                        ? 'Pickup'
-                        : `Delivery fee${zone ? ` · ${zone.name}` : ''}${shopCount >= TWO_FEE_SHOP_COUNT ? ` · ${shopCount} shops, 2 trips` : ''}`}
+                      {isPickup ? 'Pickup' : 'Delivery fee'}
+                      {!isPickup && zone ? ` · ${zone.name}` : null}
                     </span>
                     <span style={{ color: (freeDelivery || isPickup) ? c.green : c.charcoal }}>
-                      {(freeDelivery || isPickup) ? 'Free' : formatIQD(deliveryFee)}
+                      {(freeDelivery || isPickup) ? 'Free' : feeKnown ? formatIQD(deliveryFee) : '—'}
                     </span>
                   </div>
+                  {!isPickup && !freeDelivery && shopCount >= TWO_FEE_SHOP_COUNT && (
+                    <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.stone }}>
+                      3 or more shops: the two farthest zone fees are added.
+                    </div>
+                  )}
                   {!isPickup && zone?.free_delivery_threshold != null && !freeDelivery && (
                     <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.green }}>
                       Add {formatIQD(zone.free_delivery_threshold - subtotal)} more for free delivery
@@ -322,16 +334,15 @@ export default function CartPage() {
                   )}
                   <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px] font-medium pt-2">
                     <span style={{ color: c.charcoal }}>Total</span>
-                    <span style={{ color: c.green }}>{formatIQD(total)}</span>
+                    <span style={{ color: c.green }}>{feeKnown ? formatIQD(total) : '—'}</span>
                   </div>
                 </div>
 
                 <div className="mb-4">
                   <CouponInput
-                    shopIds={shopGroups.map(g => g.shopId)}
-                    subtotal={subtotal}
-                    applied={coupon}
-                    onApply={(d, desc, code) => setCoupon({ discount: d, description: desc, code })}
+                    shopSubtotals={shopSubtotals}
+                    applied={activeCoupon}
+                    onApply={(d, desc, code) => setCoupon({ discount: d, description: desc, code, forCart: cartKey })}
                     onRemove={() => setCoupon(null)}
                   />
                 </div>
@@ -407,6 +418,13 @@ export default function CartPage() {
                   </div>
                 </div>
 
+                {/* Next to the button — on a phone the top of this card is off screen. */}
+                {error && (
+                  <div role="alert" className="rounded-[8px] px-3 py-2 mb-3 font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ background: c.errorBg, color: c.error }}>
+                    {error}
+                  </div>
+                )}
+
                 <button
                   onClick={handleCheckout}
                   disabled={isPending || belowMin}
@@ -415,7 +433,7 @@ export default function CartPage() {
                   onMouseEnter={e => !isPending && !belowMin && (e.currentTarget.style.transform = 'scale(0.98)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
                 >
-                  {isPending ? 'Placing order...' : belowMin ? 'Minimum order not met' : `Place order — ${formatIQD(total)}`}
+                  {isPending ? 'Placing order...' : belowMin ? 'Minimum order not met' : feeKnown ? `Place order — ${formatIQD(total)}` : 'Place order'}
                 </button>
 
                 <p className="text-center font-[family-name:var(--font-dm-mono)] text-[10px] mt-3" style={{ color: c.stone }}>

@@ -223,7 +223,7 @@ function OrderCard({ group, userId }: { group: OrderGroup; userId: string }) {
       {['pending', 'confirmed', 'ready'].includes(order.status) && (
         <button
           onClick={async () => {
-            if (await dialog.confirm({ title: 'Cancel this order?', message: 'This action cannot be undone.', confirmLabel: 'Cancel order', cancelLabel: 'Keep order', tone: 'danger' })) {
+            if (await dialog.confirm({ title: 'Cancel this order?', message: 'The customer’s whole order is cancelled, including items from any other shop on it. This can’t be undone.', confirmLabel: 'Cancel order', cancelLabel: 'Keep order', tone: 'danger' })) {
               startTransition(async () => {
                 setError(null)
                 const r = await cancelShopOrder(order.id)

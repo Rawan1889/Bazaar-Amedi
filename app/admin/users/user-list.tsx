@@ -139,6 +139,7 @@ function UserRow({ user }: { user: User }) {
               <option value="customer">Customer</option>
               <option value="driver">Driver</option>
               <option value="market_admin">Market Owner</option>
+              {user.role === 'fleet_manager' && <option value="fleet_manager">Delivery Company</option>}
             </select>
           )}
         </div>

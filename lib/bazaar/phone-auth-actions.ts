@@ -51,6 +51,7 @@ function dashboardFor(role: string): string {
     case 'market_admin': return '/shop'
     case 'driver': return '/driver'
     case 'super_admin': return '/admin'
+    case 'fleet_manager': return '/fleet'
     default: return '/browse'
   }
 }

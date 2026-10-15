@@ -45,6 +45,9 @@ export function EarningsPanel({ earnings, payouts }: { earnings: ShopEarnings; p
 
   const cards = [
     { label: 'Gross sales', value: earnings.gross, color: c.charcoal },
+    ...(earnings.couponDiscounts > 0
+      ? [{ label: 'Your coupon discounts', value: -earnings.couponDiscounts, color: c.terra }]
+      : []),
     { label: `Commission (${earnings.commissionRate}%)`, value: -earnings.commission, color: c.terra },
     { label: 'Net earnings', value: earnings.net, color: c.green },
     { label: 'Available to withdraw', value: earnings.available, color: c.green },
@@ -52,7 +55,7 @@ export function EarningsPanel({ earnings, payouts }: { earnings: ShopEarnings; p
 
   return (
     <div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className={`grid grid-cols-2 ${cards.length > 4 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4 mb-6`}>
         {cards.map(card => (
           <div key={card.label} className="rounded-[14px] p-5" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
             <div className="font-[family-name:var(--font-dm-mono)] text-[10px] tracking-[0.1em] uppercase mb-2" style={{ color: c.stone }}>

@@ -1,6 +1,7 @@
 // Checkout pricing and stock reservation. Kept free of 'use server' and
 // Next.js imports so it can be unit-tested without a database.
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { saleForOption, flashSalePrice, defaultVariant } from './flash-sale-price'
 
 export type CartLine = { productId: string; variantId?: string; quantity: number }
 
@@ -12,11 +13,11 @@ export type ProductRow = {
   in_stock: boolean | null
   bazaar_shops: { is_approved: boolean | null } | null
   bazaar_product_variants: { id: string; amount: number; unit: string; price: number; stock_qty: number | null; in_stock: boolean | null }[] | null
-  bazaar_flash_sales: { id: string; sale_price: number; ends_at: string; is_active: boolean | null; quantity: number | null }[] | null
+  bazaar_flash_sales: { id: string; sale_price: number; ends_at: string; is_active: boolean | null; quantity: number | null; variant_id?: string | null }[] | null
 }
 
 export const PRODUCT_PRICING_SELECT =
-  'id, shop_id, name_en, price, in_stock, bazaar_shops(is_approved), bazaar_product_variants(id, amount, unit, price, stock_qty, in_stock), bazaar_flash_sales(id, sale_price, ends_at, is_active, quantity)'
+  'id, shop_id, name_en, price, in_stock, bazaar_shops(is_approved), bazaar_product_variants(id, amount, unit, price, stock_qty, in_stock), bazaar_flash_sales(id, sale_price, ends_at, is_active, quantity, variant_id)'
 
 export type PricedItem = {
   productId: string
@@ -24,6 +25,10 @@ export type PricedItem = {
   name: string
   unitPrice: number
   quantity: number
+  // The option sold and the flash sale applied, recorded on the order item so
+  // a cancellation can hand the units back.
+  variantId: string | null
+  flashSaleId: string | null
   // Set only when that counter is actually tracked (non-null), i.e. needs reserving.
   stockVariantId: string | null
   limitedSaleId: string | null
@@ -66,16 +71,14 @@ export function priceCartLines(
       if (!chosen) return { error: `"${p.name_en}" has changed. Please remove it and add it again.` }
     }
     // Stock is tracked on the chosen variant, or the product's default variant.
-    const stockVariant = chosen ?? variants.find(v => v.price === p.price) ?? variants[0] ?? null
+    const stockVariant = chosen ?? defaultVariant(p.price, variants)
 
     if (p.in_stock === false || (stockVariant && stockVariant.in_stock === false && (stockVariant.stock_qty ?? 0) <= 0)) {
       return { error: `Sorry, "${p.name_en}" is currently out of stock.` }
     }
 
     const basePrice = chosen ? chosen.price : p.price
-    const sale = (p.bazaar_flash_sales ?? []).find(s =>
-      s.is_active && new Date(s.ends_at).getTime() > now && (s.quantity === null || s.quantity > 0)
-    ) ?? null
+    const sale = saleForOption(p.bazaar_flash_sales, stockVariant?.id ?? null, now)
     if (sale && sale.quantity !== null && sale.quantity < line.quantity) {
       return { error: `Only ${sale.quantity} of "${p.name_en}" left at the flash-sale price.` }
     }
@@ -92,8 +95,10 @@ export function priceCartLines(
       productId: p.id,
       shopId: p.shop_id,
       name: chosen ? `${p.name_en} (${chosen.amount} ${chosen.unit})` : p.name_en,
-      unitPrice: sale ? Math.min(sale.sale_price, basePrice) : basePrice,
+      unitPrice: sale ? flashSalePrice(sale, p.price, basePrice) : basePrice,
       quantity: line.quantity,
+      variantId: stockVariant?.id ?? null,
+      flashSaleId: sale?.id ?? null,
       stockVariantId: stockVariant && stockVariant.stock_qty !== null ? stockVariant.id : null,
       limitedSaleId: sale && sale.quantity !== null ? sale.id : null,
     })
@@ -119,9 +124,14 @@ export async function adjustCounter(
     if (current === null || current === undefined) return true
     const next = current + delta
     if (next < 0) return false
+    // Flip the in-stock/active flag only when crossing zero, so units handed
+    // back by a cancellation don't switch on an option the shop turned off.
+    const patch: Record<string, number | boolean> = { [col]: next }
+    if (next === 0) patch[flag] = false
+    else if (current === 0) patch[flag] = true
     const { data: updated } = await client
       .from(table)
-      .update({ [col]: next, [flag]: next > 0 })
+      .update(patch)
       .eq('id', id)
       .eq(col, current)
       .select('id')
@@ -155,4 +165,83 @@ export async function reserveStock(
     }
   }
   return { reserved }
+}
+
+// --- Coupons -----------------------------------------------------------
+
+export type CouponRow = {
+  id: string
+  shop_id: string
+  discount_type: string
+  discount_value: number
+  min_order: number | null
+  max_uses: number | null
+  uses_count: number | null
+  is_active: boolean | null
+  expires_at: string | null
+}
+
+// A coupon belongs to one shop, so it only discounts that shop's items —
+// shop A's coupon never comes out of shop B's sales.
+export function couponDiscount(
+  coupon: CouponRow,
+  shopSubtotal: number,
+  now: number,
+): { discount: number } | { error: string } {
+  if (!coupon.is_active) return { error: 'Invalid or expired coupon code.' }
+  if (coupon.expires_at && new Date(coupon.expires_at).getTime() < now) {
+    return { error: 'This coupon has expired.' }
+  }
+  if (coupon.max_uses !== null && (coupon.uses_count ?? 0) >= coupon.max_uses) {
+    return { error: 'This coupon has reached its usage limit.' }
+  }
+  const minOrder = coupon.min_order ?? 0
+  if (minOrder > 0 && shopSubtotal < minOrder) {
+    return { error: `This coupon needs ${minOrder.toLocaleString('en-IQ')} IQD from the shop that issued it.` }
+  }
+  const discount = coupon.discount_type === 'percentage'
+    ? Math.round(shopSubtotal * (coupon.discount_value / 100))
+    : Math.min(coupon.discount_value, shopSubtotal)
+  return { discount: Math.max(0, Math.min(discount, shopSubtotal)) }
+}
+
+// Count one use of a coupon (delta 1) or give one back (delta -1). Uses
+// compare-and-swap like adjustCounter, and refuses a use past max_uses, so two
+// orders can't both take a coupon's last use.
+export async function adjustCouponUses(client: SupabaseClient, couponId: string, delta: 1 | -1): Promise<boolean> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const { data: row } = await client
+      .from('bazaar_coupons')
+      .select('uses_count, max_uses')
+      .eq('id', couponId)
+      .single()
+    if (!row) return false
+    const used = (row as { uses_count: number | null }).uses_count ?? 0
+    const max = (row as { max_uses: number | null }).max_uses
+    if (delta > 0 && max !== null && used >= max) return false
+    const next = Math.max(0, used + delta)
+    let q = client.from('bazaar_coupons').update({ uses_count: next }).eq('id', couponId)
+    q = (row as { uses_count: number | null }).uses_count === null ? q.is('uses_count', null) : q.eq('uses_count', used)
+    const { data: updated } = await q.select('id')
+    if (updated?.length) return true
+  }
+  return false
+}
+
+// Give back what an order held: the stock and limited flash-sale units it
+// reserved, and its coupon use. Call it once, right after the order moves to
+// 'cancelled' (the status guard on that update makes sure only one caller does).
+export async function releaseOrderHolds(client: SupabaseClient, orderId: string) {
+  const [{ data: items }, { data: order }] = await Promise.all([
+    client.from('bazaar_order_items').select('variant_id, flash_sale_id, quantity').eq('order_id', orderId),
+    client.from('bazaar_orders').select('coupon_id').eq('id', orderId).single(),
+  ])
+  const counters: Counter[] = []
+  for (const it of (items as { variant_id: string | null; flash_sale_id: string | null; quantity: number }[] | null) ?? []) {
+    if (it.variant_id) counters.push({ table: 'bazaar_product_variants', id: it.variant_id, qty: it.quantity })
+    if (it.flash_sale_id) counters.push({ table: 'bazaar_flash_sales', id: it.flash_sale_id, qty: it.quantity })
+  }
+  await releaseCounters(client, counters)
+  const couponId = (order as { coupon_id: string | null } | null)?.coupon_id
+  if (couponId) await adjustCouponUses(client, couponId, -1)
 }

@@ -35,6 +35,7 @@ type Order = {
   id: string; order_number: number; status: string; total: number
   delivery_address: string; created_at: string
   bazaar_profiles: { full_name: string; phone: string | null }
+  driver: { full_name: string } | null
   bazaar_order_items: OrderItem[]
 }
 
@@ -92,6 +93,11 @@ export function OrderList({ orders }: { orders: Order[] }) {
                   {o.bazaar_profiles?.phone && (
                     <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
                       {o.bazaar_profiles.phone}
+                    </span>
+                  )}
+                  {o.driver?.full_name && (
+                    <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>
+                      <span>Driver</span>: {o.driver.full_name}
                     </span>
                   )}
                   <span className="font-[family-name:var(--font-dm-mono)] text-[10px]" style={{ color: c.stone }}>

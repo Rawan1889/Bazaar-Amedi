@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { priceCartLines, validateCartLines, type ProductRow } from '@/lib/bazaar/order-pricing'
+import { couponDiscount, priceCartLines, validateCartLines, type CouponRow, type ProductRow } from '@/lib/bazaar/order-pricing'
 
 const NOW = Date.parse('2026-09-30T12:00:00Z')
 const future = '2026-10-01T00:00:00Z'
@@ -64,6 +64,32 @@ describe('priceCartLines', () => {
     expect(priceCartLines([p], [{ productId: 'bread', quantity: 1 }], NOW)).toEqual({ items: [expect.objectContaining({ unitPrice: 250 })] })
   })
 
+  it('only discounts the option a flash sale is pinned to', () => {
+    const p = product({
+      bazaar_product_variants: [
+        { id: 'v-small', amount: 1, unit: 'kg', price: 250, stock_qty: null, in_stock: true },
+        { id: 'v-big', amount: 5, unit: 'kg', price: 1100, stock_qty: null, in_stock: true },
+      ],
+      bazaar_flash_sales: [{ id: 's1', sale_price: 200, ends_at: future, is_active: true, quantity: null, variant_id: 'v-small' }],
+    })
+    expect(priceCartLines([p], [{ productId: 'bread', variantId: 'v-small', quantity: 1 }], NOW)).toEqual({ items: [expect.objectContaining({ unitPrice: 200 })] })
+    expect(priceCartLines([p], [{ productId: 'bread', variantId: 'v-big', quantity: 1 }], NOW)).toEqual({ items: [expect.objectContaining({ unitPrice: 1100 })] })
+    // A card adds the default option (the one priced like the product).
+    expect(priceCartLines([p], [{ productId: 'bread', quantity: 1 }], NOW)).toEqual({ items: [expect.objectContaining({ unitPrice: 200 })] })
+  })
+
+  it('takes the same percentage off every option for an "All options" sale', () => {
+    const p = product({
+      bazaar_product_variants: [
+        { id: 'v-small', amount: 1, unit: 'kg', price: 250, stock_qty: null, in_stock: true },
+        { id: 'v-big', amount: 5, unit: 'kg', price: 1100, stock_qty: null, in_stock: true },
+      ],
+      bazaar_flash_sales: [{ id: 's1', sale_price: 200, ends_at: future, is_active: true, quantity: null, variant_id: null }],
+    })
+    expect(priceCartLines([p], [{ productId: 'bread', variantId: 'v-small', quantity: 1 }], NOW)).toEqual({ items: [expect.objectContaining({ unitPrice: 200 })] })
+    expect(priceCartLines([p], [{ productId: 'bread', variantId: 'v-big', quantity: 1 }], NOW)).toEqual({ items: [expect.objectContaining({ unitPrice: 880 })] })
+  })
+
   it('refuses more units than a limited flash sale has left', () => {
     const p = product({ bazaar_flash_sales: [{ id: 's1', sale_price: 200, ends_at: future, is_active: true, quantity: 3 }] })
     expect(priceCartLines([p], [{ productId: 'bread', quantity: 4 }], NOW)).toHaveProperty('error')
@@ -80,5 +106,25 @@ describe('priceCartLines', () => {
     expect(priceCartLines([product({ in_stock: false })], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
     expect(priceCartLines([product({ bazaar_shops: { is_approved: false } })], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
     expect(priceCartLines([], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
+  })
+})
+
+describe('couponDiscount', () => {
+  const coupon = (over: Partial<CouponRow> = {}): CouponRow => ({
+    id: 'c1', shop_id: 'renas-bakery', discount_type: 'percentage', discount_value: 10,
+    min_order: 0, max_uses: null, uses_count: 0, is_active: true, expires_at: null, ...over,
+  })
+
+  it('discounts only the issuing shop\'s subtotal', () => {
+    // 10% of the bakery's 5,000 IQD — not of a 50,000 IQD multi-shop cart.
+    expect(couponDiscount(coupon(), 5000, NOW)).toEqual({ discount: 500 })
+    expect(couponDiscount(coupon({ discount_type: 'fixed', discount_value: 8000 }), 5000, NOW)).toEqual({ discount: 5000 })
+  })
+
+  it('checks the minimum against the issuing shop and refuses used-up or expired coupons', () => {
+    expect(couponDiscount(coupon({ min_order: 10000 }), 5000, NOW)).toHaveProperty('error')
+    expect(couponDiscount(coupon({ max_uses: 3, uses_count: 3 }), 5000, NOW)).toHaveProperty('error')
+    expect(couponDiscount(coupon({ expires_at: past }), 5000, NOW)).toHaveProperty('error')
+    expect(couponDiscount(coupon({ is_active: false }), 5000, NOW)).toHaveProperty('error')
   })
 })

@@ -5,6 +5,7 @@ import { acceptOrder, updateOrderStatus, markShopPickedUp, setDriverOnline } fro
 import { useRealtimeAvailableOrders } from '@/lib/bazaar/use-realtime-orders'
 import { OrderChat } from '@/app/components/order-chat'
 import { ClientDate } from '@/app/components/client-date'
+import { useDialog } from '@/app/components/dialog-provider'
 
 const c = {
   green:    '#287A53',
@@ -266,6 +267,7 @@ function AvailableOrderCard({ order, onError, canAccept }: { order: Order; onErr
 // ──────────────────────────────────────────────
 function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
   const [isPending, startTransition] = useTransition()
+  const dialog = useDialog()
   const [error, setError] = useState<string | null>(null)
 
   // Group items by shop so we can show a per-shop pickup checklist.
@@ -399,7 +401,7 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
               background: item.pickup_status === 'picked_up' ? c.greenBg : c.saffronBg,
               color: item.pickup_status === 'picked_up' ? c.green : c.saffron,
             }}>
-              {item.pickup_status === 'picked_up' ? 'Picked' : 'Pending'}
+              {item.pickup_status === 'picked_up' ? 'Picked' : item.pickup_status === 'ready' ? 'Ready at shop' : 'Being prepared'}
             </span>
           </div>
         ))}
@@ -409,10 +411,20 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
       {nextStatus === 'delivered' ? (
         <div className="flex flex-col gap-2">
           <button
-            onClick={() => startTransition(async () => {
-              const res = await updateOrderStatus(order.id, 'delivered')
-              if (res?.error) setError(res.error)
-            })}
+            onClick={async () => {
+              // One tap closes the order and puts the cash on the driver's
+              // tab — confirm first, with the amount to collect.
+              if (!(await dialog.confirm({
+                title: 'Delivered and cash collected?',
+                message: formatIQD(order.total),
+                confirmLabel: 'Yes, delivered',
+                cancelLabel: 'Not yet',
+              }))) return
+              startTransition(async () => {
+                const res = await updateOrderStatus(order.id, 'delivered')
+                if (res?.error) setError(res.error)
+              })
+            }}
             disabled={isPending}
             className="w-full py-2.5 rounded-[10px] font-[family-name:var(--font-dm-sans)] text-[13px] font-medium border-none cursor-pointer"
             style={{ background: c.green, color: '#fff', opacity: isPending ? 0.7 : 1 }}
@@ -454,6 +466,20 @@ function ActiveOrderCard({ order, userId }: { order: Order; userId: string }) {
   )
 }
 
+function ActiveDeliveries({ active, userId }: { active: Order[]; userId: string }) {
+  if (active.length === 0) return null
+  return (
+    <div>
+      <h2 className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium mb-4" style={{ color: c.charcoal }}>
+        Active deliveries
+      </h2>
+      <div className="flex flex-col gap-4">
+        {active.map(order => <ActiveOrderCard key={order.id} order={order} userId={userId} />)}
+      </div>
+    </div>
+  )
+}
+
 // ──────────────────────────────────────────────
 // Main export
 // ──────────────────────────────────────────────
@@ -475,9 +501,15 @@ export function DriverOrderList({
   // Live subscription — refreshes the list when orders change. Only when online.
   useRealtimeAvailableOrders(isOnline)
 
-  // Option B: show offline screen when driver is not online
+  // Offline only stops new offers — a delivery already in hand (accepted, or
+  // assigned by the driver's company) must stay on screen so it can be finished.
   if (!isOnline) {
-    return <OfflineScreen isOnline={false} />
+    return (
+      <div className="flex flex-col gap-8">
+        {active.length > 0 ? <OnlineToggle isOnline={false} /> : <OfflineScreen isOnline={false} />}
+        <ActiveDeliveries active={active} userId={userId} />
+      </div>
+    )
   }
 
   const preparing = available.filter(o => o.status === 'confirmed')
@@ -495,16 +527,7 @@ export function DriverOrderList({
       )}
 
       {/* Active deliveries driver already accepted */}
-      {active.length > 0 && (
-        <div>
-          <h2 className="font-[family-name:var(--font-dm-sans)] text-[18px] font-medium mb-4" style={{ color: c.charcoal }}>
-            Active deliveries
-          </h2>
-          <div className="flex flex-col gap-4">
-            {active.map(order => <ActiveOrderCard key={order.id} order={order} userId={userId} />)}
-          </div>
-        </div>
-      )}
+      <ActiveDeliveries active={active} userId={userId} />
 
       {/* Ready — can accept */}
       {ready.length > 0 && (

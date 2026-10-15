@@ -96,6 +96,7 @@ export interface DriverCash {
   phone: string
   amount: number
   orders: number
+  order_ids: string[]
 }
 
 // Admin: outstanding cash per driver (delivered, not yet remitted).
@@ -106,13 +107,13 @@ export async function getDriversCashSummary(): Promise<DriverCash[]> {
   const admin = createBazaarAdmin()
   const { data } = await admin
     .from('bazaar_orders')
-    .select('total, driver_id, bazaar_profiles!bazaar_orders_driver_id_fkey(full_name, phone)')
+    .select('id, total, driver_id, bazaar_profiles!driver_id(full_name, phone)')
     .eq('status', 'delivered')
     .eq('cash_remitted', false)
     .not('driver_id', 'is', null)
 
   const rows = (data as unknown as {
-    total: number; driver_id: string; bazaar_profiles: { full_name: string; phone: string } | null
+    id: string; total: number; driver_id: string; bazaar_profiles: { full_name: string; phone: string } | null
   }[]) || []
 
   const map = new Map<string, DriverCash>()
@@ -121,17 +122,20 @@ export async function getDriversCashSummary(): Promise<DriverCash[]> {
       driver_id: r.driver_id,
       full_name: r.bazaar_profiles?.full_name || 'Driver',
       phone: r.bazaar_profiles?.phone || '',
-      amount: 0, orders: 0,
+      amount: 0, orders: 0, order_ids: [],
     }
     cur.amount += r.total || 0
     cur.orders += 1
+    cur.order_ids.push(r.id)
     map.set(r.driver_id, cur)
   }
   return [...map.values()].sort((a, b) => b.amount - a.amount)
 }
 
-// Admin: mark all of a driver's outstanding cash as remitted (settled).
-export async function settleDriverCash(driverId: string) {
+// Admin: mark the orders the admin was shown as remitted. Only those ids —
+// an order the driver delivered after the page loaded isn't in the amount the
+// admin just counted, so it must stay outstanding.
+export async function settleDriverCash(driverId: string, orderIds: string[]) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'super_admin') return { error: 'Unauthorized' }
 
@@ -140,6 +144,7 @@ export async function settleDriverCash(driverId: string) {
     .from('bazaar_orders')
     .update({ cash_remitted: true })
     .eq('driver_id', driverId)
+    .in('id', orderIds)
     .eq('status', 'delivered')
     .eq('cash_remitted', false)
 

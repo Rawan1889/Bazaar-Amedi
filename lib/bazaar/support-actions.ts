@@ -142,7 +142,7 @@ export async function getAllSupportThreads(): Promise<SupportThread[]> {
   const supabase = await createBazaarServer()
   const { data } = await supabase
     .from('bazaar_support_threads')
-    .select('*, opener:bazaar_profiles!bazaar_support_threads_opener_id_fkey(full_name, phone)')
+    .select('*, opener:bazaar_profiles!opener_id(full_name, phone)')
     .order('last_message_at', { ascending: false })
   return (data as SupportThread[]) || []
 }
@@ -153,7 +153,7 @@ export async function getSupportThread(threadId: string) {
   const supabase = await createBazaarServer()
   const { data: thread } = await supabase
     .from('bazaar_support_threads')
-    .select('*, opener:bazaar_profiles!bazaar_support_threads_opener_id_fkey(full_name, phone)')
+    .select('*, opener:bazaar_profiles!opener_id(full_name, phone)')
     .eq('id', threadId)
     .single()
   if (!thread) return null

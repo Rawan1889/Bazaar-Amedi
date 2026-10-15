@@ -5,6 +5,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { OrderTrackingMap } from '@/app/components/order-tracking-map'
 import { OrderChat } from '@/app/components/order-chat'
+import { CancelOrderButton } from './cancel-order-button'
 
 const c = {
   green:    '#287A53',
@@ -68,7 +69,7 @@ export default async function OrderDetailPage({
   if (!order) notFound()
 
   const o = order as {
-    id: string; order_number: number; status: string; total: number; delivery_fee: number
+    id: string; order_number: number; status: string; total: number; delivery_fee: number; discount: number | null
     delivery_address: string; note: string | null; created_at: string; delivered_at: string | null
     delivery_lat: number | null; delivery_lng: number | null
     driver_id: string | null
@@ -292,8 +293,14 @@ export default async function OrderDetailPage({
           <div className="flex flex-col gap-2 mb-4 pb-4" style={{ borderBottom: `1px solid ${c.cream}` }}>
             <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
               <span style={{ color: c.stone }}>Subtotal</span>
-              <span style={{ color: c.charcoal }}>{formatIQD(o.total - o.delivery_fee)}</span>
+              <span style={{ color: c.charcoal }}>{formatIQD(o.total - o.delivery_fee + (o.discount ?? 0))}</span>
             </div>
+            {(o.discount ?? 0) > 0 && (
+              <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
+                <span style={{ color: c.green }}>Coupon discount</span>
+                <span style={{ color: c.green }}>-{formatIQD(o.discount ?? 0)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-[family-name:var(--font-dm-sans)] text-[13px]">
               <span style={{ color: c.stone }}>Delivery</span>
               <span style={{ color: c.charcoal }}>{formatIQD(o.delivery_fee)}</span>
@@ -331,6 +338,7 @@ export default async function OrderDetailPage({
             </div>
           </div>
         </div>
+        {o.status === 'pending' && <CancelOrderButton orderId={o.id} />}
       </div>
       </main>
     </div>

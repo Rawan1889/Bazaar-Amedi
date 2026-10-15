@@ -14,7 +14,7 @@ const c = {
   white:  '#FFFFFF',
 } as const
 
-const STATUSES = ['pending','confirmed','picking_up','delivering','delivered','cancelled']
+const STATUSES = ['pending','confirmed','ready','picking_up','delivering','delivered']
 
 export function OrderActions({ orderId, currentStatus }: { orderId: string; currentStatus: string }) {
   const dialog = useDialog()
@@ -33,7 +33,7 @@ export function OrderActions({ orderId, currentStatus }: { orderId: string; curr
         className="px-2 py-1.5 rounded-[6px] font-[family-name:var(--font-dm-sans)] text-[11px] border cursor-pointer outline-none capitalize"
         style={{ borderColor: c.cream2, color: c.stone, background: c.white, opacity: pending ? 0.6 : 1 }}
       >
-        {STATUSES.filter(s => s !== 'cancelled').map(s => (
+        {STATUSES.map(s => (
           <option key={s} value={s}>{s.replace('_', ' ')}</option>
         ))}
       </select>
@@ -53,7 +53,7 @@ export function OrderActions({ orderId, currentStatus }: { orderId: string; curr
   )
 }
 
-const STATUS_FILTERS = ['all', 'pending', 'confirmed', 'picking_up', 'delivering', 'delivered', 'cancelled']
+const STATUS_FILTERS = ['all', 'pending', 'confirmed', 'ready', 'picking_up', 'delivering', 'delivered', 'cancelled']
 
 export function OrderFilters({
   active,

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
 import { sendPushToUser } from './push-notifications'
+import { releaseOrderHolds } from './order-pricing'
 
 async function requireAdmin() {
   const user = await getBazaarUser()
@@ -19,7 +20,7 @@ export async function getAllShops() {
 
   const { data } = await supabase
     .from('bazaar_shops')
-    .select('*, bazaar_profiles!bazaar_shops_owner_id_fkey(full_name, phone), bazaar_categories(name_en)')
+    .select('*, bazaar_profiles!owner_id(full_name, phone), bazaar_categories(name_en)')
     .order('created_at', { ascending: false })
 
   return data || []
@@ -76,7 +77,7 @@ export async function getAllOrders() {
 
   const { data } = await supabase
     .from('bazaar_orders')
-    .select('*, bazaar_profiles!bazaar_orders_customer_id_fkey(full_name, phone), bazaar_order_items(product_name, quantity, unit_price, bazaar_shops(name))')
+    .select('*, bazaar_profiles!customer_id(full_name, phone), driver:bazaar_profiles!driver_id(full_name), bazaar_order_items(product_name, quantity, unit_price, bazaar_shops(name))')
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -155,7 +156,7 @@ export async function getAdminStats() {
     supabase.from('bazaar_profiles').select('*', { count: 'exact', head: true }),
   ])
 
-  const { data: pendingShops } = await supabase
+  const { count: pendingShops } = await supabase
     .from('bazaar_shops')
     .select('*', { count: 'exact', head: true })
     .eq('is_approved', false)
@@ -165,7 +166,7 @@ export async function getAdminStats() {
     totalProducts: products.count || 0,
     totalOrders: orders.count || 0,
     totalUsers: profiles.count || 0,
-    pendingShops: pendingShops?.length || 0,
+    pendingShops: pendingShops || 0,
   }
 }
 
@@ -217,10 +218,20 @@ export async function approveUser(userId: string) {
   revalidatePath('/admin/users')
 }
 
+const ASSIGNABLE_ROLES = ['customer', 'driver', 'market_admin', 'fleet_manager']
+
 export async function changeUserRole(userId: string, role: string) {
   await requireAdmin()
+  if (!ASSIGNABLE_ROLES.includes(role)) return
   const supabase = createBazaarAdmin()
-  await supabase.from('bazaar_profiles').update({ role }).eq('id', userId)
+  // A delivery company account only works with its company record, which is
+  // created at company signup — so only a user who has one can be switched
+  // back to it. Super admins are never changed from here.
+  if (role === 'fleet_manager') {
+    const { data: fleet } = await supabase.from('bazaar_fleets').select('id').eq('owner_id', userId).maybeSingle()
+    if (!fleet) return
+  }
+  await supabase.from('bazaar_profiles').update({ role }).eq('id', userId).neq('role', 'super_admin')
   revalidatePath('/admin/users')
 }
 
@@ -233,7 +244,7 @@ export async function adminCancelOrder(orderId: string, reason?: string) {
     .select('id, order_number, status, customer_id, driver_id')
     .eq('id', orderId)
     .single()
-  if (!order || order.status === 'cancelled') {
+  if (!order || order.status === 'cancelled' || order.status === 'delivered') {
     revalidatePath('/admin/orders')
     return
   }
@@ -243,7 +254,17 @@ export async function adminCancelOrder(orderId: string, reason?: string) {
     .select('shop_id, bazaar_shops(owner_id)')
     .eq('order_id', orderId)
 
-  await supabase.from('bazaar_orders').update({ status: 'cancelled' }).eq('id', orderId)
+  const { data: cancelled } = await supabase
+    .from('bazaar_orders')
+    .update({ status: 'cancelled' })
+    .eq('id', orderId)
+    .not('status', 'in', '(delivered,cancelled)')
+    .select('id')
+  if (!cancelled?.length) {
+    revalidatePath('/admin/orders')
+    return
+  }
+  await releaseOrderHolds(supabase, orderId)
 
   const body = reason ? `Order cancelled by admin — ${reason}` : `Order cancelled by admin.`
   sendPushToUser(order.customer_id, {
@@ -281,9 +302,23 @@ export async function adminCancelOrder(orderId: string, reason?: string) {
   revalidatePath(`/orders/${orderId}`)
 }
 
+// Manual override for support cases. Cancelling goes through adminCancelOrder
+// so stock and coupon uses are handed back.
+const ADMIN_SETTABLE_STATUSES = ['pending', 'confirmed', 'ready', 'picking_up', 'delivering', 'delivered']
+
 export async function adminSetOrderStatus(orderId: string, status: string) {
   await requireAdmin()
-  const supabase = await createBazaarServer()
-  await supabase.from('bazaar_orders').update({ status }).eq('id', orderId)
+  if (!ADMIN_SETTABLE_STATUSES.includes(status)) return
+  const supabase = createBazaarAdmin()
+  await supabase
+    .from('bazaar_orders')
+    .update({ status, delivered_at: status === 'delivered' ? new Date().toISOString() : null })
+    .eq('id', orderId)
+    .not('status', 'in', '(delivered,cancelled)')
   revalidatePath('/admin/orders')
+  revalidatePath('/shop/orders')
+  revalidatePath('/driver')
+  revalidatePath('/fleet')
+  revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
 }

@@ -1,8 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createBazaarServer } from './supabase-server'
+import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
+import { couponDiscount, type CouponRow } from './order-pricing'
 
 export async function createCoupon(formData: FormData) {
   const user = await getBazaarUser()
@@ -102,52 +103,60 @@ export async function deleteCoupon(couponId: string) {
     .delete()
     .eq('id', couponId)
 
+  if (error?.code === '23503') {
+    // Already used on an order: keep it for the shop's earnings history and
+    // just switch it off.
+    const { error: offError } = await supabase.from('bazaar_coupons').update({ is_active: false }).eq('id', couponId)
+    if (offError) return { error: offError.message }
+    revalidatePath('/shop/coupons')
+    return { success: true }
+  }
   if (error) return { error: error.message }
 
   revalidatePath('/shop/coupons')
   return { success: true }
 }
 
-export async function applyCoupon(code: string, shopIds: string[], subtotal: number) {
-  if (!code.trim()) return { error: 'Please enter a coupon code.' }
+// Checks a code against the shops in the cart. `shopSubtotals` maps each
+// shop id to that shop's part of the cart: a coupon only discounts the items
+// of the shop that issued it.
+export async function applyCoupon(code: string, shopSubtotals: Record<string, number>) {
+  const clean = code.trim().toUpperCase()
+  if (!clean) return { error: 'Please enter a coupon code.' }
+  const user = await getBazaarUser()
+  if (!user) return { error: 'Please sign in to use a coupon.' }
+  const shopIds = Object.keys(shopSubtotals)
+  if (!shopIds.length) return { error: 'Your cart is empty.' }
 
-  const supabase = await createBazaarServer()
-
-  const { data: coupon } = await supabase
+  // Service role: customers can't read the coupons table (phase 33), so codes
+  // can't be listed — only checked one at a time, here.
+  const { data: coupons } = await createBazaarAdmin()
     .from('bazaar_coupons')
-    .select('*')
-    .eq('code', code.trim().toUpperCase())
-    .eq('is_active', true)
+    .select('id, shop_id, discount_type, discount_value, min_order, max_uses, uses_count, is_active, expires_at, bazaar_shops(name)')
+    .eq('code', clean)
     .in('shop_id', shopIds)
-    .single()
+  if (!coupons?.length) return { error: 'Invalid or expired coupon code.' }
 
-  if (!coupon) return { error: 'Invalid or expired coupon code.' }
-
-  if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
-    return { error: 'This coupon has expired.' }
+  // Codes are unique per shop, so two shops in one cart can share a code.
+  // Use whichever gives the bigger discount.
+  let best: { coupon: (typeof coupons)[number]; discount: number } | null = null
+  let lastError = 'Invalid or expired coupon code.'
+  for (const coupon of coupons) {
+    const result = couponDiscount(coupon as CouponRow, shopSubtotals[coupon.shop_id] ?? 0, Date.now())
+    if ('error' in result) { lastError = result.error; continue }
+    if (!best || result.discount > best.discount) best = { coupon, discount: result.discount }
   }
+  if (!best) return { error: lastError }
 
-  if (coupon.max_uses !== null && coupon.uses_count >= coupon.max_uses) {
-    return { error: 'This coupon has reached its usage limit.' }
-  }
-
-  if (coupon.min_order > 0 && subtotal < coupon.min_order) {
-    return { error: `Minimum order of ${coupon.min_order} IQD required for this coupon.` }
-  }
-
-  let discount = 0
-  if (coupon.discount_type === 'percentage') {
-    discount = Math.round(subtotal * (coupon.discount_value / 100))
-  } else {
-    discount = Math.min(coupon.discount_value, subtotal)
-  }
-
+  const { coupon, discount } = best
+  const shopName = (coupon.bazaar_shops as unknown as { name: string } | null)?.name
+  const off = coupon.discount_type === 'percentage'
+    ? `${coupon.discount_value}% off`
+    : `${coupon.discount_value.toLocaleString('en-IQ')} IQD off`
   return {
     success: true,
     discount,
     couponId: coupon.id,
-    description: coupon.discount_type === 'percentage'
-      ? `${coupon.discount_value}% off`
-      : `${coupon.discount_value} IQD off`,
+    description: shopName ? `${off} ${shopName}` : off,
   }
 }

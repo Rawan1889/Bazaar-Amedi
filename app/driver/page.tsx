@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic'
-import { getBazaarUser } from '@/lib/bazaar/auth'
+import { getBazaarUser, bazaarLogout } from '@/lib/bazaar/auth'
 import { redirect } from 'next/navigation'
 import { getAvailableOrders, getMyDeliveries } from '@/lib/bazaar/order-actions'
 import { DriverOrderList } from './driver-orders'
@@ -32,13 +32,17 @@ export default async function DriverDashboard() {
           <p className="font-[family-name:var(--font-dm-mono)] text-[11px]" style={{ color: '#716C66' }}>
             Signed in as {user.full_name}
           </p>
+          <form action={bazaarLogout} className="mt-4">
+            <button type="submit" className="text-[13px] text-[#C94A3A] bg-transparent border-none cursor-pointer">Sign out</button>
+          </form>
         </div>
       </div>
     )
   }
 
-  // Only fetch orders when driver is online — saves unnecessary DB queries
-  // and avoids showing stale data when they go offline then refresh.
+  // New offers are only fetched while online. The driver's own deliveries are
+  // always fetched — going offline mid-delivery, or being assigned an order by
+  // their company while offline, must not hide it.
   const isOnline = user.is_online ?? false
   let fleetName: string | null = null
   if (user.fleet_id) {
@@ -47,7 +51,7 @@ export default async function DriverDashboard() {
   }
   const [available, active] = await Promise.all([
     isOnline ? getAvailableOrders() : Promise.resolve([]),
-    isOnline ? getMyDeliveries()    : Promise.resolve([]),
+    getMyDeliveries(),
   ])
 
   return (

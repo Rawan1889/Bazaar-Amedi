@@ -6,7 +6,7 @@ import { getBazaarUser } from './auth'
 import { sendPushToUser, sendPushToOnlineDrivers } from './push-notifications'
 import { applyCoupon } from './coupon-actions'
 import { computeDeliveryFee } from './zone-utils'
-import { PRODUCT_PRICING_SELECT, priceCartLines, validateCartLines, reserveStock, releaseCounters, type ProductRow } from './order-pricing'
+import { PRODUCT_PRICING_SELECT, priceCartLines, validateCartLines, reserveStock, releaseCounters, adjustCouponUses, releaseOrderHolds, type ProductRow } from './order-pricing'
 
 interface CartItemInput {
   productId: string
@@ -111,16 +111,18 @@ export async function placeOrder(data: {
     })
   }
 
-  // Re-validate the coupon server-side — never trust the discount the client sent.
+  // Re-validate the coupon server-side — never trust the discount the client
+  // sent. It only discounts the issuing shop's items. If the customer saw a
+  // discount that no longer holds, stop rather than charge them more.
   let discount = 0
   let appliedCouponId: string | null = null
   if (data.couponCode?.trim()) {
-    const shopIds = [...new Set(items.map(i => i.shopId))]
-    const result = await applyCoupon(data.couponCode, shopIds, subtotal)
-    if ('success' in result && result.success) {
-      discount = result.discount
-      appliedCouponId = result.couponId
-    }
+    const shopSubtotals: Record<string, number> = {}
+    for (const i of items) shopSubtotals[i.shopId] = (shopSubtotals[i.shopId] ?? 0) + i.unitPrice * i.quantity
+    const result = await applyCoupon(data.couponCode, shopSubtotals)
+    if ('error' in result) return { error: `Coupon: ${result.error} Remove it to order without it.` }
+    discount = result.discount
+    appliedCouponId = result.couponId
   }
 
   const total = Math.max(0, subtotal - discount) + deliveryFee
@@ -130,6 +132,17 @@ export async function placeOrder(data: {
   const reservation = await reserveStock(admin, items)
   if ('error' in reservation) return { error: reservation.error }
   const reserved = reservation.reserved
+
+  // Claim one use of the coupon the same way, so a coupon limited to 10 uses
+  // can't be used 11 times by customers checking out at once.
+  if (appliedCouponId && !(await adjustCouponUses(admin, appliedCouponId, 1))) {
+    await releaseCounters(admin, reserved)
+    return { error: 'Coupon: this code has reached its usage limit. Remove it to order without it.' }
+  }
+  async function undoHolds() {
+    await releaseCounters(admin, reserved)
+    if (appliedCouponId) await adjustCouponUses(admin, appliedCouponId, -1)
+  }
 
   // Written with the service-role client: customers have no direct INSERT
   // rights on orders/items (phase 29), so every order passes this validation.
@@ -150,12 +163,14 @@ export async function placeOrder(data: {
       scheduled_date: data.scheduledDate ?? null,
       scheduled_slot: data.scheduledSlot ?? null,
       fulfillment_type: isPickup ? 'pickup' : 'delivery',
+      discount,
+      coupon_id: appliedCouponId,
     })
     .select('id')
     .single()
 
   if (orderError) {
-    await releaseCounters(admin, reserved)
+    await undoHolds()
     return { error: orderError.message }
   }
 
@@ -167,6 +182,9 @@ export async function placeOrder(data: {
     quantity: item.quantity,
     unit_price: item.unitPrice,
     pickup_status: 'pending' as const,
+    // What the order holds, so a cancellation can give it back.
+    variant_id: item.variantId,
+    flash_sale_id: item.flashSaleId,
   }))
 
   const { error: itemsError } = await admin
@@ -176,23 +194,8 @@ export async function placeOrder(data: {
   if (itemsError) {
     // Don't leave an order with no items behind.
     await admin.from('bazaar_orders').delete().eq('id', order.id)
-    await releaseCounters(admin, reserved)
+    await undoHolds()
     return { error: itemsError.message }
-  }
-
-  // Record coupon usage with the service-role client (customers can't UPDATE coupons under RLS).
-  if (appliedCouponId) {
-    const { data: cpn } = await admin
-      .from('bazaar_coupons')
-      .select('uses_count')
-      .eq('id', appliedCouponId)
-      .single()
-    if (cpn) {
-      await admin
-        .from('bazaar_coupons')
-        .update({ uses_count: (cpn.uses_count ?? 0) + 1 })
-        .eq('id', appliedCouponId)
-    }
   }
 
   revalidatePath('/orders')
@@ -326,6 +329,16 @@ export async function acceptShopOrder(orderId: string) {
     .single()
   if (!shop) return { error: 'No shop found' }
 
+  const { data: order } = await supabase
+    .from('bazaar_orders')
+    .select('status, customer_id, order_number')
+    .eq('id', orderId)
+    .maybeSingle()
+  if (!order) return { error: 'Order not found.' }
+  if (order.status !== 'pending' && order.status !== 'confirmed') {
+    return { error: 'This order was cancelled or has already moved on.' }
+  }
+
   const { data: accepted, error: itemsError } = await supabase
     .from('bazaar_order_items')
     .update({ pickup_status: 'accepted' })
@@ -338,11 +351,21 @@ export async function acceptShopOrder(orderId: string) {
 
   // Move the order to 'confirmed' the first time any shop accepts. Guarded
   // by .eq('status','pending') so it's idempotent and safe for the 2nd shop.
-  await supabase
+  const { data: confirmed } = await supabase
     .from('bazaar_orders')
     .update({ status: 'confirmed' })
     .eq('id', orderId)
     .eq('status', 'pending')
+    .select('id')
+
+  if (confirmed?.length) {
+    sendPushToUser(order.customer_id, {
+      type: 'order_status',
+      title: `Order #${order.order_number} accepted`,
+      body: 'The shop is preparing your order.',
+      url: `/orders/${orderId}`,
+    })
+  }
 
   revalidatePath('/shop/orders')
   revalidatePath('/driver')
@@ -371,6 +394,16 @@ export async function markShopOrderReady(orderId: string) {
 
   if (!shop) return { error: 'No shop found' }
 
+  const { data: order } = await supabase
+    .from('bazaar_orders')
+    .select('status, customer_id, order_number, fulfillment_type')
+    .eq('id', orderId)
+    .maybeSingle()
+  if (!order) return { error: 'Order not found.' }
+  if (order.status !== 'pending' && order.status !== 'confirmed') {
+    return { error: 'This order was cancelled or has already moved on.' }
+  }
+
   // Mark this shop's items as ready. Accept whichever prior state they were in
   // — 'accepted' is the normal path, but 'pending' also works if the shop
   // skipped the explicit Accept click.
@@ -396,24 +429,39 @@ export async function markShopOrderReady(orderId: string) {
     i => i.pickup_status === 'ready' || i.pickup_status === 'picked_up'
   )
 
-  if (allReady) {
-    const { error } = await supabase
-      .from('bazaar_orders')
-      .update({ status: 'ready' })
-      .eq('id', orderId)
-    if (error) return { error: error.message }
+  // Guarded on status so an order cancelled a moment ago stays cancelled.
+  const { data: moved, error } = await supabase
+    .from('bazaar_orders')
+    .update({ status: allReady ? 'ready' : 'confirmed' })
+    .eq('id', orderId)
+    .in('status', ['pending', 'confirmed'])
+    .select('id')
+  if (error) return { error: error.message }
 
-    // Notify online drivers only once, when the whole order is ready.
-    sendPushToOnlineDrivers({
-      type: 'order_ready',
-      title: '📦 Order ready for pickup',
-      body: `An order is packed and waiting — tap to accept.`,
-      url: '/driver',
-    })
+  if (allReady && moved?.length) {
+    if (order.fulfillment_type === 'pickup') {
+      sendPushToUser(order.customer_id, {
+        type: 'order_status',
+        title: `Order #${order.order_number} is ready`,
+        body: 'Your order is ready to collect from the shop.',
+        url: `/orders/${orderId}`,
+      })
+    } else {
+      // Notify online drivers only once, when the whole order is ready.
+      sendPushToOnlineDrivers({
+        type: 'order_ready',
+        title: '📦 Order ready for pickup',
+        body: `An order is packed and waiting — tap to accept.`,
+        url: '/driver',
+      })
+    }
   }
 
   revalidatePath('/shop/orders')
   revalidatePath('/driver')
+  revalidatePath('/fleet')
+  revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
   return { success: true, allReady }
 }
 
@@ -468,14 +516,19 @@ export async function markPickupCollected(orderId: string) {
     .maybeSingle()
   if (!item) return { error: 'Order not found for your shop.' }
 
-  const { error } = await supabase
+  const { data: done, error } = await supabase
     .from('bazaar_orders')
     .update({ status: 'delivered', delivered_at: new Date().toISOString() })
     .eq('id', orderId)
     .eq('fulfillment_type', 'pickup')
+    .eq('status', 'ready')
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!done?.length) return { error: 'Mark the order ready first. Cancelled orders cannot be completed.' }
   revalidatePath('/shop/orders')
+  revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
   return { success: true }
 }
 
@@ -534,6 +587,10 @@ export async function acceptOrder(orderId: string) {
   if (!claimed?.length) return { error: 'This order was already claimed by another driver.' }
 
   revalidatePath('/driver')
+  revalidatePath('/fleet')
+  revalidatePath('/shop/orders')
+  revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
   return { success: true }
 }
 
@@ -548,32 +605,46 @@ export async function markShopPickedUp(orderId: string, shopId: string) {
 
   const { data: order } = await supabase
     .from('bazaar_orders')
-    .select('driver_id')
+    .select('driver_id, status')
     .eq('id', orderId)
     .maybeSingle()
 
   if (!order || order.driver_id !== user.id) {
     return { error: 'You are not the driver for this order.' }
   }
+  if (order.status !== 'picking_up') {
+    return { error: 'This order is no longer being picked up.' }
+  }
 
-  const { error } = await supabase
+  const { data: picked, error } = await supabase
     .from('bazaar_order_items')
     .update({ pickup_status: 'picked_up' })
     .eq('order_id', orderId)
     .eq('shop_id', shopId)
+    .eq('pickup_status', 'ready')
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!picked?.length) return { error: 'Nothing waiting at this shop for this order.' }
 
   revalidatePath('/driver')
+  revalidatePath('/shop/orders')
+  revalidatePath(`/orders/${orderId}`)
   return { success: true }
 }
 
-const DRIVER_SETTABLE_STATUSES = ['picking_up', 'delivering', 'delivered']
+// Which statuses a driver may move an order to, from where. Pick-up itself
+// starts when the driver (or their company) claims the order.
+const DRIVER_TRANSITIONS: Record<string, string[]> = {
+  delivering: ['picking_up'],
+  delivered: ['picking_up', 'delivering'],
+}
 
 export async function updateOrderStatus(orderId: string, status: string) {
   const user = await getBazaarUser()
   if (!user || user.role !== 'driver') return { error: 'Unauthorized' }
-  if (!DRIVER_SETTABLE_STATUSES.includes(status)) return { error: 'Invalid status.' }
+  const from = DRIVER_TRANSITIONS[status]
+  if (!from) return { error: 'Invalid status.' }
 
   const supabase = createBazaarAdmin()
 
@@ -589,6 +660,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
   if (orderData.status === 'delivered' || orderData.status === 'cancelled') {
     return { error: 'This order is already closed.' }
   }
+  if (!from.includes(orderData.status)) return { error: 'This order is not at that step yet.' }
 
   // Block transition to 'delivering' or 'delivered' until every shop has been
   // marked as picked up. Otherwise a driver could tap "Delivered" while some
@@ -609,18 +681,19 @@ export async function updateOrderStatus(orderId: string, status: string) {
     update.delivered_at = new Date().toISOString()
   }
 
-  const { error } = await supabase
+  const { data: moved, error } = await supabase
     .from('bazaar_orders')
     .update(update)
     .eq('id', orderId)
     .eq('driver_id', user.id)
+    .in('status', from)
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!moved?.length) return { error: 'This order changed in the meantime. Refresh and try again.' }
 
-  if (orderData) {
+  {
     const statusMessages: Record<string, string> = {
-      confirmed: 'A driver has accepted your order',
-      picking_up: 'Your items are being picked up from the shops',
       delivering: 'Your order is on its way to you',
       delivered: 'Your order has been delivered',
     }
@@ -633,7 +706,9 @@ export async function updateOrderStatus(orderId: string, status: string) {
   }
 
   revalidatePath('/driver')
+  revalidatePath('/fleet')
   revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
   revalidatePath('/shop/orders')
   return { success: true }
 }
@@ -684,7 +759,10 @@ export async function cancelOrder(orderId: string) {
 
   if (error) return { error: error.message }
   if (!cancelled?.length) return { error: 'A shop just accepted this order — it can no longer be cancelled.' }
+  await releaseOrderHolds(supabase, orderId)
   revalidatePath('/orders')
+  revalidatePath(`/orders/${orderId}`)
+  revalidatePath('/shop/orders')
   return { success: true }
 }
 
@@ -739,16 +817,23 @@ export async function cancelShopOrder(orderId: string) {
     .single()
 
   if (!order) return { error: 'Order not found' }
-  if (order.status === 'delivered' || order.status === 'cancelled') {
-    return { error: 'Order is already delivered or cancelled.' }
+  // Once a driver has started collecting, the shop can't pull the order out
+  // from under them — that goes through Kela support instead.
+  const SHOP_CANCELLABLE = ['pending', 'confirmed', 'ready']
+  if (!SHOP_CANCELLABLE.includes(order.status)) {
+    return { error: 'A driver already has this order. Contact Kela support to cancel it.' }
   }
 
-  const { error } = await supabase
+  const { data: cancelled, error } = await supabase
     .from('bazaar_orders')
     .update({ status: 'cancelled' })
     .eq('id', orderId)
+    .in('status', SHOP_CANCELLABLE)
+    .select('id')
 
   if (error) return { error: error.message }
+  if (!cancelled?.length) return { error: 'This order just moved on and can no longer be cancelled here.' }
+  await releaseOrderHolds(supabase, orderId)
 
   const body = `Order cancelled by ${shop.name}.`
   sendPushToUser(order.customer_id, {

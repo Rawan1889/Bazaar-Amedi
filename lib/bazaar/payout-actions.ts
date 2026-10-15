@@ -6,6 +6,7 @@ import { getBazaarUser } from './auth'
 
 export interface ShopEarnings {
   gross: number
+  couponDiscounts: number
   commissionRate: number
   commission: number
   net: number
@@ -35,7 +36,9 @@ async function shopForOwner() {
   return shop as { id: string; commission_rate: number } | null
 }
 
-// Gross = delivered order-item revenue for the shop. Net = gross − commission.
+// Gross = delivered order-item revenue for the shop. The shop's own coupons
+// come off its sales (the customer paid that much less), commission is taken
+// on what is left, and Net = gross − coupon discounts − commission.
 export async function getShopEarnings(): Promise<ShopEarnings | null> {
   const shop = await shopForOwner()
   if (!shop) return null
@@ -50,9 +53,25 @@ export async function getShopEarnings(): Promise<ShopEarnings | null> {
   const gross = ((items as unknown as { quantity: number; unit_price: number }[]) || [])
     .reduce((s, i) => s + i.unit_price * i.quantity, 0)
 
+  // Coupons are shop-issued and only discount that shop's items, so every
+  // discount on an order using one of this shop's coupons is the shop's.
+  const admin = createBazaarAdmin()
+  const { data: coupons } = await admin.from('bazaar_coupons').select('id').eq('shop_id', shop.id)
+  const couponIds = (coupons ?? []).map(c => c.id as string)
+  let couponDiscounts = 0
+  if (couponIds.length) {
+    const { data: discounted } = await admin
+      .from('bazaar_orders')
+      .select('discount')
+      .in('coupon_id', couponIds)
+      .eq('status', 'delivered')
+    couponDiscounts = ((discounted as { discount: number | null }[]) || []).reduce((s, o) => s + (o.discount ?? 0), 0)
+  }
+
   const rate = shop.commission_rate ?? 10
-  const commission = Math.round(gross * rate / 100)
-  const net = gross - commission
+  const afterCoupons = Math.max(0, gross - couponDiscounts)
+  const commission = Math.round(afterCoupons * rate / 100)
+  const net = afterCoupons - commission
 
   const { data: payouts } = await supabase
     .from('bazaar_payouts')
@@ -64,7 +83,7 @@ export async function getShopEarnings(): Promise<ShopEarnings | null> {
   const pending = rows.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0)
   const available = Math.max(0, net - paidOut - pending)
 
-  return { gross, commissionRate: rate, commission, net, paidOut, pending, available }
+  return { gross, couponDiscounts, commissionRate: rate, commission, net, paidOut, pending, available }
 }
 
 export async function getMyPayouts(): Promise<Payout[]> {

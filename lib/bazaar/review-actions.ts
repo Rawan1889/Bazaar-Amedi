@@ -69,7 +69,7 @@ export async function getShopReviews(shopId: string) {
 
   const { data } = await supabase
     .from('bazaar_reviews')
-    .select('*, bazaar_profiles!bazaar_reviews_customer_id_fkey(full_name)')
+    .select('*, bazaar_profiles!customer_id(full_name)')
     .eq('shop_id', shopId)
     .order('created_at', { ascending: false })
     .limit(20)

@@ -20,9 +20,12 @@ export async function getShopZones(shopIds: string[]): Promise<Pick<DeliveryZone
   if (zoneIds.length === 0) return []
   const { data: zones } = await supabase
     .from('bazaar_delivery_zones')
-    .select('fee, is_active')
-    .in('id', zoneIds)
-  return (zones || []).filter(z => z.is_active).map(z => ({ fee: z.fee }))
+    .select('id, fee, is_active')
+    .in('id', [...new Set(zoneIds)])
+  const fees = new Map((zones || []).filter(z => z.is_active).map(z => [z.id as string, z.fee as number]))
+  // One entry per shop, not per zone — placeOrder counts three shops in one
+  // zone as three, so the cart preview has to as well.
+  return zoneIds.filter(id => fees.has(id)).map(id => ({ fee: fees.get(id)! }))
 }
 
 // Public: active zones for the checkout / address picker.

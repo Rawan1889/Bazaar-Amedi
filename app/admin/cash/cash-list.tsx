@@ -46,7 +46,7 @@ export function CashList({ drivers }: { drivers: DriverCash[] }) {
             {fmt(d.amount)}
           </div>
           <button
-            onClick={async () => { if (await dialog.confirm({ title: 'Mark cash as remitted?', message: `${fmt(d.amount)} from ${d.full_name}`, confirmLabel: 'Mark remitted' })) startTransition(async () => { await settleDriverCash(d.driver_id); router.refresh() }) }}
+            onClick={async () => { if (await dialog.confirm({ title: 'Mark cash as remitted?', message: `${fmt(d.amount)} from ${d.full_name}`, confirmLabel: 'Mark remitted' })) startTransition(async () => { await settleDriverCash(d.driver_id, d.order_ids); router.refresh() }) }}
             disabled={isPending}
             className="px-3 py-2 rounded-[8px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[12px] font-medium flex-shrink-0"
             style={{ background: c.greenBg, color: c.green, opacity: isPending ? 0.6 : 1 }}

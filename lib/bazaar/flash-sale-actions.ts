@@ -28,15 +28,31 @@ export async function createFlashSale(formData: FormData) {
   if (!productId || isNaN(salePrice) || !endsAt) {
     return { error: 'All fields are required.' }
   }
+  if (salePrice <= 0) return { error: 'Sale price must be more than 0.' }
+  if (quantity !== null && (!Number.isInteger(quantity) || quantity < 1)) {
+    return { error: 'Items available must be at least 1.' }
+  }
+  if (isNaN(new Date(endsAt).getTime()) || new Date(endsAt).getTime() <= Date.now()) {
+    return { error: 'The end time must be in the future.' }
+  }
 
   const { data: product } = await supabase
     .from('bazaar_products')
-    .select('id, shop_id')
+    .select('id, shop_id, price, bazaar_product_variants(id, price)')
     .eq('id', productId)
     .eq('shop_id', shop.id)
     .single()
 
   if (!product) return { error: 'Product not found in your shop.' }
+
+  const option = variantId
+    ? (product.bazaar_product_variants as { id: string; price: number }[] | null)?.find(v => v.id === variantId)
+    : null
+  if (variantId && !option) return { error: 'That option no longer exists.' }
+  const normalPrice = option ? option.price : product.price
+  if (salePrice >= normalPrice) {
+    return { error: `Sale price must be lower than the normal price (${normalPrice.toLocaleString('en-IQ')} IQD).` }
+  }
 
   const { error } = await supabase.from('bazaar_flash_sales').insert({
     product_id: productId,
@@ -63,7 +79,8 @@ export async function endFlashSale(saleId: string) {
 
   const { error } = await supabase
     .from('bazaar_flash_sales')
-    .update({ is_active: false })
+    // Also end it now, so a cancelled order handing units back can't revive it.
+    .update({ is_active: false, ends_at: new Date().toISOString() })
     .eq('id', saleId)
 
   if (error) return { error: error.message }

@@ -14,14 +14,14 @@ const c = {
 } as const
 
 interface Props {
-  shopIds: string[]
-  subtotal: number
+  // What each shop in the cart adds up to; a coupon only discounts its own shop.
+  shopSubtotals: Record<string, number>
   onApply: (discount: number, description: string, code: string) => void
   onRemove: () => void
   applied: { discount: number; description: string } | null
 }
 
-export function CouponInput({ shopIds, subtotal, onApply, onRemove, applied }: Props) {
+export function CouponInput({ shopSubtotals, onApply, onRemove, applied }: Props) {
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -31,7 +31,7 @@ export function CouponInput({ shopIds, subtotal, onApply, onRemove, applied }: P
     setError(null)
     startTransition(async () => {
       const appliedCode = code.trim().toUpperCase()
-      const result = await applyCoupon(code, shopIds, subtotal)
+      const result = await applyCoupon(code, shopSubtotals)
       if (result.error) {
         setError(result.error)
       } else if (result.success) {

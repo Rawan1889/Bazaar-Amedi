@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRealtimeOrders } from '@/lib/bazaar/use-realtime-orders'
 import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 
 const c = {
   green:    '#287A53',
@@ -12,7 +13,8 @@ const c = {
   white:    '#FFFFFF',
 } as const
 
-const statusMessages: Record<string, string> = {
+// What the customer reads about their own order.
+const customerMessages: Record<string, string> = {
   new:         'New order placed',
   pending:     'Order is pending',
   confirmed:   'Shop confirmed your order',
@@ -21,6 +23,28 @@ const statusMessages: Record<string, string> = {
   delivering:  'Your order is on its way',
   delivered:   'Order delivered',
   cancelled:   'Order was cancelled',
+}
+
+// Shops, drivers and admins get the same updates, worded for the people
+// doing the work — a shop that just accepted an order shouldn't read
+// "Shop confirmed your order".
+const staffMessages: Record<string, string> = {
+  new:         'New order placed',
+  pending:     'Waiting for the shop to accept',
+  confirmed:   'Order accepted — being prepared',
+  ready:       'Order ready for pickup',
+  picking_up:  'Driver is collecting the items',
+  delivering:  'Order is out for delivery',
+  delivered:   'Order delivered',
+  cancelled:   'Order was cancelled',
+}
+
+const homeFor: Record<string, string> = {
+  customer: '/orders',
+  driver: '/driver',
+  market_admin: '/shop/orders',
+  fleet_manager: '/fleet',
+  super_admin: '/admin/orders',
 }
 
 export function OrderNotifications({ userId, role }: { userId: string; role: string }) {
@@ -45,9 +69,7 @@ export function OrderNotifications({ userId, role }: { userId: string; role: str
           style={{ background: c.white, border: `1px solid ${c.greenBg}` }}
           onClick={() => {
             dismiss(n.id)
-            if (role === 'customer') router.push('/orders')
-            else if (role === 'driver') router.push('/driver')
-            else router.push('/shop/orders')
+            router.push((role === 'customer' ? `/orders/${n.id}` : homeFor[role] ?? '/') as Route)
           }}
         >
           <div className="flex items-center justify-between gap-3">
@@ -62,7 +84,7 @@ export function OrderNotifications({ userId, role }: { userId: string; role: str
                   Order #{n.order_number}
                 </div>
                 <div className="font-[family-name:var(--font-dm-sans)] text-[11px]" style={{ color: c.stone }}>
-                  {statusMessages[n.status] || n.status.replace('_', ' ')}
+                  {(role === 'customer' ? customerMessages : staffMessages)[n.status] || n.status.replace('_', ' ')}
                 </div>
               </div>
             </div>

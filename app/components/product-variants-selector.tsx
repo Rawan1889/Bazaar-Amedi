@@ -22,6 +22,8 @@ interface Props {
   unit: string
   imageUrl: string | null
   activeSalePrice: number | null
+  // Sale price per option id (null = that option isn't on sale).
+  variantSalePrices?: Record<string, number | null>
   variants: Variant[]
   inStock: boolean
 }
@@ -51,6 +53,7 @@ export function ProductVariantsSelector({
   unit,
   imageUrl,
   activeSalePrice,
+  variantSalePrices = {},
   variants,
   inStock,
 }: Props) {
@@ -63,9 +66,9 @@ export function ProductVariantsSelector({
   const currentPrice = selectedVariant ? selectedVariant.price : basePrice
   const currentUnit = selectedVariant ? `${selectedVariant.amount} ${selectedVariant.unit}` : unit
 
-  // Sale price applies if present
-  // (Usually flash sales apply to specific variants or the base product, let's support it cleanly)
-  const hasSale = activeSalePrice !== null
+  // A sale can cover one option or all of them, so look it up per option.
+  const salePrice = selectedVariant ? (variantSalePrices[selectedVariant.id] ?? null) : activeSalePrice
+  const hasSale = salePrice !== null
 
   return (
     <div>
@@ -74,7 +77,7 @@ export function ProductVariantsSelector({
         {hasSale ? (
           <>
             <span className="font-[family-name:var(--font-dm-sans)] text-[22px] font-medium" style={{ color: c.terra }}>
-              {formatIQD(activeSalePrice)}
+              {formatIQD(salePrice)}
             </span>
             <span className="font-[family-name:var(--font-dm-sans)] text-[15px] line-through" style={{ color: c.stone }}>
               {formatIQD(currentPrice)}
@@ -140,7 +143,7 @@ export function ProductVariantsSelector({
             shopSlug={shopSlug}
             name={selectedVariant ? `${name} (${selectedVariant.amount} ${selectedVariant.unit})` : name}
             price={currentPrice}
-            salePrice={activeSalePrice}
+            salePrice={salePrice}
             unit={currentUnit}
             imageUrl={imageUrl}
             stockQty={selectedVariant?.stock_qty}
