@@ -579,6 +579,7 @@ export async function acceptOrder(orderId: string) {
     .from('bazaar_orders')
     .update({ driver_id: user.id, status: 'picking_up' })
     .eq('id', orderId)
+    .eq('fulfillment_type', 'delivery')
     .is('driver_id', null)
     .eq('status', 'ready')
     .select('id')

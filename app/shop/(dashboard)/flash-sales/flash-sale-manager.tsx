@@ -61,9 +61,10 @@ function SaleCard({ sale }: { sale: FlashSale }) {
           <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
             {sale.bazaar_products.name_en}
           </div>
-          {sale.quantity && (
+          {/* Counts down as customers buy at the sale price. */}
+          {sale.quantity != null && (
             <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mt-0.5" style={{ color: c.stone }}>
-              {sale.quantity} {sale.bazaar_products.unit}
+              {sale.quantity} <span>left</span>
             </div>
           )}
           <div className="flex items-center gap-2 mt-1">

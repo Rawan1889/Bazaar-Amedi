@@ -9,6 +9,7 @@ export interface ShopEarnings {
   couponDiscounts: number
   commissionRate: number
   commission: number
+  collectedAtPickup: number
   net: number
   paidOut: number
   pending: number
@@ -38,7 +39,9 @@ async function shopForOwner() {
 
 // Gross = delivered order-item revenue for the shop. The shop's own coupons
 // come off its sales (the customer paid that much less), commission is taken
-// on what is left, and Net = gross − coupon discounts − commission.
+// on what is left. Pickup customers pay the shop at the counter, so that cash
+// is already in the shop's hands and comes off what Kela owes:
+// Net = gross − coupon discounts − commission − cash collected at pickup.
 export async function getShopEarnings(): Promise<ShopEarnings | null> {
   const shop = await shopForOwner()
   if (!shop) return null
@@ -46,11 +49,15 @@ export async function getShopEarnings(): Promise<ShopEarnings | null> {
 
   const { data: items } = await supabase
     .from('bazaar_order_items')
-    .select('quantity, unit_price, bazaar_orders!inner(status)')
+    .select('quantity, unit_price, bazaar_orders!inner(status, fulfillment_type)')
     .eq('shop_id', shop.id)
     .eq('bazaar_orders.status', 'delivered')
 
-  const gross = ((items as unknown as { quantity: number; unit_price: number }[]) || [])
+  type Item = { quantity: number; unit_price: number; bazaar_orders: { fulfillment_type: string } }
+  const rows_ = (items as unknown as Item[]) || []
+  const gross = rows_.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+  const pickupGross = rows_
+    .filter(i => i.bazaar_orders?.fulfillment_type === 'pickup')
     .reduce((s, i) => s + i.unit_price * i.quantity, 0)
 
   // Coupons are shop-issued and only discount that shop's items, so every
@@ -59,19 +66,25 @@ export async function getShopEarnings(): Promise<ShopEarnings | null> {
   const { data: coupons } = await admin.from('bazaar_coupons').select('id').eq('shop_id', shop.id)
   const couponIds = (coupons ?? []).map(c => c.id as string)
   let couponDiscounts = 0
+  let pickupDiscounts = 0
   if (couponIds.length) {
     const { data: discounted } = await admin
       .from('bazaar_orders')
-      .select('discount')
+      .select('discount, fulfillment_type')
       .in('coupon_id', couponIds)
       .eq('status', 'delivered')
-    couponDiscounts = ((discounted as { discount: number | null }[]) || []).reduce((s, o) => s + (o.discount ?? 0), 0)
+    for (const o of (discounted as { discount: number | null; fulfillment_type: string }[]) || []) {
+      couponDiscounts += o.discount ?? 0
+      if (o.fulfillment_type === 'pickup') pickupDiscounts += o.discount ?? 0
+    }
   }
 
   const rate = shop.commission_rate ?? 10
   const afterCoupons = Math.max(0, gross - couponDiscounts)
   const commission = Math.round(afterCoupons * rate / 100)
-  const net = afterCoupons - commission
+  const collectedAtPickup = Math.max(0, pickupGross - pickupDiscounts)
+  // Negative when pickup commission is more than delivery earnings: the shop owes Kela.
+  const net = afterCoupons - commission - collectedAtPickup
 
   const { data: payouts } = await supabase
     .from('bazaar_payouts')
@@ -83,7 +96,7 @@ export async function getShopEarnings(): Promise<ShopEarnings | null> {
   const pending = rows.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0)
   const available = Math.max(0, net - paidOut - pending)
 
-  return { gross, couponDiscounts, commissionRate: rate, commission, net, paidOut, pending, available }
+  return { gross, couponDiscounts, commissionRate: rate, commission, collectedAtPickup, net, paidOut, pending, available }
 }
 
 export async function getMyPayouts(): Promise<Payout[]> {

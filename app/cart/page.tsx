@@ -219,7 +219,7 @@ export default function CartPage() {
             {/* Items grouped by shop */}
             <div className="flex flex-col gap-4">
               <p className="font-[family-name:var(--font-dm-sans)] text-[14px]" style={{ color: c.stone }}>
-                {itemCount} item{itemCount !== 1 ? 's' : ''} from {shopCount} shop{shopCount !== 1 ? 's' : ''} — one delivery trip
+                {itemCount} item{itemCount !== 1 ? 's' : ''} from {shopCount} shop{shopCount !== 1 ? 's' : ''}{isPickup ? '' : ' — one delivery trip'}
               </p>
 
               {shopGroups.map(group => (
@@ -411,7 +411,7 @@ export default function CartPage() {
                     <input
                       value={note}
                       onChange={e => setNote(e.target.value)}
-                      placeholder="e.g. Ring the bell"
+                      placeholder={isPickup ? 'e.g. I will come at 5pm' : 'e.g. Ring the bell'}
                       className="w-full rounded-[8px] px-3 py-2.5 text-[13px] font-[family-name:var(--font-dm-sans)] outline-none"
                       style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}
                     />
@@ -437,7 +437,7 @@ export default function CartPage() {
                 </button>
 
                 <p className="text-center font-[family-name:var(--font-dm-mono)] text-[10px] mt-3" style={{ color: c.stone }}>
-                  Cash on delivery
+                  {isPickup ? 'Pay at pickup' : 'Cash on delivery'}
                 </p>
               </div>
             </div>

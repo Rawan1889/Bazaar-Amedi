@@ -88,6 +88,7 @@ export async function assignOrderToDriver(orderId: string, driverId: string) {
     .from('bazaar_orders')
     .update({ driver_id: driverId, fleet_id: fleet.id, status: 'picking_up' })
     .eq('id', orderId)
+    .eq('fulfillment_type', 'delivery')
     .is('driver_id', null)
     .eq('status', 'ready')
     .select('id, order_number')

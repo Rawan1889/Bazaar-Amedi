@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { getBazaarUser } from '@/lib/bazaar/auth'
 import { getMySupportThreads } from '@/lib/bazaar/support-actions'
@@ -20,10 +21,15 @@ export default async function SupportPage() {
   if (user.role === 'super_admin') redirect('/admin/support')
 
   const threads = await getMySupportThreads()
+  // /support sits outside every role's layout, so give each role a way home.
+  const home = ({ market_admin: '/shop', driver: '/driver', fleet_manager: '/fleet' } as Record<string, string>)[user.role] ?? '/browse'
 
   return (
     <main className="min-h-[100dvh] px-4 md:px-8 py-8 pb-24 md:pb-8" style={{ background: '#FAFAF7' }}>
       <div className="max-w-[720px] mx-auto">
+        <Link href={home as Route} className="inline-block mb-4 font-[family-name:var(--font-dm-mono)] text-[11px] no-underline" style={{ color: c.stone }}>
+          <span className="inline-block rtl:-scale-x-100" aria-hidden="true">←</span> <span>Back</span>
+        </Link>
         <h1 className="font-[family-name:var(--font-dm-sans)] text-[28px] font-medium mb-2" style={{ color: c.charcoal }}>
           Support
         </h1>

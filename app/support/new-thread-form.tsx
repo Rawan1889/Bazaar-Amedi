@@ -39,7 +39,7 @@ export function NewThreadForm() {
         <input
           value={subject}
           onChange={e => setSubject(e.target.value)}
-          placeholder="e.g. Payout hasn't arrived"
+          placeholder="e.g. My order arrived late"
           maxLength={120}
           className="w-full px-3 py-2 rounded-[8px] font-[family-name:var(--font-dm-sans)] text-[14px] outline-none"
           style={{ border: `1px solid ${c.cream2}`, color: c.charcoal }}

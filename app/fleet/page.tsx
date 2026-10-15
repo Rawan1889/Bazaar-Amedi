@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getBazaarUser, bazaarLogout } from '@/lib/bazaar/auth'
 import { getFleetDashboard } from '@/lib/bazaar/fleet-actions'
@@ -19,6 +20,7 @@ export default async function FleetPage() {
           <span className="text-[18px] font-medium">kela<span className="text-[#2D8A5E]">.</span> <span className="text-[12px] text-[#716C66] font-[family-name:var(--font-dm-mono)]">FLEET</span></span>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
+            <Link href="/support" className="text-[13px] text-[#716C66] no-underline whitespace-nowrap">Support</Link>
             <form action={bazaarLogout}>
               <button className="text-[13px] text-[#C94A3A] bg-transparent border-none cursor-pointer whitespace-nowrap">Sign out</button>
             </form>

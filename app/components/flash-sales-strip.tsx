@@ -105,9 +105,9 @@ function SaleCard({ sale }: { sale: Sale }) {
             {p.bazaar_shops.name}
           </div>
           {/* Items available in flash sale */}
-          {sale.quantity && (
+          {sale.quantity != null && (
             <div className="font-[family-name:var(--font-dm-mono)] text-[10px] mb-2" style={{ color: c.stone }}>
-              {sale.quantity} available
+              {sale.quantity} <span>available</span>
             </div>
           )}
           <div className="flex items-center justify-between">
