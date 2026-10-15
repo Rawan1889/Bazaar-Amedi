@@ -102,9 +102,10 @@ describe('priceCartLines', () => {
     expect(priceCartLines([p], lines, NOW)).toHaveProperty('error')
   })
 
-  it('rejects out-of-stock products and shops that are not approved', () => {
+  it('rejects out-of-stock products and shops that are not approved or are paused', () => {
     expect(priceCartLines([product({ in_stock: false })], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
     expect(priceCartLines([product({ bazaar_shops: { is_approved: false } })], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
+    expect(priceCartLines([product({ bazaar_shops: { is_approved: true, is_paused: true } })], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
     expect(priceCartLines([], [{ productId: 'bread', quantity: 1 }], NOW)).toHaveProperty('error')
   })
 })

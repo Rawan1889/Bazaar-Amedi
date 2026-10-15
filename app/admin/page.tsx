@@ -47,6 +47,26 @@ export default async function AdminOverview() {
         ))}
       </div>
 
+      {stats.overdueShops > 0 && (
+        <div className="rounded-[14px] p-5 mb-4" style={{ background: c.terraBg, border: '1px solid rgba(196,101,74,0.2)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(196,101,74,0.12)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c.terra} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={{ color: c.charcoal }}>
+                <span>{stats.overdueShops}</span> <span>{stats.overdueShops === 1 ? 'shop has not paid its subscription' : 'shops have not paid their subscription'}</span>
+              </div>
+              <a href="/admin/shops" className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.terra }}>
+                Record payment or pause
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {stats.pendingShops > 0 && (
         <div className="rounded-[14px] p-5" style={{ background: c.saffronBg, border: '1px solid rgba(232,168,56,0.2)' }}>
           <div className="flex items-center gap-3">

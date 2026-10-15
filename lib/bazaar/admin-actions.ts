@@ -5,6 +5,7 @@ import { createBazaarServer, createBazaarAdmin } from './supabase-server'
 import { getBazaarUser } from './auth'
 import { sendPushToUser } from './push-notifications'
 import { releaseOrderHolds } from './order-pricing'
+import { subscriptionStatus } from './subscription'
 
 async function requireAdmin() {
   const user = await getBazaarUser()
@@ -18,12 +19,29 @@ export async function getAllShops() {
   await requireAdmin()
   const supabase = await createBazaarServer()
 
-  const { data } = await supabase
-    .from('bazaar_shops')
-    .select('*, bazaar_profiles!owner_id(full_name, phone), bazaar_categories(name_en)')
-    .order('created_at', { ascending: false })
+  const [{ data }, { data: payments }] = await Promise.all([
+    supabase
+      .from('bazaar_shops')
+      .select('*, bazaar_profiles!owner_id(full_name, phone), bazaar_categories(name_en), bazaar_products(count)')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('bazaar_subscription_payments')
+      .select('shop_id, amount, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1000),
+  ])
 
-  return data || []
+  // Newest payment per shop.
+  const lastPayment = new Map<string, { amount: number; created_at: string }>()
+  for (const p of payments || []) {
+    if (!lastPayment.has(p.shop_id)) lastPayment.set(p.shop_id, { amount: p.amount, created_at: p.created_at })
+  }
+
+  return (data || []).map(({ bazaar_products, ...shop }) => ({
+    ...shop,
+    product_count: (bazaar_products as unknown as { count: number }[] | null)?.[0]?.count ?? 0,
+    last_payment: lastPayment.get(shop.id) ?? null,
+  }))
 }
 
 export async function approveShop(shopId: string) {
@@ -161,12 +179,22 @@ export async function getAdminStats() {
     .select('*', { count: 'exact', head: true })
     .eq('is_approved', false)
 
+  // Live shops whose free month or last payment has run out.
+  const { data: liveShops } = await supabase
+    .from('bazaar_shops')
+    .select('trial_ends_at, paid_until')
+    .eq('is_approved', true)
+    .eq('is_paused', false)
+  const now = Date.now()
+  const overdueShops = (liveShops || []).filter(s => subscriptionStatus(s, now).state === 'overdue').length
+
   return {
     totalShops: shops.count || 0,
     totalProducts: products.count || 0,
     totalOrders: orders.count || 0,
     totalUsers: profiles.count || 0,
     pendingShops: pendingShops || 0,
+    overdueShops,
   }
 }
 

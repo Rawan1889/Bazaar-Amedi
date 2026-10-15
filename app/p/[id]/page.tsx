@@ -34,7 +34,7 @@ const loadProduct = cache(async (id: string) => {
   const supabase = await createBazaarServer()
   const { data } = await supabase
     .from('bazaar_products')
-    .select('*, bazaar_shops!inner(id, name, slug, is_approved), bazaar_product_variants(id, amount, unit, price, in_stock, stock_qty), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active, quantity, variant_id)')
+    .select('*, bazaar_shops!inner(id, name, slug, is_approved, is_paused), bazaar_product_variants(id, amount, unit, price, in_stock, stock_qty), bazaar_product_images(url, sort_order), bazaar_flash_sales(sale_price, ends_at, is_active, quantity, variant_id)')
     .eq('id', id)
     .single()
   return data
@@ -43,7 +43,7 @@ const loadProduct = cache(async (id: string) => {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const product = await loadProduct(id)
-  if (!product || !product.bazaar_shops?.is_approved) return { title: 'Product not found' }
+  if (!product || !product.bazaar_shops?.is_approved || product.bazaar_shops.is_paused) return { title: 'Product not found' }
 
   const variant = defaultVariant(product.price, product.bazaar_product_variants as { id: string; price: number }[] | null)
   const sale = saleForOption(product.bazaar_flash_sales as FlashSaleLike[] | null, variant?.id ?? null, Date.now())
@@ -75,13 +75,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const p = product as {
     id: string; shop_id: string; name_en: string; name_ku: string | null; name_ar: string | null
     description: string | null; price: number; unit: string; image_url: string | null; in_stock: boolean
-    bazaar_shops: { id: string; name: string; slug: string; is_approved: boolean }
+    bazaar_shops: { id: string; name: string; slug: string; is_approved: boolean; is_paused: boolean }
     bazaar_product_variants: { id: string; amount: number; unit: string; price: number; in_stock: boolean; stock_qty: number | null }[]
     bazaar_product_images: { url: string; sort_order: number }[]
     bazaar_flash_sales: FlashSaleLike[] | null
   }
 
-  if (!p.bazaar_shops.is_approved) notFound()
+  if (!p.bazaar_shops.is_approved || p.bazaar_shops.is_paused) notFound()
 
   const gallery = [
     ...(p.image_url ? [p.image_url] : []),

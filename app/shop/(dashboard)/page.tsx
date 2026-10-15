@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { createBazaarServer } from '@/lib/bazaar/supabase-server'
 import { getBazaarUser } from '@/lib/bazaar/auth'
+import { SubscriptionNotice } from './subscription-notice'
 
 const c = {
   green:     '#287A53',
@@ -33,7 +34,9 @@ export default async function ShopDashboard() {
   const stats = [
     { label: 'Products', value: productCount ?? 0, color: c.green, bg: c.greenBg },
     { label: 'Status', value: shop?.is_approved ? 'Approved' : 'Pending', color: shop?.is_approved ? c.green : c.saffron, bg: shop?.is_approved ? c.greenBg : c.saffronBg },
-    { label: 'Shop', value: shop?.is_open ? 'Open' : 'Closed', color: shop?.is_open ? c.green : c.terra, bg: shop?.is_open ? c.greenBg : c.terraBg },
+    shop?.is_paused
+      ? { label: 'Shop', value: 'Paused', color: c.terra, bg: c.terraBg }
+      : { label: 'Shop', value: shop?.is_open ? 'Open' : 'Closed', color: shop?.is_open ? c.green : c.terra, bg: shop?.is_open ? c.greenBg : c.terraBg },
   ]
 
   return (
@@ -86,6 +89,8 @@ export default async function ShopDashboard() {
           ))}
         </div>
       )}
+
+      {shop && <SubscriptionNotice shop={shop} productCount={productCount ?? 0} />}
 
       {shop && (
         <div className="grid grid-cols-2 gap-4 mb-6">

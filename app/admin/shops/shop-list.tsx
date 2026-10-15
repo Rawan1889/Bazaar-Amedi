@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { approveShop, rejectShop } from '@/lib/bazaar/admin-actions'
 import { updateCommissionRate } from '@/lib/bazaar/payout-actions'
+import { SubscriptionPanel, type SubscriptionShopRow } from './subscription-panel'
 
 const c = {
   green:    '#287A53',
@@ -15,9 +16,7 @@ const c = {
   white:    '#FFFFFF',
 } as const
 
-interface Shop {
-  id: string
-  name: string
+interface Shop extends SubscriptionShopRow {
   slug: string
   phone: string | null
   address: string | null
@@ -29,7 +28,7 @@ interface Shop {
   bazaar_categories: { name_en: string } | null
 }
 
-function ShopCard({ shop, showActions }: { shop: Shop; showActions: boolean }) {
+function ShopCard({ shop, showActions, now }: { shop: Shop; showActions: boolean; now: number }) {
   const [isPending, startTransition] = useTransition()
   const [rate, setRate] = useState(String(shop.commission_rate ?? 10))
   const [saved, setSaved] = useState(false)
@@ -100,6 +99,8 @@ function ShopCard({ shop, showActions }: { shop: Shop; showActions: boolean }) {
         </button>
       </div>
 
+      <SubscriptionPanel shop={shop} now={now} />
+
       {showActions && (
         <div className="flex gap-2">
           <button
@@ -126,7 +127,7 @@ function ShopCard({ shop, showActions }: { shop: Shop; showActions: boolean }) {
   )
 }
 
-export function ShopList({ shops, showActions }: { shops: unknown[]; showActions: boolean }) {
+export function ShopList({ shops, showActions, now }: { shops: unknown[]; showActions: boolean; now: number }) {
   if (shops.length === 0) {
     return (
       <div className="rounded-[14px] p-8 text-center" style={{ background: c.white, border: `1px solid ${c.cream2}` }}>
@@ -140,7 +141,7 @@ export function ShopList({ shops, showActions }: { shops: unknown[]; showActions
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {shops.map(shop => (
-        <ShopCard key={(shop as unknown as Shop).id} shop={shop as unknown as Shop} showActions={showActions} />
+        <ShopCard key={(shop as unknown as Shop).id} shop={shop as unknown as Shop} showActions={showActions} now={now} />
       ))}
     </div>
   )

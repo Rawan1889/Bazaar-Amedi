@@ -56,8 +56,10 @@ export default async function BrowsePage({
   // Active flash sales
   const { data: flashSales } = await supabase
     .from('bazaar_flash_sales')
-    .select('*, bazaar_products(id, name_en, name_ku, name_ar, shop_id, unit, price, image_url, bazaar_shops(name, slug)), bazaar_product_variants(id, amount, unit, stock_qty)')
+    .select('*, bazaar_products!inner(id, name_en, name_ku, name_ar, shop_id, unit, price, image_url, bazaar_shops!inner(name, slug, is_approved, is_paused)), bazaar_product_variants(id, amount, unit, stock_qty)')
     .eq('is_active', true)
+    .eq('bazaar_products.bazaar_shops.is_approved', true)
+    .eq('bazaar_products.bazaar_shops.is_paused', false)
     .gt('ends_at', new Date().toISOString())
     .order('ends_at', { ascending: true })
     .limit(8)
@@ -78,9 +80,10 @@ export default async function BrowsePage({
 
   let productsQuery = supabase
     .from('bazaar_products')
-    .select('*, bazaar_shops!inner(name, slug, is_open, is_approved), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active, quantity, variant_id), bazaar_product_variants(id, stock_qty, price, in_stock)')
+    .select('*, bazaar_shops!inner(name, slug, is_open, is_approved, is_paused), bazaar_categories(name_en, name_ku, name_ar), bazaar_flash_sales(sale_price, ends_at, is_active, quantity, variant_id), bazaar_product_variants(id, stock_qty, price, in_stock)')
     .eq('in_stock', true)
     .eq('bazaar_shops.is_approved', true)
+    .eq('bazaar_shops.is_paused', false)
     .order('created_at', { ascending: false })
     .limit(40)
 

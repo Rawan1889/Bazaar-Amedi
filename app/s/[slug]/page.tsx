@@ -67,6 +67,8 @@ export default async function ShopPublicPage({
     if (user.role === 'super_admin') redirect('/admin')
   }
   const isOwnerView = !!user && user.id === shop.owner_id
+  // Customers only see approved shops that aren't paused; the owner can still preview.
+  if ((!shop.is_approved || shop.is_paused) && !isOwnerView) notFound()
 
   const { data: products } = await supabase
     .from('bazaar_products')

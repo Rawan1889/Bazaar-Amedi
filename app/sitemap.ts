@@ -19,11 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = createClient(url, key, { auth: { persistSession: false } })
   const [{ data: shops }, { data: products }] = await Promise.all([
-    supabase.from('bazaar_shops').select('id, slug, created_at').eq('is_approved', true),
+    supabase.from('bazaar_shops').select('id, slug, created_at').eq('is_approved', true).eq('is_paused', false),
     supabase
       .from('bazaar_products')
-      .select('id, created_at, bazaar_shops!inner(is_approved)')
+      .select('id, created_at, bazaar_shops!inner(is_approved, is_paused)')
       .eq('bazaar_shops.is_approved', true)
+      .eq('bazaar_shops.is_paused', false)
       .limit(5000),
   ])
 

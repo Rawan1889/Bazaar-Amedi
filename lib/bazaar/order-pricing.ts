@@ -11,13 +11,13 @@ export type ProductRow = {
   name_en: string
   price: number
   in_stock: boolean | null
-  bazaar_shops: { is_approved: boolean | null } | null
+  bazaar_shops: { is_approved: boolean | null; is_paused?: boolean | null } | null
   bazaar_product_variants: { id: string; amount: number; unit: string; price: number; stock_qty: number | null; in_stock: boolean | null }[] | null
   bazaar_flash_sales: { id: string; sale_price: number; ends_at: string; is_active: boolean | null; quantity: number | null; variant_id?: string | null }[] | null
 }
 
 export const PRODUCT_PRICING_SELECT =
-  'id, shop_id, name_en, price, in_stock, bazaar_shops(is_approved), bazaar_product_variants(id, amount, unit, price, stock_qty, in_stock), bazaar_flash_sales(id, sale_price, ends_at, is_active, quantity, variant_id)'
+  'id, shop_id, name_en, price, in_stock, bazaar_shops(is_approved, is_paused), bazaar_product_variants(id, amount, unit, price, stock_qty, in_stock), bazaar_flash_sales(id, sale_price, ends_at, is_active, quantity, variant_id)'
 
 export type PricedItem = {
   productId: string
@@ -61,7 +61,7 @@ export function priceCartLines(
 
   for (const line of lines) {
     const p = byId.get(line.productId)
-    if (!p || !p.bazaar_shops?.is_approved) {
+    if (!p || !p.bazaar_shops?.is_approved || p.bazaar_shops.is_paused) {
       return { error: 'An item in your cart is no longer available. Please remove it and try again.' }
     }
     const variants = p.bazaar_product_variants ?? []

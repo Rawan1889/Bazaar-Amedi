@@ -13,11 +13,11 @@ export async function generateMetadata({
 
   const { data: shop } = await supabase
     .from('bazaar_shops')
-    .select('name, description, logo_url, cover_url, bazaar_categories(name_en)')
+    .select('name, description, logo_url, cover_url, is_approved, is_paused, bazaar_categories(name_en)')
     .eq('slug', slug)
     .single()
 
-  if (!shop) {
+  if (!shop || !shop.is_approved || shop.is_paused) {
     return { title: 'Shop not found' }
   }
 

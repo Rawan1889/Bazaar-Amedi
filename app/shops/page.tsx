@@ -33,6 +33,7 @@ export default async function ShopsPage() {
     .from('bazaar_shops')
     .select('id, name, slug, description, logo_url, cover_url, address, is_open, bazaar_categories(name_en)')
     .eq('is_approved', true)
+    .eq('is_paused', false)
     .order('name')
 
   const open = (shops || []).filter(s => s.is_open)
