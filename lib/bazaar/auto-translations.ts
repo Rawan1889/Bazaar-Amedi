@@ -2,6 +2,10 @@
 // Run `node scripts/build-auto-translations.mjs` after updating the CSV.
 
 export const AUTO_AR: Record<string, string> = {
+  "Get a code on WhatsApp": "احصل على رمز عبر واتساب",
+  "Enter the code we sent on WhatsApp to +964": "أدخل الرمز الذي أرسلناه عبر واتساب إلى +964",
+  "Enter the code from WhatsApp.": "أدخل الرمز من واتساب.",
+  "Could not send the code on WhatsApp. Please try again.": "تعذّر إرسال الرمز عبر واتساب. حاول مرة أخرى.",
   "delivery": "توصيل",
   "product": "منتج",
   "Delivery Cut": "حصة التوصيل",
@@ -823,6 +827,10 @@ export const AUTO_AR: Record<string, string> = {
 } as const
 
 export const AUTO_KU: Record<string, string> = {
+  "Get a code on WhatsApp": "کۆدەکێ ل سەر واتسئاپێ وەربگرە",
+  "Enter the code we sent on WhatsApp to +964": "وی کۆدی بنڤیسە یێ مە ل سەر واتسئاپێ هنارتی بۆ +964",
+  "Enter the code from WhatsApp.": "کۆدێ واتسئاپێ بنڤیسە.",
+  "Could not send the code on WhatsApp. Please try again.": "نەشیا کۆد ل سەر واتسئاپێ بهێتە هنارتن. دووبارە هەول بدە.",
   "delivery": "گەهاندن",
   "product": "بەرهەم",
   "Delivery Cut": "پشکا گەهاندنێ",

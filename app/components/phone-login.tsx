@@ -44,7 +44,7 @@ export function PhoneLogin() {
   }
 
   function verifyCode() {
-    if (code.trim().length < 4) { setError('Enter the code you received.'); return }
+    if (code.trim().length < 4) { setError('Enter the code from WhatsApp.'); return }
     setError(null)
     startTransition(async () => {
       const supabase = createBazaarClient()
@@ -93,7 +93,7 @@ export function PhoneLogin() {
             />
           </div>
           <button onClick={sendCode} disabled={isPending} className="py-2.5 rounded-[10px] border-none cursor-pointer font-[family-name:var(--font-dm-sans)] text-[14px] font-medium" style={btnStyle}>
-            {isPending ? 'Sending…' : 'Send code'}
+            {isPending ? 'Sending…' : 'Get a code on WhatsApp'}
           </button>
         </>
       )}
@@ -101,7 +101,7 @@ export function PhoneLogin() {
       {step === 'code' && (
         <>
           <label className="font-[family-name:var(--font-dm-sans)] text-[12px]" style={{ color: c.stone }}>
-            Enter the code sent to +964 {phone}
+            Enter the code we sent on WhatsApp to +964 {phone}
           </label>
           <input
             value={code}
