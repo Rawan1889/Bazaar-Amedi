@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   )
 
   try {
-    const res = await fetch(`https://graph.facebook.com/v23.0/${phoneId}/messages`, {
+    const res = await fetch(`https://graph.facebook.com/v25.0/${phoneId}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(message),
