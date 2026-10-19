@@ -396,8 +396,15 @@ export async function deleteProduct(formData: FormData) {
     .eq('id', productId)
 
   if (error) {
+    // Past orders still reference this product — archive it instead so order history stays intact
     if (error.code === '23503') {
-      return { error: 'This product is part of past orders, so it cannot be deleted. Mark it "Out" instead to hide it from customers.' }
+      const { error: archiveError } = await supabase
+        .from('bazaar_products')
+        .update({ archived_at: new Date().toISOString(), in_stock: false })
+        .eq('id', productId)
+      if (archiveError) return { error: archiveError.message }
+      revalidatePath('/shop/products')
+      return { success: true, archived: true }
     }
     return { error: error.message }
   }

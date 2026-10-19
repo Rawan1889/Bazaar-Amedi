@@ -42,6 +42,7 @@ export default async function ProductsPage() {
     .from('bazaar_products')
     .select('*, bazaar_categories(name_en), bazaar_product_images(id, url, sort_order), bazaar_product_variants(id, amount, unit, price, stock_qty)')
     .eq('shop_id', shop.id)
+    .is('archived_at', null)
     .order('sort_order', { ascending: true })
 
   const { data: categories } = await supabase

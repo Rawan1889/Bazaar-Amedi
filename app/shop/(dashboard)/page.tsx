@@ -30,6 +30,7 @@ export default async function ShopDashboard() {
     .from('bazaar_products')
     .select('*', { count: 'exact', head: true })
     .eq('shop_id', shop?.id || '')
+    .is('archived_at', null)
 
   const stats = [
     { label: 'Products', value: productCount ?? 0, color: c.green, bg: c.greenBg },
