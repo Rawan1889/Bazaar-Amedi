@@ -191,7 +191,10 @@ function ProductRow({ product }: { product: Product }) {
 
         <form action={async (fd: FormData) => {
           if (await dialog.confirm({ title: 'Delete this product?', message: 'This cannot be undone.', confirmLabel: 'Delete', tone: 'danger' })) {
-            startTransition(() => { deleteProduct(fd) })
+            startTransition(async () => {
+              const res = await deleteProduct(fd)
+              if (res?.error) await dialog.alert({ title: 'Could not delete', message: res.error })
+            })
           }
         }}>
           <input type="hidden" name="product_id" value={product.id} />

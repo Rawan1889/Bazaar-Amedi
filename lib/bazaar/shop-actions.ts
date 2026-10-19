@@ -395,7 +395,12 @@ export async function deleteProduct(formData: FormData) {
     .delete()
     .eq('id', productId)
 
-  if (error) return { error: error.message }
+  if (error) {
+    if (error.code === '23503') {
+      return { error: 'This product is part of past orders, so it cannot be deleted. Mark it "Out" instead to hide it from customers.' }
+    }
+    return { error: error.message }
+  }
 
   revalidatePath('/shop/products')
   return { success: true }
